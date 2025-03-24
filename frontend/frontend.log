@@ -1,0 +1,14 @@
+
+> agent-ciril-frontend@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.25
+  - Local:        http://localhost:3000
+  - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 2.2s
+ ○ Compiling / ...
+ ✓ Compiled / in 3.7s (1291 modules)
+ GET / 200 in 4307ms
+ ✓ Compiled in 666ms (616 modules)

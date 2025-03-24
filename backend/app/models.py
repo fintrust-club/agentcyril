@@ -8,6 +8,8 @@ class ChatRequest(BaseModel):
     Request model for chat endpoint
     """
     message: str = Field(..., description="The message sent by the user")
+    visitor_id: str = Field(..., description="Unique identifier for the visitor")
+    visitor_name: Optional[str] = Field(None, description="Optional name for the visitor")
 
 
 class ChatResponse(BaseModel):
@@ -26,6 +28,8 @@ class ChatHistoryItem(BaseModel):
     message: str
     sender: str
     response: Optional[str] = None
+    visitor_id: str
+    visitor_name: Optional[str] = None
     timestamp: datetime
 
 
@@ -48,6 +52,23 @@ class ProfileData(BaseModel):
     projects: str
     interests: str
     updated_at: Optional[datetime] = None
+
+
+class AdminLoginRequest(BaseModel):
+    """
+    Request model for admin login
+    """
+    username: str
+    password: str
+
+
+class AdminLoginResponse(BaseModel):
+    """
+    Response model for admin login
+    """
+    success: bool
+    token: Optional[str] = None
+    message: Optional[str] = None
 
 
 class ErrorResponse(BaseModel):

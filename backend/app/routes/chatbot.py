@@ -1,6 +1,6 @@
 import time
-from fastapi import APIRouter, HTTPException, Depends
-from typing import List
+from fastapi import APIRouter, HTTPException, Depends, Query
+from typing import List, Optional
 
 from app import models
 from app.database import log_chat_message, get_chat_history
@@ -22,8 +22,23 @@ async def chat(chat_request: models.ChatRequest):
         # Generate AI response
         response = generate_ai_response(chat_request.message, search_results)
         
-        # Log the chat message
-        log_chat_message(chat_request.message, "user", response)
+        # Log the user message first (without response)
+        log_chat_message(
+            chat_request.message, 
+            "user", 
+            None,  # No response field for user message
+            visitor_id=chat_request.visitor_id,
+            visitor_name=chat_request.visitor_name
+        )
+        
+        # Log the AI response as a separate entry
+        log_chat_message(
+            "", 
+            "bot", 
+            response,  # Response is the message for bot entries
+            visitor_id=chat_request.visitor_id,
+            visitor_name=chat_request.visitor_name
+        )
         
         # Calculate query time
         query_time_ms = (time.time() - start_time) * 1000
@@ -41,12 +56,16 @@ async def chat(chat_request: models.ChatRequest):
         )
 
 @router.get("/history", response_model=models.ChatHistoryResponse)
-async def get_chat_history_endpoint(limit: int = 50):
+async def get_chat_history_endpoint(
+    limit: int = 50, 
+    visitor_id: Optional[str] = Query(None, description="Filter chat history by visitor ID")
+):
     """
-    Get chat history
+    Get chat history, optionally filtered by visitor ID
     """
     try:
-        history = get_chat_history(limit=limit)
+        # Get history with optional visitor ID filter
+        history = get_chat_history(limit=limit, visitor_id=visitor_id)
         
         # Convert the history to the expected format
         formatted_history = []
@@ -56,6 +75,8 @@ async def get_chat_history_endpoint(limit: int = 50):
                 message=item["message"],
                 sender=item["sender"],
                 response=item.get("response"),
+                visitor_id=item.get("visitor_id", "anonymous"),
+                visitor_name=item.get("visitor_name"),
                 timestamp=item["timestamp"]
             ))
         

@@ -11,7 +11,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeToggle } from '@/components/theme-toggle';
-import { chatApi } from '@/utils/api';
+import { chatApi, setVisitorName } from '@/utils/api';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 type Message = {
   id: string;
@@ -32,7 +42,25 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [visitorName, setVisitorNameState] = useState('');
+  const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Check if visitor name is set
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedName = localStorage.getItem('visitor_name');
+      if (storedName) {
+        setVisitorNameState(storedName);
+      } else {
+        // Show dialog to set name after a short delay
+        const timer = setTimeout(() => {
+          setIsNameDialogOpen(true);
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
@@ -86,16 +114,52 @@ export default function Home() {
     }
   };
 
+  const handleSaveVisitorName = () => {
+    if (visitorName.trim()) {
+      setVisitorName(visitorName.trim());
+      setIsNameDialogOpen(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background border-b py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-primary">Agent Ciril</h1>
           <nav className="flex items-center space-x-4">
+            <Dialog open={isNameDialogOpen} onOpenChange={setIsNameDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  {visitorName ? `Hi, ${visitorName}` : 'Set Your Name'}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Introduce Yourself</DialogTitle>
+                  <DialogDescription>
+                    Tell us your name so we can personalize your chat experience.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">
+                      Name
+                    </Label>
+                    <Input
+                      id="name"
+                      value={visitorName}
+                      onChange={(e) => setVisitorNameState(e.target.value)}
+                      className="col-span-3"
+                      placeholder="Your name"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleSaveVisitorName}>Save</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <ThemeToggle />
-            <Button variant="outline" asChild>
-              <Link href="/admin">Admin</Link>
-            </Button>
           </nav>
         </div>
       </header>
@@ -134,7 +198,9 @@ export default function Home() {
                   {message.sender === 'user' && (
                     <Avatar className="ml-2 h-10 w-10 border-2 border-primary/10">
                       <AvatarImage src="/user-avatar.png" alt="User" />
-                      <AvatarFallback className="bg-secondary/10 text-secondary">You</AvatarFallback>
+                      <AvatarFallback className="bg-secondary/10 text-secondary">
+                        {visitorName ? visitorName[0].toUpperCase() : 'You'}
+                      </AvatarFallback>
                     </Avatar>
                   )}
                 </div>

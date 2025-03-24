@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Optional
+from datetime import datetime
 
 from app import models
 from app.database import get_profile_data, update_profile_data
@@ -41,7 +42,11 @@ async def update_profile(profile_data: models.ProfileData):
         # Convert to dict for database
         data_dict = profile_data.dict()
         
+        # Add/update timestamp for updating
+        data_dict["updated_at"] = datetime.utcnow().isoformat()
+        
         # Update in database
+        print(f"Updating profile with data: {data_dict}")
         updated_data = update_profile_data(data_dict)
         if not updated_data:
             raise HTTPException(

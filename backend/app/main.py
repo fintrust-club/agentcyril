@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
 
-from app.routes import chatbot, profiles
+from app.routes import chatbot, profiles, admin
 
 # Load environment variables
 API_KEY = os.getenv("OPENAI_API_KEY")
@@ -29,6 +29,7 @@ app.add_middleware(
 # Include routers
 app.include_router(chatbot.router, prefix="/chat", tags=["chat"])
 app.include_router(profiles.router, prefix="/profile", tags=["profile"])
+app.include_router(admin.router, prefix="/admin", tags=["admin"])
 
 @app.get("/")
 async def root():

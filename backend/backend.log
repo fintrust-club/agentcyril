@@ -1,0 +1,51 @@
+INFO:     Will watch for changes in these directories: ['/Users/cirilcyriacmullasseril/Documents/Experiments/agentcyril/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [43446] using WatchFiles
+INFO:     Started server process [43451]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+Supabase connection initialized
+INFO:     127.0.0.1:63781 - "POST /chat HTTP/1.1" 307 Temporary Redirect
+Warning: Vector database is empty. Adding default profile.
+Successfully added 5 documents to vector database
+Vector DB query returned 3 results
+Logging chat message for visitor: test-visitor-999, name: Test User 999
+Sending to Supabase: {'message': 'Test message with explicit visitor ID', 'sender': 'user', 'response': None, 'visitor_id': 'test-visitor-999', 'visitor_name': 'Test User 999', 'timestamp': '2025-03-24 17:16:51'}
+Successfully logged message to Supabase. Response: [{'id': '6799e435-5bd2-427d-9041-e9ce5789b7f6', 'message': 'Test message with explicit visitor ID', 'sender': 'user', 'response': None, 'timestamp': '2025-03-24T17:16:51+00:00', 'visitor_id': 'test-visitor-999', 'visitor_name': 'Test User 999'}]
+Logging chat message for visitor: test-visitor-999, name: Test User 999
+Sending to Supabase: {'message': '', 'sender': 'bot', 'response': "Hello! It looks like you're testing the system. How can I assist you today? If you have any questions about my work or projects, feel free to ask!", 'visitor_id': 'test-visitor-999', 'visitor_name': 'Test User 999', 'timestamp': '2025-03-24 17:16:51'}
+Successfully logged message to Supabase. Response: [{'id': '4a32c1fa-765b-4dd1-b6b4-b321873ddc28', 'message': '', 'sender': 'bot', 'response': "Hello! It looks like you're testing the system. How can I assist you today? If you have any questions about my work or projects, feel free to ask!", 'timestamp': '2025-03-24T17:16:51+00:00', 'visitor_id': 'test-visitor-999', 'visitor_name': 'Test User 999'}]
+INFO:     127.0.0.1:63781 - "POST /chat/ HTTP/1.1" 200 OK
+Getting chat history, limit: 50, visitor_id: test-visitor-999
+Filtering chat history for visitor: test-visitor-999
+Retrieved 2 messages from Supabase
+First message visitor_id: test-visitor-999
+INFO:     127.0.0.1:63786 - "GET /chat/history?visitor_id=test-visitor-999 HTTP/1.1" 200 OK
+Getting chat history, limit: 50, visitor_id: None
+Retrieved 6 messages from Supabase
+First message visitor_id: test-visitor-999
+INFO:     127.0.0.1:63791 - "GET /chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63811 - "OPTIONS /chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63811 - "POST /chat HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:63813 - "OPTIONS /chat/ HTTP/1.1" 200 OK
+Vector DB query returned 3 results
+Logging chat message for visitor: v-1742816520726-n61i81th8p, name: Sachu
+Sending to Supabase: {'message': 'Hello ciril ', 'sender': 'user', 'response': None, 'visitor_id': 'v-1742816520726-n61i81th8p', 'visitor_name': 'Sachu', 'timestamp': '2025-03-24 17:17:38'}
+Successfully logged message to Supabase. Response: [{'id': '7e61c404-b55e-4bce-b577-0c7854b87c08', 'message': 'Hello ciril ', 'sender': 'user', 'response': None, 'timestamp': '2025-03-24T17:17:38+00:00', 'visitor_id': 'v-1742816520726-n61i81th8p', 'visitor_name': 'Sachu'}]
+Logging chat message for visitor: v-1742816520726-n61i81th8p, name: Sachu
+Sending to Supabase: {'message': '', 'sender': 'bot', 'response': 'Hello! How can I help you today?', 'visitor_id': 'v-1742816520726-n61i81th8p', 'visitor_name': 'Sachu', 'timestamp': '2025-03-24 17:17:38'}
+Successfully logged message to Supabase. Response: [{'id': 'f827a0e6-5839-4004-9300-8ae79b49151f', 'message': '', 'sender': 'bot', 'response': 'Hello! How can I help you today?', 'timestamp': '2025-03-24T17:17:38+00:00', 'visitor_id': 'v-1742816520726-n61i81th8p', 'visitor_name': 'Sachu'}]
+INFO:     127.0.0.1:63811 - "POST /chat/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63817 - "POST /chat HTTP/1.1" 307 Temporary Redirect
+Vector DB query returned 3 results
+Logging chat message for visitor: v-1742816520726-n61i81th8p, name: Sachu
+Sending to Supabase: {'message': 'can you tell m about yourself ', 'sender': 'user', 'response': None, 'visitor_id': 'v-1742816520726-n61i81th8p', 'visitor_name': 'Sachu', 'timestamp': '2025-03-24 17:18:00'}
+Successfully logged message to Supabase. Response: [{'id': '9c7bd35a-9207-4d81-9843-183b99eb9f70', 'message': 'can you tell m about yourself ', 'sender': 'user', 'response': None, 'timestamp': '2025-03-24T17:18:00+00:00', 'visitor_id': 'v-1742816520726-n61i81th8p', 'visitor_name': 'Sachu'}]
+Logging chat message for visitor: v-1742816520726-n61i81th8p, name: Sachu
+Sending to Supabase: {'message': '', 'sender': 'bot', 'response': "Certainly! I'm Ciril Cyriac, a UX designer, product thinker, and technology enthusiast with a robust background in digital product design, embedded systems, and content creation. My professional journey involves designing user-centric experiences, especially in sectors like automotive, e-commerce, and technology-driven products. I have a sharp focus on crafting intuitive digital interfaces and integrating technology to enhance usability.\n\nBeyond UX design, I'm deeply passionate about electronics and hardware-software integration. I thrive on projects that fuse design, technology, and business, continually exploring new ways to monetize and scale digital and hardware solutions. I'm also actively engaged in filmmaking and content creation, using visual storytelling to educate and inspire audiences about technology, product design, and innovation.\n\nIn addition to my technical and creative pursuits, I have a keen interest in business strategy and investment, focusing on developing sustainable, high-value projects. My goal is to leverage my skills in design, technology, and content creation to forge impactful solutions that blend creativity with functionality.", 'visitor_id': 'v-1742816520726-n61i81th8p', 'visitor_name': 'Sachu', 'timestamp': '2025-03-24 17:18:00'}
+Successfully logged message to Supabase. Response: [{'id': 'b90e5011-1b2e-4a99-aeac-9ed19f590159', 'message': '', 'sender': 'bot', 'response': "Certainly! I'm Ciril Cyriac, a UX designer, product thinker, and technology enthusiast with a robust background in digital product design, embedded systems, and content creation. My professional journey involves designing user-centric experiences, especially in sectors like automotive, e-commerce, and technology-driven products. I have a sharp focus on crafting intuitive digital interfaces and integrating technology to enhance usability.\n\nBeyond UX design, I'm deeply passionate about electronics and hardware-software integration. I thrive on projects that fuse design, technology, and business, continually exploring new ways to monetize and scale digital and hardware solutions. I'm also actively engaged in filmmaking and content creation, using visual storytelling to educate and inspire audiences about technology, product design, and innovation.\n\nIn addition to my technical and creative pursuits, I have a keen interest in business strategy and investment, focusing on developing sustainable, high-value projects. My goal is to leverage my skills in design, technology, and content creation to forge impactful solutions that blend creativity with functionality.", 'timestamp': '2025-03-24T17:18:00+00:00', 'visitor_id': 'v-1742816520726-n61i81th8p', 'visitor_name': 'Sachu'}]
+INFO:     127.0.0.1:63817 - "POST /chat/ HTTP/1.1" 200 OK
+Getting chat history, limit: 1000, visitor_id: None
+Retrieved 10 messages from Supabase
+First message visitor_id: v-1742816520726-n61i81th8p
+INFO:     127.0.0.1:63822 - "GET /chat/history?limit=1000 HTTP/1.1" 200 OK
