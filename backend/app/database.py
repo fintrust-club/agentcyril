@@ -2,6 +2,8 @@ import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import time
+import json
+import uuid
 
 # Load environment variables
 load_dotenv()
@@ -32,46 +34,130 @@ except Exception as e:
 
 # In-memory storage as fallback
 in_memory_profile = DEFAULT_PROFILE.copy()
+
+# Try to load saved profile if it exists
+try:
+    if os.path.exists('profile_backup.json'):
+        with open('profile_backup.json', 'r') as f:
+            saved_profile = json.load(f)
+            in_memory_profile.update(saved_profile)
+            print("Loaded saved profile from profile_backup.json")
+except Exception as e:
+    print(f"Error loading saved profile: {e}")
+
 in_memory_messages = []
 
-def get_profile_data():
+def get_profile_data(user_id=None):
     """
     Get the profile data from Supabase or in-memory storage
+    If user_id is provided, try to match it with an existing profile
+    Otherwise, return the default profile (first one found)
     """
     try:
+        db_profile = None
         if supabase:
+            # For now, since we don't have a user_id column in the database,
+            # return the first profile regardless of user_id
             response = supabase.table("profiles").select("*").limit(1).execute()
+            
             if response.data and len(response.data) > 0:
-                return response.data[0]
+                print(f"Found profile: {response.data[0].get('id')}")
+                db_profile = response.data[0]
         
-        # Return in-memory profile if Supabase fails or is not available
-        return in_memory_profile
+        # Merge the database profile with the in-memory profile
+        # This ensures we have all fields available even if they're not in the database
+        result = {}
+        if db_profile:
+            result.update(db_profile)
+        
+        # Add name and location from in-memory profile if not present
+        if 'name' not in result and 'name' in in_memory_profile:
+            result['name'] = in_memory_profile['name']
+        
+        if 'location' not in result and 'location' in in_memory_profile:
+            result['location'] = in_memory_profile['location']
+            
+        # Add missing fields from in-memory profile
+        for key in ['bio', 'skills', 'experience', 'projects', 'interests']:
+            if key not in result or not result[key]:
+                result[key] = in_memory_profile.get(key, '')
+                
+        # If we still don't have a result, use in-memory profile
+        if not result:
+            print("Using in-memory profile")
+            result = in_memory_profile.copy()
+        
+        return result
     except Exception as e:
         print(f"Error fetching profile data: {e}")
-        return in_memory_profile
+        return in_memory_profile.copy()
 
-def update_profile_data(data):
+def save_profile_to_file():
+    """Save the in-memory profile to a file for persistence"""
+    try:
+        with open('profile_backup.json', 'w') as f:
+            json.dump(in_memory_profile, f, indent=2)
+        print("Saved in-memory profile to file for persistence")
+    except Exception as e:
+        print(f"Error saving profile to file: {e}")
+
+def update_profile_data(data, user_id=None):
     """
     Update the profile data in Supabase or in-memory storage
     """
     try:
         if supabase:
             print(f"Attempting to update profile in Supabase: {data.get('id')}")
+            
+            # Get the first profile in the database to update
+            response = supabase.table("profiles").select("*").limit(1).execute()
+            
+            existing_profile = None
+            if response.data and len(response.data) > 0:
+                existing_profile = response.data[0]
+                data["id"] = existing_profile["id"]  # Ensure we're updating the right profile
+                print(f"Found existing profile with ID: {existing_profile['id']}")
+            
             profile_id = data.get("id")
             if profile_id:
+                # Filter data to only include fields that exist in the database schema
+                filtered_data = {}
+                for key, value in data.items():
+                    # Skip 'name' and 'location' if they're not in the existing profile
+                    if key not in ['name', 'location'] or (existing_profile and key in existing_profile):
+                        filtered_data[key] = value
+                
                 # Update existing profile
                 print(f"Updating existing profile with ID: {profile_id}")
-                response = supabase.table("profiles").update(data).eq("id", profile_id).execute()
+                print(f"Using filtered data: {filtered_data}")
+                response = supabase.table("profiles").update(filtered_data).eq("id", profile_id).execute()
                 print(f"Supabase update response: {response.data}")
             else:
-                # Create new profile
+                # Create new profile, but only with columns that exist
                 print("Creating new profile in Supabase")
-                response = supabase.table("profiles").insert(data).execute()
+                # Start with basic fields that should exist in the database
+                filtered_data = {
+                    "bio": data.get("bio", ""),
+                    "skills": data.get("skills", ""),
+                    "experience": data.get("experience", ""),
+                    "projects": data.get("projects", ""),
+                    "interests": data.get("interests", "")
+                }
+                response = supabase.table("profiles").insert(filtered_data).execute()
                 print(f"Supabase insert response: {response.data}")
             
             if response.data:
                 print("Successfully updated profile in Supabase")
-                return response.data
+                
+                # Update the in-memory profile with ALL fields for vector DB
+                in_memory_profile.update(data)
+                print("Also updated in-memory profile for vector DB")
+                
+                # Save to file for persistence
+                save_profile_to_file()
+                
+                # Return the full data for vector DB
+                return data
             else:
                 print("No data returned from Supabase update")
         else:
@@ -80,48 +166,74 @@ def update_profile_data(data):
         # Update in-memory profile if Supabase fails or is not available
         in_memory_profile.update(data)
         print("Updated in-memory profile as fallback")
-        return [in_memory_profile]
+        
+        # Save to file for persistence
+        save_profile_to_file()
+        
+        return in_memory_profile
     except Exception as e:
         print(f"Error updating profile data: {e}")
         # Update in-memory profile as fallback
         in_memory_profile.update(data)
         print("Updated in-memory profile after error")
-        return [in_memory_profile]
+        
+        # Save to file for persistence
+        save_profile_to_file()
+        
+        return in_memory_profile
 
-def log_chat_message(message, sender, response=None, visitor_id="anonymous", visitor_name=None):
+def log_chat_message(message, sender, response=None, visitor_id=None, visitor_name=None, target_user_id=None):
     """
     Log a chat message to Supabase or in-memory storage
     """
     try:
-        # Ensure visitor_id is not None or empty
-        if not visitor_id or visitor_id.strip() == "":
-            visitor_id = "anonymous"
-            print("Warning: Empty visitor_id provided, using 'anonymous' instead")
+        # Generate a UUID for the message
+        message_id = str(uuid.uuid4())
         
-        # Create message data
+        # Create message data with all required fields
         data = {
+            "id": message_id,
             "message": message,
             "sender": sender,
             "response": response,
-            "visitor_id": visitor_id,
+            "visitor_id": visitor_id or "anonymous",  # Ensure visitor_id is never None
             "visitor_name": visitor_name,
+            "target_user_id": target_user_id,
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
         }
         
-        print(f"Logging chat message for visitor: {visitor_id}, name: {visitor_name}")
+        print(f"Logging chat message for visitor: {visitor_id}, name: {visitor_name}, target user: {target_user_id}")
         
         if supabase:
             # Log the data being sent to Supabase for debugging
             print(f"Sending to Supabase: {data}")
             
             try:
-                response = supabase.table("messages").insert(data).execute()
+                # Try to insert the message using a more robust approach
+                cleaned_data = {
+                    # Include only fields that are likely in the Supabase schema
+                    "id": message_id,
+                    "message": message,
+                    "sender": sender,
+                    "response": response,
+                    "visitor_id": visitor_id or "anonymous",
+                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+                }
+                
+                # Only add optional fields if they have values
+                if visitor_name:
+                    cleaned_data["visitor_name"] = visitor_name
+                if target_user_id:
+                    cleaned_data["target_user_id"] = target_user_id
+                
+                response = supabase.table("messages").insert(cleaned_data).execute()
                 
                 if response.data:
                     print(f"Successfully logged message to Supabase. Response: {response.data}")
                     return response.data
                 else:
                     print(f"No data returned from Supabase insert. Response: {response}")
+                    print("Falling back to in-memory storage")
             except Exception as supabase_error:
                 print(f"Supabase insert error: {supabase_error}")
                 print("Falling back to in-memory storage due to Supabase error")
@@ -129,36 +241,46 @@ def log_chat_message(message, sender, response=None, visitor_id="anonymous", vis
             print("Supabase client not available, using in-memory storage")
         
         # Add to in-memory storage if Supabase fails or is not available
-        message_with_id = {**data, "id": str(len(in_memory_messages) + 1)}
+        message_with_id = {**data, "id": message_id}
         in_memory_messages.append(message_with_id)
-        print("Added message to in-memory storage")
+        print(f"Added message to in-memory storage with ID: {message_id}")
+        
+        # Debug: Print how many messages are in in-memory storage
+        print(f"Total messages in in-memory storage: {len(in_memory_messages)}")
+        
         return [message_with_id]
     except Exception as e:
         print(f"Error logging chat message: {e}")
         try:
             # Try to add to in-memory storage as fallback
+            message_id = str(uuid.uuid4())
             message_with_id = {
+                "id": message_id,
                 "message": message,
                 "sender": sender,
                 "response": response,
                 "visitor_id": visitor_id or "anonymous",
                 "visitor_name": visitor_name,
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "id": str(len(in_memory_messages) + 1)
+                "target_user_id": target_user_id,
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
             }
             in_memory_messages.append(message_with_id)
-            print("Added message to in-memory storage after error")
+            print(f"Added message to in-memory storage after error with ID: {message_id}")
             return [message_with_id]
         except Exception as fallback_error:
             print(f"Error in fallback storage: {fallback_error}")
             return None
 
-def get_chat_history(limit=50, visitor_id=None):
+def get_chat_history(limit=50, visitor_id=None, target_user_id=None):
     """
     Get chat history from Supabase or in-memory storage
+    Can filter by visitor_id and/or target_user_id
     """
     try:
-        print(f"Getting chat history, limit: {limit}, visitor_id: {visitor_id}")
+        print(f"Getting chat history, limit: {limit}, visitor_id: {visitor_id}, target_user_id: {target_user_id}")
+        
+        # Initialize result array
+        result_messages = []
         
         if supabase:
             try:
@@ -169,6 +291,11 @@ def get_chat_history(limit=50, visitor_id=None):
                     print(f"Filtering chat history for visitor: {visitor_id}")
                     query = query.eq("visitor_id", visitor_id)
                 
+                # Filter by target user ID if provided
+                if target_user_id:
+                    print(f"Filtering chat history for target user: {target_user_id}")
+                    query = query.eq("target_user_id", target_user_id)
+                
                 response = query.limit(limit).execute()
                 
                 if response.data:
@@ -176,23 +303,52 @@ def get_chat_history(limit=50, visitor_id=None):
                     # DEBUG: Print first message to verify visitor_id is present
                     if response.data and len(response.data) > 0:
                         print(f"First message visitor_id: {response.data[0].get('visitor_id', 'MISSING')}")
-                    return response.data
+                    
+                    # Add Supabase messages to result
+                    result_messages.extend(response.data)
                 else:
                     print("No chat history found in Supabase")
             except Exception as supabase_error:
                 print(f"Error retrieving chat history from Supabase: {supabase_error}")
-                print("Falling back to in-memory storage")
+                print("Falling back to in-memory storage only")
         else:
-            print("Supabase client not available, using in-memory storage")
+            print("Supabase client not available, using in-memory storage only")
         
-        # Return in-memory messages if Supabase fails or is not available
-        filtered_messages = in_memory_messages
-        if visitor_id:
-            filtered_messages = [msg for msg in in_memory_messages if msg.get("visitor_id") == visitor_id]
-            print(f"Filtered in-memory messages for visitor {visitor_id}: found {len(filtered_messages)} messages")
+        # Add in-memory messages to the result (fallback or complementary)
+        if in_memory_messages:
+            print(f"Found {len(in_memory_messages)} messages in in-memory storage")
+            
+            # Filter in-memory messages
+            filtered_messages = in_memory_messages
+            
+            # Apply filters if provided
+            if visitor_id:
+                filtered_messages = [msg for msg in filtered_messages if msg.get("visitor_id") == visitor_id]
+                print(f"Filtered in-memory messages for visitor {visitor_id}: found {len(filtered_messages)} messages")
+            
+            if target_user_id:
+                filtered_messages = [msg for msg in filtered_messages if msg.get("target_user_id") == target_user_id]
+                print(f"Filtered in-memory messages for target user {target_user_id}: found {len(filtered_messages)} messages")
+            
+            # Add in-memory messages to result
+            result_messages.extend(filtered_messages)
+            
+            # Debug: Print some information about the in-memory messages
+            if filtered_messages:
+                print(f"First in-memory message: {filtered_messages[0]}")
         
-        sorted_messages = sorted(filtered_messages, key=lambda x: x.get("timestamp", ""), reverse=True)
-        return sorted_messages[:limit]
+        # Sort by timestamp
+        sorted_messages = sorted(
+            result_messages, 
+            key=lambda x: x.get("timestamp", ""), 
+            reverse=True
+        )
+        
+        # Limit the number of messages returned
+        limited_messages = sorted_messages[:limit]
+        
+        print(f"Returning {len(limited_messages)} total messages (combined from Supabase and in-memory)")
+        return limited_messages
     except Exception as e:
         print(f"Error getting chat history: {e}")
         return []
@@ -221,4 +377,41 @@ def verify_admin_login(username, password):
     except Exception as e:
         print(f"Error verifying admin login: {e}")
         # Fallback for demo purposes
-        return username == "admin" and password == "admin123" 
+        return username == "admin" and password == "admin123"
+
+def is_admin_user(user_id=None, email=None):
+    """
+    Check if a user is an admin based on user_id or email
+    """
+    try:
+        if not supabase:
+            print("Supabase client not available, admin check failed")
+            return False
+            
+        if not user_id and not email:
+            print("No user_id or email provided for admin check")
+            return False
+            
+        query = supabase.table("admin_users").select("*")
+        
+        # Build query conditions
+        conditions = []
+        if user_id:
+            conditions.append(f"user_id.eq.{user_id}")
+        if email:
+            conditions.append(f"email.eq.{email}")
+            
+        if conditions:
+            query = query.or_(",".join(conditions))
+            
+        response = query.limit(1).execute()
+        
+        if response.data and len(response.data) > 0:
+            print(f"Found admin user: {response.data[0]}")
+            return True
+            
+        print(f"No admin user found for user_id={user_id}, email={email}")
+        return False
+    except Exception as e:
+        print(f"Error checking admin user status: {e}")
+        return False 

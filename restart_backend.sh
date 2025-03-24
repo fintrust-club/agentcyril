@@ -3,6 +3,17 @@
 echo "=== Restarting Backend Server ==="
 echo "This will restart the backend server with the changes."
 
+# Kill any running uvicorn processes
+pkill -f uvicorn
+
+# Wait a moment for processes to terminate
+sleep 2
+
+# Start the backend server with debugging
+cd backend
+source venv/bin/activate
+python -m app.main --debug
+
 # Find the backend process
 echo "Finding backend process..."
 BACKEND_PID=$(ps aux | grep "uvicorn app.main:app" | grep -v grep | awk '{print $2}')

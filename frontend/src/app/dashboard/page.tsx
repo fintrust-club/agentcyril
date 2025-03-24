@@ -2,18 +2,28 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { profileApi, type ProfileData } from '@/utils/api';
+import { fetchProfileData, updateProfileData } from '@/utils/api';
+import { ProfileData } from '@/utils/types';
 import { AdminChatHistory } from '@/components/admin/chat-history';
-import AdminLogin from './login';
 import { supabaseAuth } from '@/utils/supabase';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Copy } from "lucide-react";
 
-export default function AdminPage() {
+export default function DashboardPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState<ProfileData>({
     bio: "Loading...",
     skills: "Loading...",
@@ -27,7 +37,8 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
-  const [adminUser, setAdminUser] = useState<{ id: string, email: string } | null>(null);
+  const [user, setUser] = useState<{ id: string, email: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -37,47 +48,36 @@ export default function AdminPage() {
         const session = await supabaseAuth.getSession();
         
         if (session) {
-          // Check if the user is authenticated (all authenticated users can access)
-          const isAuthenticated = await supabaseAuth.isAdmin();
+          // Any user with a session is authenticated
+          const currentUser = await supabaseAuth.getUser();
           
-          if (isAuthenticated) {
-            const user = await supabaseAuth.getUser();
+          if (currentUser) {
             setIsAuthenticated(true);
-            setAdminUser({ id: user.id, email: user.email || '' });
-            fetchProfileData(user.id);
+            setUser({ id: currentUser.id, email: currentUser.email || '' });
+            fetchProfileData(currentUser.id);
           } else {
-            setIsLoading(false);
+            // No user found, redirect to login
+            router.push('/login');
           }
         } else {
-          setIsLoading(false);
+          // No session, redirect to login
+          router.push('/login');
         }
       } catch (error) {
         console.error('Auth check error:', error);
         setIsLoading(false);
+        // On error, redirect to login
+        router.push('/login');
       }
     };
     
     checkAuth();
-  }, []);
-  
-  const handleLoginSuccess = async () => {
-    setIsAuthenticated(true);
-    // Get user after successful login
-    try {
-      const user = await supabaseAuth.getUser();
-      setAdminUser({ id: user.id, email: user.email || '' });
-      fetchProfileData(user.id);
-    } catch (error) {
-      console.error('Error getting user after login:', error);
-      fetchProfileData();
-    }
-  };
+  }, [router]);
   
   const handleLogout = async () => {
     try {
       await supabaseAuth.signOut();
-      setIsAuthenticated(false);
-      setAdminUser(null);
+      router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -86,7 +86,7 @@ export default function AdminPage() {
   const fetchProfileData = async (userId?: string) => {
     try {
       setIsLoading(true);
-      const data = await profileApi.getProfileData(userId);
+      const data = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/profile`).then(r => r.json());
       setFormData(data);
       setError(null);
     } catch (err) {
@@ -97,7 +97,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -112,16 +112,23 @@ export default function AdminPage() {
     setError(null);
     
     try {
-      // Call actual API to update data
-      await profileApi.updateProfileData(formData);
+      // Use direct fetch to update profile
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to update profile: ${response.status}`);
+      }
+      
       setSaveSuccess(true);
       
       // Refresh data from server to ensure we see the latest
-      if (adminUser) {
-        await fetchProfileData(adminUser.id);
-      } else {
-        await fetchProfileData();
-      }
+      await fetchProfileData();
     } catch (err) {
       console.error('Error saving data:', err);
       setError('Failed to save data. Please try again.');
@@ -131,16 +138,29 @@ export default function AdminPage() {
   };
 
   const handleRefresh = async () => {
-    if (adminUser) {
-      await fetchProfileData(adminUser.id);
-    } else {
-      await fetchProfileData();
-    }
+    await fetchProfileData();
   };
 
-  // If not authenticated, show login screen
+  const copyToClipboard = () => {
+    if (!user) return;
+    
+    const url = `${window.location.origin}/chat/${user.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  // If not authenticated, show loading while redirecting
   if (!isAuthenticated) {
-    return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-center">
+          <h1 className="text-xl font-medium">Loading...</h1>
+          <p className="text-muted-foreground">Please wait</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -148,10 +168,10 @@ export default function AdminPage() {
       <header className="sticky top-0 z-10 bg-background border-b py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-primary">Personal Dashboard</h1>
-            {adminUser && (
+            <h1 className="text-2xl font-bold text-primary">AIChat Dashboard</h1>
+            {user && (
               <p className="text-sm text-muted-foreground hidden md:block">
-                Logged in as: <span className="font-medium">{adminUser.email}</span>
+                Logged in as: <span className="font-medium">{user.email}</span>
               </p>
             )}
           </div>
@@ -160,9 +180,11 @@ export default function AdminPage() {
               {isLoading ? 'Refreshing...' : 'Refresh Data'}
             </Button>
             <ThemeToggle />
-            <Button variant="outline" asChild>
-              <Link href="/">Back to Chat</Link>
-            </Button>
+            {user && (
+              <Button variant="outline" asChild>
+                <Link href={`/chat/${user.id}`}>View My Chatbot</Link>
+              </Button>
+            )}
             <Button variant="destructive" onClick={handleLogout}>
               Logout
             </Button>
@@ -182,6 +204,9 @@ export default function AdminPage() {
               <TabsTrigger value="profile">
                 Profile Information
               </TabsTrigger>
+              <TabsTrigger value="share">
+                Share Your Chatbot
+              </TabsTrigger>
               <TabsTrigger value="chat">
                 Chat History
               </TabsTrigger>
@@ -191,9 +216,9 @@ export default function AdminPage() {
           <TabsContent value="profile">
             <Card className="shadow-md">
               <CardHeader>
-                <CardTitle>Update Portfolio Content</CardTitle>
+                <CardTitle>Update Your AI Chatbot Data</CardTitle>
                 <CardDescription>
-                  Manage the information used in your AI assistant responses.
+                  Manage the information your AI chatbot will use when responding to visitors
                 </CardDescription>
               </CardHeader>
               
@@ -216,6 +241,32 @@ export default function AdminPage() {
                   <div className="py-8 text-center">Loading profile data...</div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">
+                          Name <Badge variant="outline" className="ml-2">Personal</Badge>
+                        </label>
+                        <Input
+                          name="name"
+                          value={formData.name || ""}
+                          onChange={handleChange}
+                          placeholder="Your name"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">
+                          Location <Badge variant="outline" className="ml-2">Personal</Badge>
+                        </label>
+                        <Input
+                          name="location"
+                          value={formData.location || ""}
+                          onChange={handleChange}
+                          placeholder="Your location (e.g., City, Country)"
+                        />
+                      </div>
+                    </div>
+
                     <div className="space-y-2">
                       <label className="text-sm font-medium">
                         Bio <Badge variant="outline" className="ml-2">Personal</Badge>
@@ -301,6 +352,66 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
           
+          <TabsContent value="share">
+            <Card className="shadow-md">
+              <CardHeader>
+                <CardTitle>Share Your AI Chatbot</CardTitle>
+                <CardDescription>
+                  Get a personalized link to share your AI chatbot with others
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Your Chatbot Link</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Share this link with anyone to let them chat with your AI assistant
+                    </p>
+                    
+                    <div className="flex items-center mt-2">
+                      <Input 
+                        value={user ? `${window.location.origin}/chat/${user.id}` : 'Loading...'}
+                        readOnly
+                        className="flex-1"
+                      />
+                      <TooltipProvider>
+                        <Tooltip open={copied}>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="icon" 
+                              className="ml-2" 
+                              onClick={copyToClipboard}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Copied!</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 border-t">
+                    <h3 className="text-lg font-medium mb-2">Preview Your Chatbot</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      See how your chatbot looks to others
+                    </p>
+                    
+                    <Button asChild>
+                      <Link href={user ? `/chat/${user.id}` : '#'}>
+                        Open Chatbot Preview
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
           <TabsContent value="chat">
             <AdminChatHistory />
           </TabsContent>
@@ -309,7 +420,7 @@ export default function AdminPage() {
 
       <footer className="bg-muted py-4 mt-auto">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          Agent Ciril - Interactive AI Portfolio &copy; {new Date().getFullYear()}
+          AIChat - Your Personal AI Chatbot &copy; {new Date().getFullYear()}
         </div>
       </footer>
     </div>

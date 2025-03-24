@@ -46,18 +46,45 @@ portfolio_collection = chroma_client.get_or_create_collection(
     embedding_function=openai_ef
 )
 
-def add_profile_to_vector_db(profile_data):
+def add_profile_to_vector_db(profile_data, user_id=None):
     """
     Add profile data to the vector database
+    Note: user_id param is kept for compatibility but we use a single collection for now
     """
     try:
-        # Clear existing documents
-        portfolio_collection.delete(where={"category": {"$eq": "profile"}})
+        # For simplicity, we'll use a single collection for all profiles
+        collection_name = "portfolio_data"
+        print(f"Using collection name: {collection_name}")
+        
+        # Create or get the appropriate collection
+        collection = chroma_client.get_or_create_collection(
+            name=collection_name,
+            embedding_function=openai_ef
+        )
+        
+        # Clear existing documents from this collection
+        try:
+            collection.delete(where={"category": {"$eq": "profile"}})
+            print(f"Cleared existing documents from collection {collection_name}")
+        except Exception as clear_error:
+            print(f"Error clearing collection (may be empty): {clear_error}")
         
         # Format and add new documents
         documents = []
         metadatas = []
         ids = []
+        
+        # Add name
+        if profile_data.get("name"):
+            documents.append(profile_data["name"])
+            metadatas.append({"category": "profile", "subcategory": "name"})
+            ids.append("name")
+        
+        # Add location
+        if profile_data.get("location"):
+            documents.append(profile_data["location"])
+            metadatas.append({"category": "profile", "subcategory": "location"})
+            ids.append("location")
         
         # Add bio
         if profile_data.get("bio"):
@@ -91,38 +118,49 @@ def add_profile_to_vector_db(profile_data):
         
         # Add documents to collection
         if documents:
-            portfolio_collection.add(
+            collection.add(
                 documents=documents,
                 metadatas=metadatas,
                 ids=ids
             )
-            print(f"Successfully added {len(documents)} documents to vector database")
+            print(f"Successfully added {len(documents)} documents to vector database collection {collection_name}")
             return True
         return False
     except Exception as e:
         print(f"Error adding profile to vector database: {e}")
         return False
 
-def query_vector_db(query, n_results=3):
+def query_vector_db(query, n_results=3, user_id=None):
     """
     Query the vector database with the user's question
+    Note: user_id param is kept for compatibility but we use a single collection for now
     """
     try:
-        # Check if collection is empty
-        collection_count = portfolio_collection.count()
-        if collection_count == 0:
-            print("Warning: Vector database is empty. Adding default profile.")
-            from app.database import get_profile_data
-            default_profile = get_profile_data()
-            add_profile_to_vector_db(default_profile)
+        # Use a single collection for all users
+        collection_name = "portfolio_data"
+        print(f"Querying collection: {collection_name}")
         
-        # Query the collection
-        results = portfolio_collection.query(
-            query_texts=[query],
-            n_results=n_results
+        # Get or create the collection
+        collection = chroma_client.get_or_create_collection(
+            name=collection_name,
+            embedding_function=openai_ef
         )
         
-        print(f"Vector DB query returned {len(results['documents'][0]) if results['documents'] else 0} results")
+        # Check if collection is empty
+        collection_count = collection.count()
+        if collection_count == 0:
+            print(f"Warning: Collection {collection_name} is empty. Adding profile data.")
+            from app.database import get_profile_data
+            profile_data = get_profile_data()
+            add_profile_to_vector_db(profile_data)
+        
+        # Query the collection
+        results = collection.query(
+            query_texts=[query],
+            n_results=min(n_results, collection_count) if collection_count > 0 else n_results
+        )
+        
+        print(f"Vector DB query returned {len(results['documents'][0]) if results['documents'] else 0} results from collection {collection_name}")
         return results
     except Exception as e:
         print(f"Error querying vector database: {e}")
@@ -134,9 +172,10 @@ def query_vector_db(query, n_results=3):
             "documents": [[]]
         }
 
-def generate_ai_response(query, search_results):
+def generate_ai_response(query, search_results, profile_data=None):
     """
     Generate a response using OpenAI based on the query and search results
+    If profile_data is provided, use it to personalize the response
     """
     # Combine search results into context
     context = ""
@@ -144,29 +183,81 @@ def generate_ai_response(query, search_results):
         for i, doc in enumerate(search_results["documents"][0]):
             subcategory = search_results["metadatas"][0][i]["subcategory"]
             context += f"{subcategory.upper()}: {doc}\n\n"
+        print(f"[INFO] Found {len(search_results['documents'][0])} relevant context items from vector database")
     else:
         # If no results, use a default message
         context = "No specific information available. Please provide a general response."
-        print("Warning: No vector DB results to include in context")
+        print("[WARNING] No vector DB results to include in context - response will be limited")
     
-    # Create system prompt
+    # Extract name from profile data for better personalization
+    user_name = profile_data.get('name', '') if profile_data else ''
+    if not user_name and profile_data and profile_data.get('bio'):
+        # Try to extract name from bio if name field is empty
+        bio = profile_data.get('bio', '')
+        if 'I am ' in bio:
+            try:
+                name_part = bio.split('I am ')[1].split(' ')[0]
+                if len(name_part) > 2:  # Ensure it's likely a name, not just "a" or "an"
+                    user_name = name_part
+            except:
+                pass
+    
+    # Create a comprehensive profile context
+    profile_context = ""
+    if profile_data:
+        # Extract key information from profile for context
+        profile_context = f"""
+NAME: {profile_data.get('name', 'Not provided')}
+LOCATION: {profile_data.get('location', 'Not provided')}
+BIO: {profile_data.get('bio', 'Not provided')}
+SKILLS: {profile_data.get('skills', 'Not provided')}
+EXPERIENCE: {profile_data.get('experience', 'Not provided')}
+PROJECTS: {profile_data.get('projects', 'Not provided')}
+INTERESTS: {profile_data.get('interests', 'Not provided')}
+        """
+        print(f"[INFO] Added complete profile data to context ({len(profile_context.split())} words)")
+        
+        # Log a summary of available profile fields for debugging
+        available_fields = [field for field in ['name', 'location', 'bio', 'skills', 'experience', 'projects', 'interests'] 
+                          if profile_data.get(field)]
+        print(f"[INFO] Available profile fields: {', '.join(available_fields)}")
+    else:
+        print("[WARNING] No profile data available - responses will be generic")
+    
+    # Create a strongly worded system prompt that clearly instructs the AI to respond as the user
     system_prompt = f"""
-    You are a clone of Ciril Cyriac, made to talk to recruiters and people about his work, projects, skills, and interests. Your goal is to represent Ciril as authentically as possible—answering questions just like he would. Be confident, direct, and engaging. No robotic responses—talk like a real person. Keep it natural, honest, and to the point, while showing enthusiasm for the things he’s passionate about.
-    
-    {context}
-    
-    Only use information provided in the context. If you don't know the answer, say so politely.
+You are NOT an AI assistant. You ARE {user_name or "the person"} whose profile information is provided below.
+
+When responding, you MUST:
+1. Speak in the FIRST PERSON (I, me, my) as if you ARE this person.
+2. ONLY use the exact information provided in the context sections below.
+3. DO NOT invent, add, or make up ANY details that aren't explicitly mentioned in the provided profile information.
+4. If you don't have specific information to answer a question, say "I prefer not to discuss that topic" rather than making up a response.
+5. Match the tone and style that would be natural for a professional with this background.
+6. Never break character or refer to yourself as an AI.
+7. Never apologize for "not having information" - instead, redirect to what you do know from the profile.
+8. STICK STRICTLY to the information provided - do not elaborate with invented details.
+
+YOUR PROFILE INFORMATION:
+{profile_context}
+
+RELEVANT PROFILE SECTIONS THAT MATCH THIS QUERY:
+{context}
+
+Remember: You ARE this person, but you can ONLY respond with information that is explicitly mentioned in the above sections.
+If asked about something not covered in the profile information, politely redirect or state you prefer to focus on the topics listed.
     """
     
     # Generate response
     try:
+        print("[INFO] Sending chat completion request to OpenAI with strict context-only instructions")
         response = openai.chat.completions.create(
             model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": query}
             ],
-            temperature=0.7,
+            temperature=0.3,  # Lower temperature to minimize creativity
             max_tokens=500
         )
         return response.choices[0].message.content

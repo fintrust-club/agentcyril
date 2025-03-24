@@ -1,20 +1,23 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Header, Query
 from typing import Optional
 from datetime import datetime
 
 from app import models
 from app.database import get_profile_data, update_profile_data
 from app.embeddings import add_profile_to_vector_db
+from app.routes.admin import verify_admin_token
 
 router = APIRouter()
 
 @router.get("/", response_model=models.ProfileData)
-async def get_profile():
+async def get_profile(user_id: Optional[str] = Query(None, description="Specific user profile to retrieve")):
     """
     Get the profile data
+    If user_id is provided, get that specific user's profile
+    Otherwise, return the default profile
     """
     try:
-        profile_data = get_profile_data()
+        profile_data = get_profile_data(user_id=user_id)
         if not profile_data:
             # Return a default profile if none exists
             return models.ProfileData(
@@ -34,9 +37,12 @@ async def get_profile():
         )
 
 @router.put("/", response_model=models.ProfileData)
-async def update_profile(profile_data: models.ProfileData):
+async def update_profile(
+    profile_data: models.ProfileData, 
+    user = Depends(verify_admin_token),
+):
     """
-    Update the profile data
+    Update the profile data for the authenticated user
     """
     try:
         # Convert to dict for database
@@ -45,9 +51,9 @@ async def update_profile(profile_data: models.ProfileData):
         # Add/update timestamp for updating
         data_dict["updated_at"] = datetime.utcnow().isoformat()
         
-        # Update in database
-        print(f"Updating profile with data: {data_dict}")
-        updated_data = update_profile_data(data_dict)
+        # Update in database with the authenticated user's ID
+        print(f"Updating profile for user {user.id} with data: {data_dict}")
+        updated_data = update_profile_data(data_dict, user_id=user.id)
         if not updated_data:
             raise HTTPException(
                 status_code=500,
@@ -55,7 +61,7 @@ async def update_profile(profile_data: models.ProfileData):
             )
         
         # Add to vector database for search
-        vector_update_success = add_profile_to_vector_db(data_dict)
+        vector_update_success = add_profile_to_vector_db(data_dict, user_id=user.id)
         if not vector_update_success:
             print("Warning: Failed to update vector database")
         

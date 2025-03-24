@@ -19,38 +19,102 @@ type UserThread = {
 };
 
 export function AdminChatHistory() {
-  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
-  const [userThreads, setUserThreads] = useState<UserThread[]>([]);
+  const [chatHistory, setChatHistory] = useState<any[]>([]);
+  const [visitorThreads, setVisitorThreads] = useState<UserThread[]>([]);
+  const [selectedVisitor, setSelectedVisitor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string | null>(null);
 
+  // Fetch chat history on component mount
   useEffect(() => {
     fetchChatHistory();
   }, []);
 
-  const fetchChatHistory = async () => {
-    try {
-      setIsLoading(true);
-      const response = await chatApi.getAllChatHistory(1000);
+  // Process chat history into visitor threads
+  useEffect(() => {
+    if (chatHistory && chatHistory.length > 0) {
+      console.log(`Processing ${chatHistory.length} messages into visitor threads...`);
+      const threads: { [key: string]: UserThread } = {};
       
-      // Sort all messages by timestamp
-      const sortedHistory = response.history.sort((a: ChatHistoryItem, b: ChatHistoryItem) => 
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      // Group messages by visitor
+      chatHistory.forEach(item => {
+        // Ensure item has required fields
+        if (!item) return;
+        
+        const visitorId = item.visitor_id || 'unknown';
+        
+        if (!threads[visitorId]) {
+          console.log(`Creating new thread for visitor: ${visitorId}, name: ${item.visitor_name || 'unnamed'}`);
+          threads[visitorId] = {
+            visitorId,
+            visitorName: item.visitor_name,
+            messages: [],
+            lastActive: new Date(item.timestamp || Date.now()),
+            messageCount: 0,
+          };
+        }
+        
+        threads[visitorId].messages.push(item);
+        threads[visitorId].messageCount += 1;
+        
+        // Update last active timestamp if more recent
+        const messageDate = new Date(item.timestamp || Date.now());
+        if (messageDate > threads[visitorId].lastActive) {
+          threads[visitorId].lastActive = messageDate;
+        }
+      });
+      
+      // Sort messages by timestamp within each thread
+      Object.values(threads).forEach(thread => {
+        thread.messages.sort((a, b) => {
+          const dateA = new Date(a.timestamp || 0).getTime();
+          const dateB = new Date(b.timestamp || 0).getTime();
+          return dateA - dateB;
+        });
+      });
+      
+      // Convert to array and sort by last active (most recent first)
+      const threadsArray = Object.values(threads).sort((a, b) => 
+        b.lastActive.getTime() - a.lastActive.getTime()
       );
       
-      setChatHistory(sortedHistory);
-      
-      // Process the data to create threads by visitor
-      const threads = processThreads(sortedHistory);
-      setUserThreads(threads);
-      
-      // Set active tab to the most recent conversation if none is selected
-      if (!activeTab && threads.length > 0) {
-        setActiveTab(threads[0].visitorId);
+      console.log(`Created ${threadsArray.length} visitor threads`);
+      if (threadsArray.length > 0) {
+        console.log(`First thread: Visitor ${threadsArray[0].visitorId} with ${threadsArray[0].messageCount} messages`);
       }
       
+      setVisitorThreads(threadsArray);
+      
+      // Select the first visitor if none is selected
+      if (threadsArray.length > 0 && !selectedVisitor) {
+        console.log(`Selecting visitor: ${threadsArray[0].visitorId}`);
+        setSelectedVisitor(threadsArray[0].visitorId);
+      }
+    } else {
+      console.log('No chat history to process');
+      setVisitorThreads([]);
+    }
+  }, [chatHistory, selectedVisitor]);
+
+  // Function to fetch chat history
+  const fetchChatHistory = async () => {
+    try {
+      console.log("Fetching chat history...");
+      setIsLoading(true);
       setError(null);
+      
+      // Use the chatApi service instead of direct fetch
+      const messagesArray = await chatApi.getAllChatHistory(1000);
+      console.log(`Retrieved ${messagesArray.length} messages from chat history API`);
+      
+      if (messagesArray.length > 0) {
+        console.log('First few messages:', messagesArray.slice(0, 2));
+      } else {
+        console.log("No chat history found. Check if messages are being saved properly.");
+      }
+      
+      // Update state with the messages
+      setChatHistory(messagesArray);
     } catch (err) {
       console.error('Error fetching chat history:', err);
       setError('Failed to load chat history.');
@@ -59,112 +123,48 @@ export function AdminChatHistory() {
     }
   };
 
-  const processThreads = (messages: ChatHistoryItem[]): UserThread[] => {
-    // Group messages by visitor
-    const threadMap = new Map<string, ChatHistoryItem[]>();
-    const visitorNames = new Map<string, string | undefined>();
-    const lastActiveTimes = new Map<string, Date>();
-    const messageCounts = new Map<string, number>();
-    
-    messages.forEach(message => {
-      const visitorId = message.visitor_id;
-      
-      // Track visitor names
-      if (message.visitor_name && !visitorNames.has(visitorId)) {
-        visitorNames.set(visitorId, message.visitor_name);
-      }
-      
-      // Add message to appropriate thread
-      if (!threadMap.has(visitorId)) {
-        threadMap.set(visitorId, []);
-        messageCounts.set(visitorId, 0);
-      }
-      
-      threadMap.get(visitorId)?.push(message);
-      
-      // Count user messages
-      if (message.sender === 'user' && message.message && message.message.trim() !== '') {
-        messageCounts.set(visitorId, (messageCounts.get(visitorId) || 0) + 1);
-      }
-      
-      // Track most recent activity
-      const messageTime = new Date(message.timestamp);
-      if (!lastActiveTimes.has(visitorId) || messageTime > lastActiveTimes.get(visitorId)!) {
-        lastActiveTimes.set(visitorId, messageTime);
-      }
-    });
-    
-    // Convert map to array of UserThread objects
-    const threads: UserThread[] = Array.from(threadMap.entries()).map(([visitorId, messages]) => ({
-      visitorId,
-      visitorName: visitorNames.get(visitorId),
-      messages: messages,
-      lastActive: lastActiveTimes.get(visitorId) || new Date(0),
-      messageCount: messageCounts.get(visitorId) || 0
-    }));
-    
-    // Sort threads by most recently active
-    threads.sort((a, b) => b.lastActive.getTime() - a.lastActive.getTime());
-    
-    return threads;
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'Unknown';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    } catch (e) {
+      return dateString;
+    }
   };
 
+  const getSelectedVisitorThread = () => {
+    if (!selectedVisitor) return null;
+    return visitorThreads.find(thread => thread.visitorId === selectedVisitor);
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    if (!dateString) return '';
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch (e) {
+      return '';
+    }
+  };
+
+  // Function to handle refresh button click
   const handleRefresh = () => {
+    console.log("Refresh button clicked");
     fetchChatHistory();
   };
 
-  const getDisplayName = (thread: UserThread): string => {
-    return thread.visitorName || `Visitor (${thread.visitorId.substring(0, 8)})`;
-  };
-
-  const formatRelativeTime = (timestamp: string): string => {
-    try {
-      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
-    } catch (e) {
-      return 'Unknown time';
-    }
-  };
-  
-  const formatDateTime = (timestamp: string): string => {
-    try {
-      const date = new Date(timestamp);
-      return format(date, 'MMM d, yyyy h:mm a');
-    } catch (e) {
-      return 'Unknown date';
-    }
-  };
-
-  const getThreadSummary = (thread: UserThread): string => {
-    const userMessages = thread.messages.filter(m => m.sender === 'user' && m.message && m.message.trim() !== '');
-    if (userMessages.length === 0) return "No messages";
-    
-    const lastMessage = userMessages[userMessages.length - 1];
-    const truncated = lastMessage.message.length > 30 
-      ? `${lastMessage.message.substring(0, 30)}...` 
-      : lastMessage.message;
-    
-    return truncated;
-  };
-
-  const getMessageContent = (message: ChatHistoryItem): string => {
-    if (message.sender === 'user') {
-      return message.message;
-    } else {
-      return message.response || '';
-    }
-  };
-
   return (
-    <Card className="shadow-md">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+    <Card className="shadow-md max-w-6xl mx-auto">
+      <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Chat Interactions</CardTitle>
-          <CardDescription>View complete conversation threads with visitors</CardDescription>
+          <CardTitle>Chat History</CardTitle>
+          <CardDescription>
+            View conversations with your AI chatbot
+          </CardDescription>
         </div>
         <Button 
           variant="outline" 
-          size="sm" 
-          onClick={handleRefresh}
+          onClick={handleRefresh} 
           disabled={isLoading}
         >
           {isLoading ? 'Loading...' : 'Refresh'}
@@ -173,127 +173,108 @@ export function AdminChatHistory() {
       
       <CardContent>
         {error && (
-          <div className="mb-4 p-3 rounded-md bg-red-50 border border-red-200 text-red-700">
+          <div className="mb-6 p-4 rounded-md bg-red-50 border border-red-200 text-red-700">
+            <p className="font-medium">Error</p>
             <p className="text-sm">{error}</p>
           </div>
         )}
         
         {isLoading ? (
-          <div className="text-center py-8">Loading chat threads...</div>
-        ) : userThreads.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">No chat conversations found.</div>
+          <div className="py-8 text-center">Loading chat history...</div>
+        ) : visitorThreads.length === 0 ? (
+          <div className="py-8 space-y-4">
+            <div className="text-center text-muted-foreground">
+              No chat history available. Try sending a message in the chat first.
+            </div>
+            {/* Debug information - only shown when there are no threads */}
+            <div className="p-4 border rounded-md bg-muted/20 text-xs overflow-auto max-h-60">
+              <p className="font-medium mb-2">Debug Information:</p>
+              <p>Raw messages count: {chatHistory ? chatHistory.length : 0}</p>
+              {chatHistory && chatHistory.length > 0 ? (
+                <div>
+                  <p>First message sample:</p>
+                  <pre className="mt-2 p-2 bg-slate-800 text-slate-200 rounded overflow-auto">
+                    {JSON.stringify(chatHistory[0], null, 2)}
+                  </pre>
+                </div>
+              ) : (
+                <p>No messages received from API.</p>
+              )}
+            </div>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Left sidebar: List of conversations */}
-            <div className="col-span-1 border rounded-md">
-              <div className="p-3 border-b">
-                <h3 className="font-medium">Conversations</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[500px] md:h-[600px]">
+            {/* Visitors List */}
+            <div className="border rounded-lg overflow-hidden md:col-span-1">
+              <div className="bg-muted/50 p-3 border-b">
+                <h3 className="font-medium">Visitors ({visitorThreads.length})</h3>
               </div>
-              
-              <ScrollArea className="h-[500px]">
-                <div className="px-1">
-                  {userThreads.map(thread => (
+              <ScrollArea className="h-[200px] md:h-[550px]">
+                <div className="p-2">
+                  {visitorThreads.map((thread) => (
                     <div 
                       key={thread.visitorId}
-                      className={`p-3 border-b cursor-pointer hover:bg-muted/50 rounded-sm transition-colors ${
-                        activeTab === thread.visitorId ? 'bg-muted' : ''
+                      onClick={() => setSelectedVisitor(thread.visitorId)}
+                      className={`p-3 rounded-lg mb-2 cursor-pointer hover:bg-muted/50 ${
+                        selectedVisitor === thread.visitorId ? 'bg-muted/50 border-primary' : 'bg-background'
                       }`}
-                      onClick={() => setActiveTab(thread.visitorId)}
                     >
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-8 w-8">
                             <AvatarFallback>
-                              {thread.visitorName ? thread.visitorName[0].toUpperCase() : 'V'}
+                              {(thread.visitorName?.[0] || 'V').toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="font-medium">{getDisplayName(thread)}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {formatRelativeTime(thread.lastActive.toISOString())}
-                            </div>
+                            <p className="font-medium text-sm">
+                              {thread.visitorName || `Visitor ${thread.visitorId.substring(0, 8)}`}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatTimeAgo(thread.lastActive.toISOString())}
+                            </p>
                           </div>
                         </div>
                         <Badge variant="outline" className="text-xs">
                           {thread.messageCount}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {getThreadSummary(thread)}
-                      </p>
                     </div>
                   ))}
                 </div>
               </ScrollArea>
             </div>
             
-            {/* Right side: Conversation thread */}
-            <div className="col-span-1 md:col-span-2 border rounded-md">
-              {activeTab ? (
-                <>
-                  {userThreads.filter(t => t.visitorId === activeTab).map(thread => (
-                    <div key={thread.visitorId} className="flex flex-col h-[500px]">
-                      <div className="p-3 border-b flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>
-                              {thread.visitorName ? thread.visitorName[0].toUpperCase() : 'V'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium">{getDisplayName(thread)}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {thread.messageCount} messages • Active {formatRelativeTime(thread.lastActive.toISOString())}
-                            </div>
-                          </div>
+            {/* Chat Thread */}
+            <div className="border rounded-lg overflow-hidden md:col-span-2">
+              <div className="bg-muted/50 p-3 border-b">
+                <h3 className="font-medium">
+                  {getSelectedVisitorThread()?.visitorName || 
+                   `Visitor ${getSelectedVisitorThread()?.visitorId.substring(0, 8) || ''}`}
+                </h3>
+              </div>
+              <ScrollArea className="h-[280px] md:h-[550px]">
+                <div className="p-4 space-y-4">
+                  {getSelectedVisitorThread()?.messages.map((item, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="bg-muted/40 rounded-lg p-3 mr-12">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs font-medium">Visitor</p>
+                          <p className="text-xs text-muted-foreground">{formatDate(item.timestamp)}</p>
                         </div>
+                        <p className="text-sm">{item.message}</p>
                       </div>
                       
-                      <ScrollArea className="flex-1 p-4 bg-muted/10">
-                        <div className="space-y-6">
-                          {thread.messages.map((message, index) => {
-                            const isUser = message.sender === 'user';
-                            const content = getMessageContent(message);
-                            
-                            // Skip empty messages
-                            if (!content || content.trim() === '') return null;
-                            
-                            return (
-                              <div key={message.id} className={index !== 0 ? 'pt-2' : ''}>
-                                <div className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
-                                  <span className="font-medium">
-                                    {isUser ? getDisplayName(thread) : 'AI Assistant'}
-                                  </span>
-                                  <span>•</span>
-                                  <span>{formatDateTime(message.timestamp)}</span>
-                                </div>
-                                
-                                <div className={`flex ${isUser ? 'justify-start' : 'justify-end'}`}>
-                                  <div 
-                                    className={`max-w-[85%] rounded-lg p-3 ${
-                                      isUser 
-                                        ? 'bg-primary text-primary-foreground' 
-                                        : 'bg-secondary/30 text-secondary-foreground'
-                                    }`}
-                                  >
-                                    <p className="text-sm whitespace-pre-wrap">
-                                      {content}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
+                      <div className="bg-primary/5 rounded-lg p-3 ml-12">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs font-medium">AI Response</p>
                         </div>
-                      </ScrollArea>
+                        <p className="text-sm">{item.response}</p>
+                      </div>
                     </div>
                   ))}
-                </>
-              ) : (
-                <div className="flex h-[500px] items-center justify-center text-muted-foreground">
-                  Select a conversation to view
                 </div>
-              )}
+              </ScrollArea>
             </div>
           </div>
         )}

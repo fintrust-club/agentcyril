@@ -24,12 +24,15 @@ CREATE TABLE IF NOT EXISTS messages (
   timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create admin users table
-CREATE TABLE IF NOT EXISTS admin_users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  username TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- Update admin_users table to use email authentication
+DROP TABLE IF EXISTS admin_users;
+CREATE TABLE admin_users (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  email TEXT UNIQUE NOT NULL,
+  user_id UUID UNIQUE, -- Supabase Auth user ID
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create initial profile entry if not exists
@@ -41,15 +44,6 @@ SELECT
   'AI-powered portfolio system, real-time analytics dashboard, natural language processing application',
   'AI, machine learning, web development, reading sci-fi, hiking'
 WHERE NOT EXISTS (SELECT 1 FROM profiles LIMIT 1);
-
--- Create initial admin user (password should be changed after first login)
--- Default password: admin123 (change this immediately)
-INSERT INTO admin_users (username, password_hash)
-SELECT 
-  'admin',
-  -- This is a placeholder hash - in production, use proper password hashing
-  'admin123'
-WHERE NOT EXISTS (SELECT 1 FROM admin_users LIMIT 1);
 
 -- Drop existing RLS policies if they exist
 DROP POLICY IF EXISTS "Allow anonymous read access to profiles" ON profiles;
@@ -89,15 +83,29 @@ CREATE POLICY "Allow users to read their own messages"
   ON messages FOR SELECT 
   USING (true);
 
--- Create policies for admin_users table
-CREATE POLICY "Allow admin users to authenticate"
-  ON admin_users FOR SELECT
-  USING (true);
+-- Create policy for admin_users table
+DROP POLICY IF EXISTS "Admin users access control" ON admin_users;
+CREATE POLICY "Admin users access control" ON admin_users
+    FOR SELECT
+    USING (auth.uid() = user_id);
+
+-- Create policy to allow service_role to insert into admin_users
+DROP POLICY IF EXISTS "Service role can insert admin users" ON admin_users;
+CREATE POLICY "Service role can insert admin users" ON admin_users
+    FOR INSERT
+    WITH CHECK (auth.jwt() ->> 'role' = 'service_role' OR auth.jwt() ->> 'role' = 'anon');
+    
+-- Create policy to allow authenticated users to update their own admin user
+DROP POLICY IF EXISTS "Admin users can update their own data" ON admin_users;
+CREATE POLICY "Admin users can update their own data" ON admin_users
+    FOR UPDATE
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- Grant access to the tables
 GRANT SELECT, INSERT, UPDATE, DELETE ON profiles TO anon, authenticated, service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON messages TO anon, authenticated, service_role;
-GRANT SELECT ON admin_users TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE ON admin_users TO anon, authenticated, service_role;
 
 -- Update messages table with visitor identification
 ALTER TABLE IF EXISTS messages
@@ -106,43 +114,6 @@ ADD COLUMN IF NOT EXISTS visitor_name TEXT;
 
 -- Create index for faster visitor filtering
 CREATE INDEX IF NOT EXISTS idx_messages_visitor_id ON messages(visitor_id);
-
--- Create admin_users table if it doesn't exist
-CREATE TABLE IF NOT EXISTS admin_users (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  username TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Add a default admin user (password: admin123)
-INSERT INTO admin_users (username, password_hash)
-VALUES ('admin', 'admin123')
-ON CONFLICT (username) DO NOTHING;
-
--- Create appropriate security policies
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
-
--- Create policy for messages table
-DROP POLICY IF EXISTS "Allow public read access to messages" ON messages;
-CREATE POLICY "Allow public read access to messages" ON messages
-    FOR SELECT 
-    USING (true);
-
-DROP POLICY IF EXISTS "Allow public insert access to messages" ON messages;
-CREATE POLICY "Allow public insert access to messages" ON messages
-    FOR INSERT
-    WITH CHECK (true);
-
--- Create policy for admin_users table
-DROP POLICY IF EXISTS "Admin users can only view their own data" ON admin_users;
-CREATE POLICY "Admin users can only view their own data" ON admin_users
-    FOR SELECT
-    USING (auth.uid() = id);
-
--- Make sure extension for UUID is available
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Ensure timestamps are properly formatted
 ALTER TABLE IF EXISTS messages
