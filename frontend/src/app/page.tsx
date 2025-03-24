@@ -4,6 +4,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 type Message = {
   id: string;
@@ -92,21 +97,21 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-b from-primary-50 to-white">
-      <header className="bg-white shadow-sm py-4">
+    <div className="flex flex-col h-screen bg-gradient-to-b from-muted/50 to-background">
+      <header className="sticky top-0 z-10 bg-background border-b py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary-700">Agent Ciril</h1>
+          <h1 className="text-2xl font-bold text-primary">Agent Ciril</h1>
           <nav>
-            <Link href="/admin" className="text-gray-600 hover:text-primary-600">
-              Admin
-            </Link>
+            <Button variant="ghost" asChild>
+              <Link href="/admin">Admin</Link>
+            </Button>
           </nav>
         </div>
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-8 flex flex-col">
-        <div className="flex-1 overflow-y-auto mb-4 card p-4">
-          <div className="space-y-4">
+        <Card className="flex-1 overflow-y-auto mb-4 p-0">
+          <CardContent className="p-4 space-y-4">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -114,53 +119,68 @@ export default function Home() {
                   message.sender === 'user' ? 'justify-end' : 'justify-start'
                 }`}
               >
+                {message.sender === 'bot' && (
+                  <Avatar className="mr-2 h-8 w-8">
+                    <AvatarImage src="/bot-avatar.png" alt="Bot" />
+                    <AvatarFallback>AI</AvatarFallback>
+                  </Avatar>
+                )}
                 <div
                   className={`max-w-3xl p-4 rounded-lg ${
                     message.sender === 'user'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-white border border-gray-200 dark:bg-gray-700 dark:text-white'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted/70'
                   }`}
                 >
-                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                  <ReactMarkdown className="prose prose-sm">{message.content}</ReactMarkdown>
                 </div>
+                {message.sender === 'user' && (
+                  <Avatar className="ml-2 h-8 w-8">
+                    <AvatarImage src="/user-avatar.png" alt="User" />
+                    <AvatarFallback>You</AvatarFallback>
+                  </Avatar>
+                )}
               </div>
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="max-w-3xl p-4 rounded-lg bg-white border border-gray-200 dark:bg-gray-700 dark:text-white">
+                <Avatar className="mr-2 h-8 w-8">
+                  <AvatarImage src="/bot-avatar.png" alt="Bot" />
+                  <AvatarFallback>AI</AvatarFallback>
+                </Avatar>
+                <div className="max-w-3xl p-4 rounded-lg bg-muted/70">
                   <div className="flex space-x-2">
-                    <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"></div>
-                    <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                    <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce"></div>
+                    <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                   </div>
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <form onSubmit={handleSendMessage} className="flex space-x-2">
-          <input
+          <Input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="input flex-1"
+            className="flex-1"
             placeholder="Ask a question..."
             disabled={isLoading}
           />
-          <button
+          <Button
             type="submit"
-            className="btn btn-primary"
             disabled={isLoading || !input.trim()}
           >
             Send
-          </button>
+          </Button>
         </form>
       </main>
 
-      <footer className="bg-gray-100 py-4 dark:bg-gray-800 dark:text-white">
-        <div className="container mx-auto px-4 text-center text-sm text-gray-600 dark:text-gray-300">
+      <footer className="bg-muted py-4">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           Agent Ciril - Interactive AI Portfolio &copy; {new Date().getFullYear()}
         </div>
       </footer>

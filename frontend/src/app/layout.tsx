@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import '../styles/globals.css';
 import { Inter } from 'next/font/google';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -28,6 +29,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <QueryClientProvider client={queryClient}>
           <main className="min-h-screen flex flex-col">{children}</main>
+          <Toaster />
         </QueryClientProvider>
       </body>
     </html>

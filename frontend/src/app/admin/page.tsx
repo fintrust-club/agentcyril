@@ -2,6 +2,10 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 
 type FormData = {
   bio: string;
@@ -50,12 +54,12 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm py-4">
+    <div className="min-h-screen bg-muted/50">
+      <header className="sticky top-0 z-10 bg-background border-b py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary-700">Agent Ciril Admin</h1>
+          <h1 className="text-2xl font-bold text-primary">Agent Ciril Admin</h1>
           <nav>
-            <Link href="/" className="text-gray-600 hover:text-primary-600">
+            <Link href="/" className="text-muted-foreground hover:text-primary">
               Back to Chat
             </Link>
           </nav>
@@ -63,97 +67,104 @@ export default function AdminPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Update Portfolio Content</h2>
+        <Card className="max-w-3xl mx-auto">
+          <CardHeader>
+            <CardTitle>Update Portfolio Content</CardTitle>
+            <CardDescription>
+              Manage the information used in your AI assistant responses.
+            </CardDescription>
+          </CardHeader>
           
-          {saveSuccess && (
-            <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md">
-              Content updated successfully!
-            </div>
-          )}
+          <CardContent>
+            {saveSuccess && (
+              <div className="mb-6 p-3 bg-green-100 text-green-700 rounded-md">
+                Content updated successfully!
+              </div>
+            )}
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Bio
+                </label>
+                <Textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleChange}
+                  rows={3}
+                  className="resize-none"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Skills
+                </label>
+                <Textarea
+                  name="skills"
+                  value={formData.skills}
+                  onChange={handleChange}
+                  rows={3}
+                  className="resize-none"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Experience
+                </label>
+                <Textarea
+                  name="experience"
+                  value={formData.experience}
+                  onChange={handleChange}
+                  rows={3}
+                  className="resize-none"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Projects
+                </label>
+                <Textarea
+                  name="projects"
+                  value={formData.projects}
+                  onChange={handleChange}
+                  rows={4}
+                  className="resize-none"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Interests & Hobbies
+                </label>
+                <Textarea
+                  name="interests"
+                  value={formData.interests}
+                  onChange={handleChange}
+                  rows={2}
+                  className="resize-none"
+                  required
+                />
+              </div>
+            </form>
+          </CardContent>
           
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Bio
-              </label>
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                rows={3}
-                className="input"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Skills
-              </label>
-              <textarea
-                name="skills"
-                value={formData.skills}
-                onChange={handleChange}
-                rows={3}
-                className="input"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Experience
-              </label>
-              <textarea
-                name="experience"
-                value={formData.experience}
-                onChange={handleChange}
-                rows={3}
-                className="input"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Projects
-              </label>
-              <textarea
-                name="projects"
-                value={formData.projects}
-                onChange={handleChange}
-                rows={4}
-                className="input"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Interests & Hobbies
-              </label>
-              <textarea
-                name="interests"
-                value={formData.interests}
-                onChange={handleChange}
-                rows={2}
-                className="input"
-                required
-              />
-            </div>
-            
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={isSaving}
-              >
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </form>
-        </div>
+          <CardFooter className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={isSaving}
+              onClick={handleSubmit}
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </CardFooter>
+        </Card>
       </main>
     </div>
   );
