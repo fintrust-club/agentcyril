@@ -1,30 +1,45 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-
-type FormData = {
-  bio: string;
-  skills: string;
-  experience: string;
-  projects: string;
-  interests: string;
-};
+import { ThemeToggle } from '@/components/theme-toggle';
+import { profileApi, type ProfileData } from '@/utils/api';
 
 export default function AdminPage() {
-  const [formData, setFormData] = useState<FormData>({
-    bio: "I'm a software engineer with a passion for building AI and web applications. I specialize in full-stack development and have experience across the entire development lifecycle.",
-    skills: "JavaScript, TypeScript, React, Node.js, Python, FastAPI, PostgreSQL, ChromaDB, Supabase, Next.js, TailwindCSS",
-    experience: "5+ years of experience in full-stack development, with a focus on building AI-powered applications and responsive web interfaces.",
-    projects: "AI-powered portfolio system, real-time analytics dashboard, natural language processing application",
-    interests: "AI, machine learning, web development, reading sci-fi, hiking"
+  const [formData, setFormData] = useState<ProfileData>({
+    bio: "Loading...",
+    skills: "Loading...",
+    experience: "Loading...",
+    projects: "Loading...",
+    interests: "Loading..."
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load profile data on mount
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await profileApi.getProfileData();
+        setFormData(data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch profile data:', err);
+        setError('Failed to load profile data. Using default values.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -38,36 +53,36 @@ export default function AdminPage() {
     e.preventDefault();
     setIsSaving(true);
     setSaveSuccess(false);
+    setError(null);
     
     try {
-      // This would be a real API call to update data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log('Saved data:', formData);
+      // Call actual API to update data
+      await profileApi.updateProfileData(formData);
       setSaveSuccess(true);
-    } catch (error) {
-      console.error('Error saving data:', error);
-      alert('Failed to save data. Please try again.');
+    } catch (err) {
+      console.error('Error saving data:', err);
+      setError('Failed to save data. Please try again.');
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-muted/50">
+    <div className="flex flex-col h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background border-b py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-primary">Agent Ciril Admin</h1>
-          <nav>
-            <Link href="/" className="text-muted-foreground hover:text-primary">
-              Back to Chat
-            </Link>
+          <nav className="flex items-center space-x-4">
+            <ThemeToggle />
+            <Button variant="outline" asChild>
+              <Link href="/">Back to Chat</Link>
+            </Button>
           </nav>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <Card className="max-w-3xl mx-auto">
+      <main className="flex-1 container mx-auto px-4 py-6 flex flex-col">
+        <Card className="max-w-3xl mx-auto shadow-md">
           <CardHeader>
             <CardTitle>Update Portfolio Content</CardTitle>
             <CardDescription>
@@ -75,97 +90,115 @@ export default function AdminPage() {
             </CardDescription>
           </CardHeader>
           
-          <CardContent>
+          <CardContent className="p-6">
             {saveSuccess && (
-              <div className="mb-6 p-3 bg-green-100 text-green-700 rounded-md">
-                Content updated successfully!
+              <div className="mb-6 p-4 rounded-md bg-green-50 border border-green-200 text-green-700">
+                <p className="font-medium">Success!</p>
+                <p className="text-sm">Content updated successfully and saved to database.</p>
               </div>
             )}
             
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Bio
-                </label>
-                <Textarea
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleChange}
-                  rows={3}
-                  className="resize-none"
-                  required
-                />
+            {error && (
+              <div className="mb-6 p-4 rounded-md bg-red-50 border border-red-200 text-red-700">
+                <p className="font-medium">Error</p>
+                <p className="text-sm">{error}</p>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Skills
-                </label>
-                <Textarea
-                  name="skills"
-                  value={formData.skills}
-                  onChange={handleChange}
-                  rows={3}
-                  className="resize-none"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Experience
-                </label>
-                <Textarea
-                  name="experience"
-                  value={formData.experience}
-                  onChange={handleChange}
-                  rows={3}
-                  className="resize-none"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Projects
-                </label>
-                <Textarea
-                  name="projects"
-                  value={formData.projects}
-                  onChange={handleChange}
-                  rows={4}
-                  className="resize-none"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Interests & Hobbies
-                </label>
-                <Textarea
-                  name="interests"
-                  value={formData.interests}
-                  onChange={handleChange}
-                  rows={2}
-                  className="resize-none"
-                  required
-                />
-              </div>
-            </form>
+            )}
+            
+            {isLoading ? (
+              <div className="py-8 text-center">Loading profile data...</div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Bio <Badge variant="outline" className="ml-2">Personal</Badge>
+                  </label>
+                  <Textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleChange}
+                    rows={3}
+                    className="resize-none"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Skills <Badge variant="outline" className="ml-2">Technical</Badge>
+                  </label>
+                  <Textarea
+                    name="skills"
+                    value={formData.skills}
+                    onChange={handleChange}
+                    rows={3}
+                    className="resize-none"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Experience <Badge variant="outline" className="ml-2">Professional</Badge>
+                  </label>
+                  <Textarea
+                    name="experience"
+                    value={formData.experience}
+                    onChange={handleChange}
+                    rows={3}
+                    className="resize-none"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Projects <Badge variant="outline" className="ml-2">Portfolio</Badge>
+                  </label>
+                  <Textarea
+                    name="projects"
+                    value={formData.projects}
+                    onChange={handleChange}
+                    rows={4}
+                    className="resize-none"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Interests & Hobbies <Badge variant="outline" className="ml-2">Personal</Badge>
+                  </label>
+                  <Textarea
+                    name="interests"
+                    value={formData.interests}
+                    onChange={handleChange}
+                    rows={2}
+                    className="resize-none"
+                    required
+                  />
+                </div>
+                
+                <div className="flex justify-end pt-4">
+                  <Button
+                    type="submit"
+                    disabled={isSaving}
+                    className="px-6"
+                  >
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </div>
+              </form>
+            )}
           </CardContent>
-          
-          <CardFooter className="flex justify-end">
-            <Button
-              type="submit"
-              disabled={isSaving}
-              onClick={handleSubmit}
-            >
-              {isSaving ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </CardFooter>
         </Card>
       </main>
+
+      <footer className="bg-muted py-4 mt-auto">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          Agent Ciril - Interactive AI Portfolio &copy; {new Date().getFullYear()}
+        </div>
+      </footer>
     </div>
   );
 } 

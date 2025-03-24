@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/globals.css';
 import { Inter } from 'next/font/google';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from '@/components/theme-provider'; 
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -14,9 +15,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const [queryClient] = useState(() => new QueryClient());
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" />
         <link
@@ -27,10 +34,14 @@ export default function RootLayout({
         <meta name="description" content="Chat with an AI agent to learn about my skills, experience, and projects" />
       </head>
       <body className={inter.className}>
-        <QueryClientProvider client={queryClient}>
-          <main className="min-h-screen flex flex-col">{children}</main>
-          <Toaster />
-        </QueryClientProvider>
+        {mounted && (
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <QueryClientProvider client={queryClient}>
+              {children}
+              <Toaster />
+            </QueryClientProvider>
+          </ThemeProvider>
+        )}
       </body>
     </html>
   );
