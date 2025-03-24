@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { supabase } from './supabase';
-import type { ProfileData } from './types';
+import type { ProfileData, Project } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -82,7 +82,7 @@ export const chatApi = {
         Object.assign(payload, { target_user_id: userId });
       }
       
-      const response = await api.post('/chat/chat', payload);
+      const response = await api.post('/chat', payload);
       return response.data;
     } catch (error) {
       console.error('Error sending message:', error);
@@ -234,31 +234,26 @@ export default {
 };
 
 // Function to fetch profile data
-export async function fetchProfileData(): Promise<ProfileData> {
-  const response = await fetch(`${API_URL}/profile`);
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch profile: ${response.status}`);
+export async function fetchProfileData(userId?: string): Promise<ProfileData> {
+  try {
+    const endpoint = userId ? `/profile?user_id=${userId}` : '/profile';
+    const response = await api.get(endpoint);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching profile data:', error);
+    throw error;
   }
-  
-  return response.json();
 }
 
 // Function to update profile data
 export async function updateProfileData(profileData: ProfileData): Promise<{ profile: ProfileData }> {
-  const response = await fetch(`${API_URL}/profile`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(profileData),
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Failed to update profile: ${response.status}`);
+  try {
+    const response = await api.post('/profile', profileData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating profile data:', error);
+    throw error;
   }
-  
-  return response.json();
 }
 
 // Function to send a message to the chatbot
@@ -291,10 +286,10 @@ export async function sendMessage(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ 
-      messages,
-      user_id: userId,
+      message: lastMessage,
       visitor_id: visitorId,
-      visitor_name: visitorName
+      visitor_name: visitorName,
+      target_user_id: userId
     }),
   });
   
@@ -307,4 +302,40 @@ export async function sendMessage(
   console.log("Received response from API:", responseData);
   
   return responseData;
-} 
+}
+
+// Project-related API methods
+export const projectApi = {
+  // Create a new project
+  createProject: async (project: Project): Promise<ProfileData> => {
+    try {
+      const response = await api.post('/profile/projects', project);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating project:', error);
+      throw error;
+    }
+  },
+  
+  // Update an existing project
+  updateProject: async (projectId: string, project: Project): Promise<ProfileData> => {
+    try {
+      const response = await api.put(`/profile/projects/${projectId}`, project);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating project:', error);
+      throw error;
+    }
+  },
+  
+  // Delete a project
+  deleteProject: async (projectId: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await api.delete(`/profile/projects/${projectId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      throw error;
+    }
+  }
+}; 

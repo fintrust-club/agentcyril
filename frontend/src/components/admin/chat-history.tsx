@@ -154,14 +154,8 @@ export function AdminChatHistory() {
   };
 
   return (
-    <Card className="shadow-md max-w-6xl mx-auto">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Chat History</CardTitle>
-          <CardDescription>
-            View conversations with your AI chatbot
-          </CardDescription>
-        </div>
+    <div className="max-w-6xl mx-auto">
+      <div className="flex justify-end mb-6">
         <Button 
           variant="outline" 
           onClick={handleRefresh} 
@@ -169,116 +163,112 @@ export function AdminChatHistory() {
         >
           {isLoading ? 'Loading...' : 'Refresh'}
         </Button>
-      </CardHeader>
+      </div>
       
-      <CardContent>
-        {error && (
-          <div className="mb-6 p-4 rounded-md bg-red-50 border border-red-200 text-red-700">
-            <p className="font-medium">Error</p>
-            <p className="text-sm">{error}</p>
+      {error && (
+        <div className="mb-6 p-4 rounded-md bg-red-50 border border-red-200 text-red-700">
+          <p className="font-medium">Error</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
+      
+      {isLoading ? (
+        <div className="py-8 text-center">Loading chat history...</div>
+      ) : visitorThreads.length === 0 ? (
+        <div className="py-8 space-y-4">
+          <div className="text-center text-muted-foreground">
+            No chat history available. Try sending a message in the chat first.
           </div>
-        )}
-        
-        {isLoading ? (
-          <div className="py-8 text-center">Loading chat history...</div>
-        ) : visitorThreads.length === 0 ? (
-          <div className="py-8 space-y-4">
-            <div className="text-center text-muted-foreground">
-              No chat history available. Try sending a message in the chat first.
-            </div>
-            {/* Debug information - only shown when there are no threads */}
-            <div className="p-4 border rounded-md bg-muted/20 text-xs overflow-auto max-h-60">
-              <p className="font-medium mb-2">Debug Information:</p>
-              <p>Raw messages count: {chatHistory ? chatHistory.length : 0}</p>
-              {chatHistory && chatHistory.length > 0 ? (
-                <div>
-                  <p>First message sample:</p>
-                  <pre className="mt-2 p-2 bg-slate-800 text-slate-200 rounded overflow-auto">
-                    {JSON.stringify(chatHistory[0], null, 2)}
-                  </pre>
-                </div>
-              ) : (
-                <p>No messages received from API.</p>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[500px] md:h-[600px]">
-            {/* Visitors List */}
-            <div className="border rounded-lg overflow-hidden md:col-span-1">
-              <div className="bg-muted/50 p-3 border-b">
-                <h3 className="font-medium">Visitors ({visitorThreads.length})</h3>
+          {/* Debug information - only shown when there are no threads */}
+          <div className="p-4 border rounded-md bg-muted/20 text-xs overflow-auto max-h-60">
+            <p className="font-medium mb-2">Debug Information:</p>
+            <p>Raw messages count: {chatHistory ? chatHistory.length : 0}</p>
+            {chatHistory && chatHistory.length > 0 ? (
+              <div>
+                <p>First message sample:</p>
+                <pre className="mt-2 p-2 bg-slate-800 text-slate-200 rounded overflow-auto">
+                  {JSON.stringify(chatHistory[0], null, 2)}
+                </pre>
               </div>
-              <ScrollArea className="h-[200px] md:h-[550px]">
-                <div className="p-2">
-                  {visitorThreads.map((thread) => (
-                    <div 
-                      key={thread.visitorId}
-                      onClick={() => setSelectedVisitor(thread.visitorId)}
-                      className={`p-3 rounded-lg mb-2 cursor-pointer hover:bg-muted/50 ${
-                        selectedVisitor === thread.visitorId ? 'bg-muted/50 border-primary' : 'bg-background'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>
-                              {(thread.visitorName?.[0] || 'V').toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium text-sm">
-                              {thread.visitorName || `Visitor ${thread.visitorId.substring(0, 8)}`}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatTimeAgo(thread.lastActive.toISOString())}
-                            </p>
-                          </div>
-                        </div>
-                        <Badge variant="outline" className="text-xs">
-                          {thread.messageCount}
-                        </Badge>
+            ) : (
+              <p>No messages received from API.</p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[600px] md:h-[700px] border rounded-lg overflow-hidden">
+          {/* Visitors List */}
+          <div className="border rounded-lg overflow-hidden md:col-span-1">
+            <div className="bg-muted/50 p-3 border-b">
+              <h3 className="font-medium">Visitors ({visitorThreads.length})</h3>
+            </div>
+            <ScrollArea className="h-[300px] md:h-[650px]">
+              {visitorThreads.map((thread) => (
+                <div 
+                  key={thread.visitorId}
+                  onClick={() => setSelectedVisitor(thread.visitorId)}
+                  className={`p-3 rounded-lg mb-2 cursor-pointer hover:bg-muted/50 ${
+                    selectedVisitor === thread.visitorId ? 'bg-muted/50 border-primary' : 'bg-background'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback>
+                          {(thread.visitorName?.[0] || 'V').toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-sm">
+                          {thread.visitorName || `Visitor ${thread.visitorId.substring(0, 8)}`}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatTimeAgo(thread.lastActive.toISOString())}
+                        </p>
                       </div>
                     </div>
-                  ))}
+                    <Badge variant="outline" className="text-xs">
+                      {thread.messageCount}
+                    </Badge>
+                  </div>
                 </div>
-              </ScrollArea>
-            </div>
-            
-            {/* Chat Thread */}
-            <div className="border rounded-lg overflow-hidden md:col-span-2">
-              <div className="bg-muted/50 p-3 border-b">
-                <h3 className="font-medium">
-                  {getSelectedVisitorThread()?.visitorName || 
-                   `Visitor ${getSelectedVisitorThread()?.visitorId.substring(0, 8) || ''}`}
-                </h3>
-              </div>
-              <ScrollArea className="h-[280px] md:h-[550px]">
-                <div className="p-4 space-y-4">
-                  {getSelectedVisitorThread()?.messages.map((item, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="bg-muted/40 rounded-lg p-3 mr-12">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs font-medium">Visitor</p>
-                          <p className="text-xs text-muted-foreground">{formatDate(item.timestamp)}</p>
-                        </div>
-                        <p className="text-sm">{item.message}</p>
-                      </div>
-                      
-                      <div className="bg-primary/5 rounded-lg p-3 ml-12">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs font-medium">AI Response</p>
-                        </div>
-                        <p className="text-sm">{item.response}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
+              ))}
+            </ScrollArea>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          
+          {/* Chat Thread */}
+          <div className="border rounded-lg overflow-hidden md:col-span-2">
+            <div className="bg-muted/50 p-3 border-b">
+              <h3 className="font-medium">
+                {getSelectedVisitorThread()?.visitorName || 
+                 `Visitor ${getSelectedVisitorThread()?.visitorId.substring(0, 8) || ''}`}
+              </h3>
+            </div>
+            <ScrollArea className="h-[300px] md:h-[650px]">
+              <div className="p-4 space-y-4">
+                {getSelectedVisitorThread()?.messages.map((item, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="bg-muted/40 rounded-lg p-3 mr-12">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-medium">Visitor</p>
+                        <p className="text-xs text-muted-foreground">{formatDate(item.timestamp)}</p>
+                      </div>
+                      <p className="text-sm">{item.message}</p>
+                    </div>
+                    
+                    <div className="bg-primary/5 rounded-lg p-3 ml-12">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-medium">AI Response</p>
+                      </div>
+                      <p className="text-sm">{item.response}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        </div>
+      )}
+    </div>
   );
 } 

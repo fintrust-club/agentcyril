@@ -17,7 +17,8 @@ DEFAULT_PROFILE = {
     "skills": "JavaScript, TypeScript, React, Node.js, Python, FastAPI, PostgreSQL, ChromaDB, Supabase, Next.js, TailwindCSS",
     "experience": "5+ years of experience in full-stack development, with a focus on building AI-powered applications and responsive web interfaces.",
     "projects": "AI-powered portfolio system, real-time analytics dashboard, natural language processing application",
-    "interests": "AI, machine learning, web development, reading sci-fi, hiking"
+    "interests": "AI, machine learning, web development, reading sci-fi, hiking",
+    "project_list": []
 }
 
 # Initialize Supabase client or None if connection fails
@@ -82,6 +83,10 @@ def get_profile_data(user_id=None):
             if key not in result or not result[key]:
                 result[key] = in_memory_profile.get(key, '')
                 
+        # Add project_list from in-memory profile if not in result
+        if 'project_list' not in result:
+            result['project_list'] = in_memory_profile.get('project_list', [])
+                
         # If we still don't have a result, use in-memory profile
         if not result:
             print("Using in-memory profile")
@@ -123,8 +128,8 @@ def update_profile_data(data, user_id=None):
                 # Filter data to only include fields that exist in the database schema
                 filtered_data = {}
                 for key, value in data.items():
-                    # Skip 'name' and 'location' if they're not in the existing profile
-                    if key not in ['name', 'location'] or (existing_profile and key in existing_profile):
+                    # Skip 'name', 'location', and 'project_list' if they're not in the existing profile
+                    if key not in ['name', 'location', 'project_list'] or (existing_profile and key in existing_profile):
                         filtered_data[key] = value
                 
                 # Update existing profile
@@ -149,38 +154,138 @@ def update_profile_data(data, user_id=None):
             if response.data:
                 print("Successfully updated profile in Supabase")
                 
-                # Update the in-memory profile with ALL fields for vector DB
-                in_memory_profile.update(data)
-                print("Also updated in-memory profile for vector DB")
-                
-                # Save to file for persistence
-                save_profile_to_file()
-                
-                # Return the full data for vector DB
-                return data
-            else:
-                print("No data returned from Supabase update")
-        else:
-            print("Supabase client not available, using in-memory storage")
+        # Update in-memory profile (to ensure we have all fields)
+        for key, value in data.items():
+            if key != 'id':  # Don't overwrite id
+                in_memory_profile[key] = value
         
-        # Update in-memory profile if Supabase fails or is not available
-        in_memory_profile.update(data)
-        print("Updated in-memory profile as fallback")
+        # For project_list, we need to handle it specially if it was included
+        if 'project_list' in data:
+            in_memory_profile['project_list'] = data['project_list']
         
-        # Save to file for persistence
+        # Save updated profile to file for persistence
         save_profile_to_file()
         
-        return in_memory_profile
+        return data
     except Exception as e:
-        print(f"Error updating profile data: {e}")
-        # Update in-memory profile as fallback
-        in_memory_profile.update(data)
-        print("Updated in-memory profile after error")
+        print(f"Error updating profile: {e}")
         
-        # Save to file for persistence
+        # Fallback to in-memory update if Supabase fails
+        for key, value in data.items():
+            if key != 'id':  # Don't overwrite id
+                in_memory_profile[key] = value
+                
+        # Save updated profile to file for persistence
         save_profile_to_file()
         
-        return in_memory_profile
+        return data
+
+def add_project(project_data, user_id=None):
+    """
+    Add a new project to the project list
+    """
+    try:
+        profile_data = get_profile_data(user_id)
+        
+        # Ensure project_list exists
+        if 'project_list' not in profile_data:
+            profile_data['project_list'] = []
+        
+        # Generate a UUID for the project if not provided
+        if not project_data.get('id'):
+            project_data['id'] = str(uuid.uuid4())
+        
+        # Set creation timestamp
+        project_data['created_at'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+        project_data['updated_at'] = project_data['created_at']
+        
+        # Extract HTML content if available in Lexical format
+        if project_data.get('content') and not project_data.get('content_html'):
+            try:
+                content_data = json.loads(project_data['content'])
+                if content_data.get('html'):
+                    project_data['content_html'] = content_data['html']
+            except (json.JSONDecodeError, KeyError):
+                print(f"Warning: Could not extract HTML from project content")
+        
+        # Add project to list
+        profile_data['project_list'].append(project_data)
+        
+        # Update profile data
+        return update_profile_data(profile_data, user_id)
+    except Exception as e:
+        print(f"Error adding project: {e}")
+        return None
+
+def update_project(project_id, project_data, user_id=None):
+    """
+    Update an existing project
+    """
+    try:
+        profile_data = get_profile_data(user_id)
+        
+        # Ensure project_list exists
+        if 'project_list' not in profile_data:
+            profile_data['project_list'] = []
+            return None  # Project not found
+        
+        # Find the project by ID
+        for i, project in enumerate(profile_data['project_list']):
+            if project.get('id') == project_id:
+                # Preserve the ID and created_at timestamp
+                project_data['id'] = project_id
+                if 'created_at' in project:
+                    project_data['created_at'] = project['created_at']
+                
+                # Update the updated_at timestamp
+                project_data['updated_at'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+                
+                # Extract HTML content if available in Lexical format
+                if project_data.get('content') and not project_data.get('content_html'):
+                    try:
+                        content_data = json.loads(project_data['content'])
+                        if content_data.get('html'):
+                            project_data['content_html'] = content_data['html']
+                    except (json.JSONDecodeError, KeyError):
+                        print(f"Warning: Could not extract HTML from project content")
+                
+                # Update the project
+                profile_data['project_list'][i] = project_data
+                
+                # Update profile data
+                return update_profile_data(profile_data, user_id)
+        
+        return None  # Project not found
+    except Exception as e:
+        print(f"Error updating project: {e}")
+        return None
+
+def delete_project(project_id, user_id=None):
+    """
+    Delete a project
+    """
+    try:
+        profile_data = get_profile_data(user_id)
+        
+        # Ensure project_list exists
+        if 'project_list' not in profile_data:
+            profile_data['project_list'] = []
+            return False  # Project not found
+        
+        # Find the project by ID
+        for i, project in enumerate(profile_data['project_list']):
+            if project.get('id') == project_id:
+                # Remove the project
+                profile_data['project_list'].pop(i)
+                
+                # Update profile data
+                update_profile_data(profile_data, user_id)
+                return True
+        
+        return False  # Project not found
+    except Exception as e:
+        print(f"Error deleting project: {e}")
+        return False
 
 def log_chat_message(message, sender, response=None, visitor_id=None, visitor_name=None, target_user_id=None):
     """

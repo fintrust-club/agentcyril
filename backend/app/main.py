@@ -6,8 +6,9 @@ import logging
 import os
 import json
 import uuid
+from app import models
 from app.database import get_profile_data, update_profile_data, log_chat_message, get_chat_history
-from app.embeddings import add_profile_to_vector_db, query_vector_db, generate_ai_response
+from app.embeddings import add_profile_to_vector_db, query_vector_db, generate_ai_response, add_conversation_to_vector_db
 from app.routes import chatbot, profiles, admin
 
 # Configure logging
@@ -108,7 +109,7 @@ async def update_profile_handler(profile_data: ProfileData, user_id: Optional[st
 
 # Chat endpoint - kept for backward compatibility
 @app.post("/chat")
-async def chat(chat_request: ChatRequest):
+async def chat(chat_request: models.ChatRequest):
     """Process chat messages and generate AI response"""
     try:
         logging.info(f"Processing chat message")
@@ -116,35 +117,59 @@ async def chat(chat_request: ChatRequest):
         # Extract visitor information
         visitor_id = chat_request.visitor_id
         visitor_name = chat_request.visitor_name
-        user_id = chat_request.user_id
+        target_user_id = chat_request.target_user_id
         
-        logging.info(f"Chat request from visitor: {visitor_id}, name: {visitor_name}, user_id: {user_id}")
+        logging.info(f"Chat request from visitor: {visitor_id}, name: {visitor_name}, user_id: {target_user_id}")
         
-        # Get the latest user message
-        last_message = None
-        for msg in reversed(chat_request.messages):
-            if msg.role == "user":
-                last_message = msg.content
-                break
+        # Get the message directly from the request
+        message = chat_request.message
         
-        if not last_message:
+        if not message or message.strip() == "":
             logging.warning("No valid user message found in request")
             return {"response": "I didn't receive a valid message. Please try again."}
         
-        logging.info(f"User message: {last_message[:50]}...")
+        logging.info(f"User message: {message[:50]}...")
         
         # Get profile data
         profile_data = get_profile_data()
         logging.info(f"Retrieved profile data: {profile_data.get('id', 'No ID')}") 
         
-        # Query vector database for relevant information
-        search_results = query_vector_db(last_message, n_results=3)
+        # Query vector database for relevant information including conversation history
+        logging.info(f"Querying vector DB for relevant context and conversation history")
+        search_results = query_vector_db(
+            query=message, 
+            n_results=3,
+            visitor_id=visitor_id,
+            include_conversation=True
+        )
+        
+        # Get sequential conversation history for UI/display context
+        logging.info(f"Getting sequential conversation history for visitor: {visitor_id}")
+        history_limit = 10  # Get last 10 messages (5 exchanges)
+        chat_history = get_chat_history(
+            limit=history_limit,
+            visitor_id=visitor_id,
+            target_user_id=target_user_id
+        )
+        
+        # Sort history to have oldest messages first
+        if chat_history:
+            chat_history = sorted(
+                chat_history,
+                key=lambda x: x.get("timestamp", ""),
+                reverse=False  # Oldest messages first
+            )
+            logging.info(f"Found {len(chat_history)} previous messages in conversation history")
+        else:
+            logging.info("No previous conversation history found")
+            chat_history = []
         
         # Generate AI response using the embeddings.py implementation
         ai_response = generate_ai_response(
-            last_message,  # Using the last message as the query
+            message,  # Using the message as the query
             search_results,
-            profile_data
+            profile_data,
+            chat_history
         )
         
         logging.info(f"Generated AI response: {ai_response[:50]}...")
@@ -152,12 +177,22 @@ async def chat(chat_request: ChatRequest):
         # Log chat interaction
         logging.info("Saving chat message to database...")
         chat_log_result = log_chat_message(
-            message=last_message,
+            message=message,
             sender="user", 
             response=ai_response,
             visitor_id=chat_request.visitor_id,
             visitor_name=chat_request.visitor_name,
-            target_user_id=chat_request.user_id
+            target_user_id=chat_request.target_user_id
+        )
+        
+        # Also store the conversation in the vector database for semantic search
+        message_id = chat_log_result[0]["id"] if chat_log_result and len(chat_log_result) > 0 else None
+        logging.info(f"Adding conversation to vector database for future reference")
+        add_conversation_to_vector_db(
+            message=message,
+            response=ai_response,
+            visitor_id=visitor_id,
+            message_id=message_id
         )
         
         logging.info(f"Chat message saved: {chat_log_result is not None}")
@@ -187,11 +222,28 @@ async def history(visitor_id: Optional[str] = None, target_user_id: Optional[str
         else:
             logging.info("No chat history found")
         
-        # Add debug headers to response
-        response = history
-        logging.info(f"Returning response with {len(response)} items")
+        # Convert to ChatHistoryResponse format for better compatibility
+        formatted_history = []
+        for item in history:
+            formatted_history.append(models.ChatHistoryItem(
+                id=item["id"],
+                message=item["message"],
+                sender=item["sender"],
+                response=item.get("response"),
+                visitor_id=item["visitor_id"],
+                visitor_name=item.get("visitor_name"),
+                target_user_id=item.get("target_user_id"),
+                timestamp=item["timestamp"]
+            ))
         
+        response = models.ChatHistoryResponse(
+            history=formatted_history,
+            count=len(formatted_history)
+        )
+        
+        logging.info(f"Returning response with {len(formatted_history)} items, using ChatHistoryResponse format")
         return response
+        
     except Exception as e:
         logging.error(f"Error getting chat history: {e}")
         raise HTTPException(status_code=500, detail=str(e))

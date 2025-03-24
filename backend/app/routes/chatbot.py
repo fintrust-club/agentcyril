@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from app import models
 from app.database import log_chat_message, get_chat_history, get_profile_data
-from app.embeddings import query_vector_db, generate_ai_response
+from app.embeddings import query_vector_db, generate_ai_response, add_conversation_to_vector_db
 
 router = APIRouter()
 
@@ -35,9 +35,14 @@ async def chat(request: models.ChatRequest):
                 query_time_ms=0
             )
         
-        # Get context for the AI by searching vector DB
-        print(f"[INFO] Querying vector DB for relevant context")
-        search_results = query_vector_db(message, user_id=target_user_id)
+        # Get context for the AI by searching vector DB, including relevant conversation history
+        print(f"[INFO] Querying vector DB for relevant context and conversation history")
+        search_results = query_vector_db(
+            query=message, 
+            user_id=target_user_id,
+            visitor_id=visitor_id,
+            include_conversation=True
+        )
         
         # Get the profile data - use the target_user_id if provided
         # This allows for user-specific chatbots
@@ -51,12 +56,34 @@ async def chat(request: models.ChatRequest):
             profile_id = profile_data.get('id', 'None')
             print(f"[INFO] Profile data retrieved: id={profile_id}")
         
-        # Generate the AI response with our improved implementation from embeddings.py
-        print(f"[INFO] Generating AI response")
+        # Get recent conversation history for this visitor (limit to last 5 messages) from database
+        print(f"[INFO] Fetching sequential conversation history for visitor {visitor_id}")
+        history_limit = 10  # Get the last 10 messages (5 exchanges)
+        chat_history = get_chat_history(
+            limit=history_limit, 
+            visitor_id=visitor_id,
+            target_user_id=target_user_id
+        )
+        
+        # Sort the history by timestamp (oldest first)
+        if chat_history:
+            chat_history = sorted(
+                chat_history,
+                key=lambda x: x.get("timestamp", ""),
+                reverse=False  # Oldest messages first
+            )
+            print(f"[INFO] Found {len(chat_history)} previous messages in conversation history")
+        else:
+            print("[INFO] No previous conversation history found")
+            chat_history = []
+        
+        # Generate the AI response
+        print(f"[INFO] Generating AI response with conversation context")
         ai_response = generate_ai_response(
             query=message,
             search_results=search_results,
-            profile_data=profile_data
+            profile_data=profile_data,
+            chat_history=chat_history
         )
         
         # Brief validation of the response
@@ -66,13 +93,23 @@ async def chat(request: models.ChatRequest):
         
         # Log the message to the database
         print(f"[INFO] Logging chat message to database")
-        log_chat_message(
+        log_result = log_chat_message(
             message=message, 
             sender="user", 
             response=ai_response, 
             visitor_id=visitor_id, 
             visitor_name=visitor_name,
             target_user_id=target_user_id
+        )
+        
+        # Also store this conversation exchange in the vector database for semantic search
+        message_id = log_result[0]["id"] if log_result and len(log_result) > 0 else None
+        print(f"[INFO] Adding conversation to vector database for future reference")
+        add_conversation_to_vector_db(
+            message=message,
+            response=ai_response,
+            visitor_id=visitor_id,
+            message_id=message_id
         )
         
         # Calculate time taken
@@ -120,6 +157,8 @@ async def get_chat_history_endpoint(
         # Get history with optional filters
         history = get_chat_history(limit=limit, visitor_id=visitor_id, target_user_id=target_user_id)
         
+        print(f"Retrieved {len(history)} chat history items")
+        
         # Convert the history to the expected format
         formatted_history = []
         for item in history:
@@ -134,10 +173,13 @@ async def get_chat_history_endpoint(
                 timestamp=item["timestamp"]
             ))
         
-        return models.ChatHistoryResponse(
+        response = models.ChatHistoryResponse(
             history=formatted_history,
             count=len(formatted_history)
         )
+        
+        print(f"Returning response with {len(formatted_history)} items")
+        return response
     except Exception as e:
         print(f"Error getting chat history: {e}")
         raise HTTPException(

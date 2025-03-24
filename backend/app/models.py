@@ -43,6 +43,21 @@ class ChatHistoryResponse(BaseModel):
     count: int
 
 
+class Project(BaseModel):
+    """
+    Model for a project
+    """
+    id: Optional[str] = None
+    title: str = Field(..., description="Project title")
+    description: str = Field(..., description="Project description")
+    category: str = Field(..., description="Project category (tech, design, other)")
+    details: str = Field(..., description="Project details")
+    content: Optional[str] = Field(None, description="Rich document content in Lexical format")
+    content_html: Optional[str] = Field(None, description="HTML representation of the Lexical content for fallback display")
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
 class ProfileData(BaseModel):
     """
     Model for profile data
@@ -54,7 +69,8 @@ class ProfileData(BaseModel):
     bio: str
     skills: str
     experience: str
-    projects: str
+    projects: Optional[str] = None  # Keeping for backward compatibility
+    project_list: Optional[List[Project]] = Field(default_factory=list, description="List of projects")
     interests: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

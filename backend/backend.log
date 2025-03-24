@@ -677,3 +677,749 @@ INFO:     Stopping reloader process [46279]
 2025-03-24 20:51:41,368 [INFO] Saving chat message to database...
 2025-03-24 20:51:41,427 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
 2025-03-24 20:51:41,428 [INFO] Chat message saved: True
+2025-03-24 20:55:37,586 [INFO] Getting profile data
+2025-03-24 20:55:38,119 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 20:55:38,146 [INFO] Getting profile data
+2025-03-24 20:55:38,217 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 20:56:20,408 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 20:56:20,475 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 20:56:32,949 [INFO] Processing chat message
+2025-03-24 20:56:32,949 [INFO] Chat request from visitor: visitor-1742822805442-rhr71d6, name: Suresh, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 20:56:32,951 [INFO] User message: hello ...
+2025-03-24 20:56:33,039 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 20:56:33,039 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 20:56:33,795 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 20:56:34,723 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 20:56:34,727 [INFO] Generated AI response: Hello! How can I assist you today?...
+2025-03-24 20:56:34,727 [INFO] Saving chat message to database...
+2025-03-24 20:56:34,790 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 20:56:34,792 [INFO] Chat message saved: True
+2025-03-24 20:58:10,511 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 20:58:10,598 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 20:59:06,230 [INFO] Getting profile data
+2025-03-24 20:59:06,327 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 20:59:06,329 [INFO] Getting profile data
+2025-03-24 20:59:06,391 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 20:59:10,244 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 20:59:10,320 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 20:59:19,454 [INFO] Getting profile data
+2025-03-24 20:59:19,565 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 20:59:19,568 [INFO] Getting profile data
+2025-03-24 20:59:19,640 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 20:59:32,195 [INFO] Getting profile data
+2025-03-24 20:59:32,290 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 20:59:32,295 [INFO] Getting profile data
+2025-03-24 20:59:32,492 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:00:15,934 [INFO] Getting profile data
+2025-03-24 21:00:16,054 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:00:16,064 [INFO] Getting profile data
+2025-03-24 21:00:16,133 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:00:17,357 [INFO] Getting profile data
+2025-03-24 21:00:17,422 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:00:17,451 [INFO] Getting profile data
+2025-03-24 21:00:17,525 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:00:40,596 [INFO] Updating profile data
+2025-03-24 21:00:40,699 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:00:40,787 [INFO] HTTP Request: PATCH https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?id=eq.754093fa-dca3-4ec8-892c-b278e3207dc1 "HTTP/2 200 OK"
+2025-03-24 21:00:41,246 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 21:00:41,743 [INFO] Getting profile data
+2025-03-24 21:00:41,813 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:00:53,074 [INFO] Getting profile data
+2025-03-24 21:00:53,164 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:00:53,184 [INFO] Getting profile data
+2025-03-24 21:00:53,258 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:00:54,006 [INFO] Getting profile data
+2025-03-24 21:00:54,077 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:00:54,080 [INFO] Getting profile data
+2025-03-24 21:00:54,142 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:01:13,320 [INFO] Processing chat message
+2025-03-24 21:01:13,320 [INFO] Chat request from visitor: visitor-1742830273314-hirlu4v, name: Suraj, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 21:01:13,320 [INFO] User message: Hello ciril how are you ?...
+2025-03-24 21:01:13,415 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:01:13,416 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 21:01:14,132 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 21:01:15,479 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 21:01:15,484 [INFO] Generated AI response: Hello! I'm doing well, thank you. How can I assist...
+2025-03-24 21:01:15,484 [INFO] Saving chat message to database...
+2025-03-24 21:01:15,550 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 21:01:15,551 [INFO] Chat message saved: True
+2025-03-24 21:01:24,725 [INFO] Processing chat message
+2025-03-24 21:01:24,725 [INFO] Chat request from visitor: visitor-1742830273314-hirlu4v, name: Suraj, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 21:01:24,726 [INFO] User message: tell me about yourself please...
+2025-03-24 21:01:24,812 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:01:24,814 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 21:01:25,453 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 21:01:30,326 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 21:01:30,328 [INFO] Generated AI response: I'm Ciril Cyriac, based in Bengaluru, with a diver...
+2025-03-24 21:01:30,329 [INFO] Saving chat message to database...
+2025-03-24 21:01:30,429 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 21:01:30,430 [INFO] Chat message saved: True
+2025-03-24 21:02:53,281 [INFO] Updating profile data
+2025-03-24 21:02:53,821 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:02:53,903 [INFO] HTTP Request: PATCH https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?id=eq.754093fa-dca3-4ec8-892c-b278e3207dc1 "HTTP/2 200 OK"
+2025-03-24 21:02:54,354 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 21:02:54,852 [INFO] Getting profile data
+2025-03-24 21:02:54,925 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:03:06,842 [INFO] Processing chat message
+2025-03-24 21:03:06,843 [INFO] Chat request from visitor: visitor-1742830273314-hirlu4v, name: Suraj, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 21:03:06,843 [INFO] User message: Tell me on ef the important projects you have work...
+2025-03-24 21:03:06,934 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:03:06,935 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 21:03:07,606 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 21:03:16,290 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 21:03:16,294 [INFO] Generated AI response: One important project I worked on was the "Cars24 ...
+2025-03-24 21:03:16,294 [INFO] Saving chat message to database...
+2025-03-24 21:03:16,374 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 21:03:16,375 [INFO] Chat message saved: True
+2025-03-24 21:03:36,605 [INFO] Processing chat message
+2025-03-24 21:03:36,605 [INFO] Chat request from visitor: visitor-1742830273314-hirlu4v, name: Suraj, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 21:03:36,606 [INFO] User message: What role suits you well ...
+2025-03-24 21:03:36,707 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:03:36,710 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 21:03:37,098 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 21:03:42,532 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 21:03:42,541 [INFO] Generated AI response: Given my extensive experience and skills, I am wel...
+2025-03-24 21:03:42,541 [INFO] Saving chat message to database...
+2025-03-24 21:03:42,618 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 21:03:42,619 [INFO] Chat message saved: True
+2025-03-24 21:06:16,435 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:06:16,521 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:06:28,076 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:06:28,143 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:06:49,410 [INFO] Getting profile data
+2025-03-24 21:06:49,518 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:06:49,521 [INFO] Getting profile data
+2025-03-24 21:06:49,592 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:06:49,595 [INFO] Getting profile data
+2025-03-24 21:06:49,669 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:06:49,675 [INFO] Getting profile data
+2025-03-24 21:06:49,752 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:06:56,523 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:06:56,591 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:06:59,542 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:06:59,617 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:07:04,671 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:07:04,739 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:07:07,063 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:07:07,132 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:07:46,161 [INFO] Getting profile data
+2025-03-24 21:07:46,274 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:07:46,279 [INFO] Getting profile data
+2025-03-24 21:07:46,351 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:08:31,807 [INFO] Processing chat message
+2025-03-24 21:08:31,807 [INFO] Chat request from visitor: visitor-1742830711801-8sa4nxq, name: ann, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 21:08:31,808 [INFO] User message: Hello ciril, can you tell me about yourself ...
+2025-03-24 21:08:32,224 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:08:32,236 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 21:08:33,051 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 21:08:40,412 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 21:08:40,417 [INFO] Generated AI response: Hello! I'm Ciril Cyriac, based in Bengaluru. My pr...
+2025-03-24 21:08:40,417 [INFO] Saving chat message to database...
+2025-03-24 21:08:40,515 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 21:08:40,516 [INFO] Chat message saved: True
+2025-03-24 21:08:56,925 [INFO] Processing chat message
+2025-03-24 21:08:56,925 [INFO] Chat request from visitor: visitor-1742830711801-8sa4nxq, name: ann, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 21:08:56,925 [INFO] User message: tell me about a projct you did in your past compan...
+2025-03-24 21:08:57,016 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:08:57,017 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 21:08:57,820 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 21:09:09,906 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 21:09:09,908 [INFO] Generated AI response: In my role at Cars24, I led a significant project ...
+2025-03-24 21:09:09,908 [INFO] Saving chat message to database...
+2025-03-24 21:09:10,013 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 21:09:10,014 [INFO] Chat message saved: True
+2025-03-24 21:09:35,227 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:10:55,961 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:10:56,034 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:15:00,694 [INFO] Getting profile data
+2025-03-24 21:15:00,899 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:15:00,906 [INFO] Getting profile data
+2025-03-24 21:15:01,076 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:15:16,116 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:15:16,189 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:15:28,791 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:15:28,863 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:41:45,065 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:41:45,230 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 21:52:41,342 [INFO] Getting profile data
+2025-03-24 21:52:41,576 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:52:41,602 [INFO] Getting profile data
+2025-03-24 21:52:41,668 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:53:53,353 [INFO] Getting profile data
+2025-03-24 21:53:53,463 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:53:53,468 [INFO] Getting profile data
+2025-03-24 21:53:53,539 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:53:54,293 [INFO] Getting profile data
+2025-03-24 21:53:54,361 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:53:54,364 [INFO] Getting profile data
+2025-03-24 21:53:54,432 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:54:17,438 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-03-24 21:54:17,519 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:54:17,582 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:54:17,650 [INFO] HTTP Request: PATCH https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?id=eq.754093fa-dca3-4ec8-892c-b278e3207dc1 "HTTP/2 200 OK"
+2025-03-24 21:54:18,663 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 21:54:20,487 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 21:54:34,418 [INFO] Getting profile data
+2025-03-24 21:54:34,504 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 21:54:34,605 [INFO] Getting profile data
+2025-03-24 21:54:34,671 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:01:08,746 [INFO] Getting profile data
+2025-03-24 22:01:08,919 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:01:08,945 [INFO] Getting profile data
+2025-03-24 22:01:09,009 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:08:14,773 [INFO] Getting profile data
+2025-03-24 22:08:14,897 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:08:14,902 [INFO] Getting profile data
+2025-03-24 22:08:14,968 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:09:55,487 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-03-24 22:09:55,608 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:09:55,685 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:09:55,762 [INFO] HTTP Request: PATCH https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?id=eq.754093fa-dca3-4ec8-892c-b278e3207dc1 "HTTP/2 200 OK"
+2025-03-24 22:09:57,131 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 22:09:58,668 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 22:10:33,854 [INFO] Getting profile data
+2025-03-24 22:10:33,958 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:10:33,963 [INFO] Getting profile data
+2025-03-24 22:10:34,030 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:10:42,467 [INFO] Updating profile data
+2025-03-24 22:10:42,549 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:10:42,626 [INFO] HTTP Request: PATCH https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?id=eq.754093fa-dca3-4ec8-892c-b278e3207dc1 "HTTP/2 200 OK"
+2025-03-24 22:10:43,827 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 22:10:44,183 [INFO] Getting profile data
+2025-03-24 22:10:44,255 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:10:55,731 [INFO] Getting profile data
+2025-03-24 22:10:55,825 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:10:55,828 [INFO] Getting profile data
+2025-03-24 22:10:55,893 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:11:12,655 [INFO] Processing chat message
+2025-03-24 22:11:12,656 [INFO] Chat request from visitor: visitor-1742827603180-4oubbin, name: Saji, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 22:11:12,656 [INFO] User message: hello tell me about the project you did about app ...
+2025-03-24 22:11:12,742 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:11:12,744 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 22:11:13,211 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 22:11:13,222 [ERROR] Error processing chat: 0
+2025-03-24 22:11:19,983 [INFO] Processing chat message
+2025-03-24 22:11:19,983 [INFO] Chat request from visitor: visitor-1742827603180-4oubbin, name: Saji, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 22:11:19,983 [INFO] User message: hello tell me about the project you did about app ...
+2025-03-24 22:11:20,071 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:11:20,072 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 22:11:20,896 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 22:11:20,900 [ERROR] Error processing chat: 0
+2025-03-24 22:16:04,832 [INFO] Getting profile data
+2025-03-24 22:16:04,982 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:16:04,990 [INFO] Getting profile data
+2025-03-24 22:16:05,051 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:16:05,304 [INFO] Getting profile data
+2025-03-24 22:16:05,366 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:16:05,389 [INFO] Getting profile data
+2025-03-24 22:16:05,452 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:17:24,151 [INFO] Getting profile data
+2025-03-24 22:17:24,277 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:17:24,285 [INFO] Getting profile data
+2025-03-24 22:17:24,351 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:17:37,130 [INFO] Processing chat message
+2025-03-24 22:17:37,130 [INFO] Chat request from visitor: visitor-1742830273314-hirlu4v, name: Suraj, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 22:17:37,131 [INFO] User message: Hi can you tell me about the app onbording project...
+2025-03-24 22:17:37,211 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:17:37,212 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 22:17:45,542 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 22:17:45,558 [INFO] Generated AI response: Certainly! In the Cars24 AU App Onboarding project...
+2025-03-24 22:17:45,558 [INFO] Saving chat message to database...
+2025-03-24 22:17:45,693 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 22:17:45,694 [INFO] Chat message saved: True
+2025-03-24 22:18:36,066 [INFO] Processing chat message
+2025-03-24 22:18:36,066 [INFO] Chat request from visitor: visitor-1742830273314-hirlu4v, name: Suraj, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 22:18:36,066 [INFO] User message: what was your main role in this project ...
+2025-03-24 22:18:36,636 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:18:36,641 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 22:18:38,549 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 22:18:38,556 [INFO] Generated AI response: Could you please specify which project you are ref...
+2025-03-24 22:18:38,556 [INFO] Saving chat message to database...
+2025-03-24 22:18:38,619 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 22:18:38,619 [INFO] Chat message saved: True
+2025-03-24 22:18:57,105 [INFO] Processing chat message
+2025-03-24 22:18:57,105 [INFO] Chat request from visitor: visitor-1742830273314-hirlu4v, name: Suraj, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 22:18:57,105 [INFO] User message: the above one...
+2025-03-24 22:18:57,227 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:18:57,227 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 22:18:59,987 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 22:18:59,989 [INFO] Generated AI response: Could you please clarify what specific information...
+2025-03-24 22:18:59,989 [INFO] Saving chat message to database...
+2025-03-24 22:19:00,062 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 22:19:00,063 [INFO] Chat message saved: True
+2025-03-24 22:22:30,118 [INFO] Getting profile data
+2025-03-24 22:22:32,981 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:22:32,988 [INFO] Getting profile data
+2025-03-24 22:22:33,058 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:22:47,469 [INFO] Processing chat message
+2025-03-24 22:22:47,469 [INFO] Chat request from visitor: visitor-1742830273314-hirlu4v, name: Suraj, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 22:22:47,469 [INFO] User message: hello can you tell me about one project you have d...
+2025-03-24 22:22:47,567 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:22:47,569 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 22:22:47,569 [INFO] Getting conversation history for visitor: visitor-1742830273314-hirlu4v
+2025-03-24 22:22:47,638 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742830273314-hirlu4v&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 22:22:47,639 [INFO] No previous conversation history found
+2025-03-24 22:22:54,561 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 22:22:54,565 [INFO] Generated AI response: Hello! One interesting project I worked on was enh...
+2025-03-24 22:22:54,565 [INFO] Saving chat message to database...
+2025-03-24 22:22:54,663 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 22:22:54,664 [INFO] Chat message saved: True
+2025-03-24 22:23:03,188 [INFO] Processing chat message
+2025-03-24 22:23:03,188 [INFO] Chat request from visitor: visitor-1742830273314-hirlu4v, name: Suraj, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 22:23:03,188 [INFO] User message: explain the above...
+2025-03-24 22:23:03,278 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:23:03,282 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 22:23:03,282 [INFO] Getting conversation history for visitor: visitor-1742830273314-hirlu4v
+2025-03-24 22:23:03,359 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742830273314-hirlu4v&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 22:23:03,359 [INFO] Found 1 previous messages in conversation history
+2025-03-24 22:23:21,353 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 22:23:21,363 [INFO] Generated AI response: Certainly! Let me give you an overview of some of ...
+2025-03-24 22:23:21,363 [INFO] Saving chat message to database...
+2025-03-24 22:23:21,450 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 22:23:21,451 [INFO] Chat message saved: True
+2025-03-24 22:25:29,048 [INFO] Getting profile data
+2025-03-24 22:25:29,160 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:25:29,167 [INFO] Getting profile data
+2025-03-24 22:25:29,233 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:25:35,058 [INFO] Getting profile data
+2025-03-24 22:25:35,138 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:25:35,175 [INFO] Getting profile data
+2025-03-24 22:25:35,237 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:36:20,042 [INFO] Getting profile data
+2025-03-24 22:36:20,175 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:36:20,181 [INFO] Getting profile data
+2025-03-24 22:36:20,243 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:36:35,951 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:36:36,040 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:36:40,576 [INFO] Getting profile data
+2025-03-24 22:36:40,643 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:36:41,762 [INFO] Getting profile data
+2025-03-24 22:36:41,830 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:36:43,137 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:37:04,026 [INFO] Getting profile data
+2025-03-24 22:37:04,150 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:37:04,157 [INFO] Getting profile data
+2025-03-24 22:37:04,225 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:38:29,547 [INFO] Getting profile data
+2025-03-24 22:38:29,679 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:38:29,685 [INFO] Getting profile data
+2025-03-24 22:38:29,755 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:38:46,565 [INFO] Getting profile data
+2025-03-24 22:38:46,646 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:38:46,732 [INFO] Getting profile data
+2025-03-24 22:38:46,802 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:38:49,856 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:38:49,924 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:41:21,867 [INFO] Getting profile data
+2025-03-24 22:41:22,514 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:41:22,583 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742822211984-mmxyy64&limit=50 "HTTP/2 200 OK"
+2025-03-24 22:41:22,584 [INFO] Getting profile data
+2025-03-24 22:41:22,656 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:41:22,731 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742822211984-mmxyy64&limit=50 "HTTP/2 200 OK"
+2025-03-24 22:41:22,733 [INFO] Getting profile data
+2025-03-24 22:41:22,799 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:41:22,803 [INFO] Getting profile data
+2025-03-24 22:41:22,864 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:41:22,867 [INFO] Getting profile data
+2025-03-24 22:41:22,930 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:41:57,493 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:41:57,574 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:46:25,119 [INFO] Getting profile data
+2025-03-24 22:46:25,285 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:46:25,305 [INFO] Getting profile data
+2025-03-24 22:46:25,372 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:46:41,567 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:46:41,655 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:46:47,712 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:49:42,674 [INFO] Getting profile data
+2025-03-24 22:49:42,817 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:49:42,825 [INFO] Getting profile data
+2025-03-24 22:49:42,891 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:49:47,868 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:49:47,951 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:50:02,807 [INFO] Getting profile data
+2025-03-24 22:50:02,904 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:50:02,907 [INFO] Getting profile data
+2025-03-24 22:50:02,979 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:50:03,054 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742827603180-4oubbin&limit=50 "HTTP/2 200 OK"
+2025-03-24 22:50:03,124 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742827603180-4oubbin&limit=50 "HTTP/2 200 OK"
+2025-03-24 22:50:07,471 [INFO] Processing chat message
+2025-03-24 22:50:07,471 [INFO] Chat request from visitor: visitor-1742827603180-4oubbin, name: Saji, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 22:50:07,471 [INFO] User message: helooo...
+2025-03-24 22:50:07,558 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:50:07,559 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 22:50:07,559 [INFO] Querying vector DB for relevant context and conversation history
+2025-03-24 22:50:07,573 [INFO] Getting sequential conversation history for visitor: visitor-1742827603180-4oubbin
+2025-03-24 22:50:07,636 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742827603180-4oubbin&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 22:50:07,637 [INFO] No previous conversation history found
+2025-03-24 22:50:10,152 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 22:50:10,166 [INFO] Generated AI response: Hello! How can I assist you today?...
+2025-03-24 22:50:10,166 [INFO] Saving chat message to database...
+2025-03-24 22:50:10,232 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 22:50:10,233 [INFO] Adding conversation to vector database for future reference
+2025-03-24 22:50:11,146 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 22:50:11,166 [INFO] Chat message saved: True
+2025-03-24 22:50:17,879 [INFO] Processing chat message
+2025-03-24 22:50:17,879 [INFO] Chat request from visitor: visitor-1742827603180-4oubbin, name: Saji, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 22:50:17,880 [INFO] User message: how are you...
+2025-03-24 22:50:17,968 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:50:17,972 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 22:50:17,972 [INFO] Querying vector DB for relevant context and conversation history
+2025-03-24 22:50:19,208 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 22:50:19,211 [WARNING] Number of requested results 3 is greater than number of elements in index 1, updating n_results = 1
+2025-03-24 22:50:19,216 [INFO] Getting sequential conversation history for visitor: visitor-1742827603180-4oubbin
+2025-03-24 22:50:19,277 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742827603180-4oubbin&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 22:50:19,277 [INFO] Found 1 previous messages in conversation history
+2025-03-24 22:50:20,844 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 22:50:20,847 [INFO] Generated AI response: Hello! I'm here and ready to discuss UX design, pr...
+2025-03-24 22:50:20,847 [INFO] Saving chat message to database...
+2025-03-24 22:50:20,912 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 22:50:20,912 [INFO] Adding conversation to vector database for future reference
+2025-03-24 22:50:21,549 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 22:50:21,554 [INFO] Chat message saved: True
+2025-03-24 22:50:39,443 [INFO] Processing chat message
+2025-03-24 22:50:39,443 [INFO] Chat request from visitor: visitor-1742827603180-4oubbin, name: Saji, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 22:50:39,443 [INFO] User message: explain a project you did...
+2025-03-24 22:50:39,534 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:50:39,535 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 22:50:39,535 [INFO] Querying vector DB for relevant context and conversation history
+2025-03-24 22:50:40,251 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 22:50:40,255 [WARNING] Number of requested results 3 is greater than number of elements in index 2, updating n_results = 2
+2025-03-24 22:50:40,256 [INFO] Getting sequential conversation history for visitor: visitor-1742827603180-4oubbin
+2025-03-24 22:50:40,337 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742827603180-4oubbin&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 22:50:40,338 [INFO] Found 2 previous messages in conversation history
+2025-03-24 22:50:57,831 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 22:50:57,843 [INFO] Generated AI response: One of the projects I worked on was enhancing the ...
+2025-03-24 22:50:57,861 [INFO] Saving chat message to database...
+2025-03-24 22:50:57,948 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 22:50:57,949 [INFO] Adding conversation to vector database for future reference
+2025-03-24 22:50:58,733 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 22:50:58,739 [INFO] Chat message saved: True
+2025-03-24 22:51:15,942 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:51:16,011 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:52:09,800 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:52:10,604 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:54:24,374 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:54:24,448 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:54:40,283 [INFO] Getting profile data
+2025-03-24 22:54:40,372 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:54:40,377 [INFO] Getting profile data
+2025-03-24 22:54:40,448 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:54:43,404 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:54:43,482 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:57:01,377 [INFO] Getting profile data
+2025-03-24 22:57:01,478 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:57:01,482 [INFO] Getting profile data
+2025-03-24 22:57:01,550 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:57:06,841 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:57:06,921 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:57:13,145 [INFO] Getting profile data
+2025-03-24 22:57:13,238 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:57:13,241 [INFO] Getting profile data
+2025-03-24 22:57:13,308 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:57:14,692 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:57:14,766 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:57:20,641 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:57:21,768 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:57:21,831 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:57:38,713 [INFO] Getting profile data
+2025-03-24 22:57:38,889 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:57:38,894 [INFO] Getting profile data
+2025-03-24 22:57:38,961 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:57:40,037 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:57:40,106 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:57:53,328 [INFO] Getting profile data
+2025-03-24 22:57:53,433 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:57:53,442 [INFO] Getting profile data
+2025-03-24 22:57:53,525 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:57:55,955 [INFO] Getting profile data
+2025-03-24 22:57:56,024 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:57:56,049 [INFO] Getting profile data
+2025-03-24 22:57:56,115 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:57:57,048 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:57:57,115 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:58:02,148 [INFO] Getting profile data
+2025-03-24 22:58:02,274 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:58:02,277 [INFO] Getting profile data
+2025-03-24 22:58:02,356 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 22:58:04,187 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:58:04,259 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 22:58:06,410 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:00:44,204 [INFO] Getting profile data
+2025-03-24 23:00:44,706 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:00:44,710 [INFO] Getting profile data
+2025-03-24 23:00:44,781 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:00:44,869 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:00:44,940 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:00:45,031 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:00:45,118 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:06:01,373 [INFO] Getting profile data
+2025-03-24 23:06:01,543 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:06:01,553 [INFO] Getting profile data
+2025-03-24 23:06:01,620 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:06:34,522 [INFO] Getting profile data
+2025-03-24 23:06:34,791 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:06:34,803 [INFO] Getting profile data
+2025-03-24 23:06:34,973 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:08:28,545 [INFO] Getting profile data
+2025-03-24 23:08:28,655 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:08:28,660 [INFO] Getting profile data
+2025-03-24 23:08:28,745 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:09:51,869 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:09:51,935 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:10:41,484 [INFO] Getting profile data
+2025-03-24 23:10:42,815 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:10:42,818 [INFO] Getting profile data
+2025-03-24 23:10:42,884 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:10:42,974 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838042825-czzy5li&limit=50 "HTTP/2 200 OK"
+2025-03-24 23:10:43,044 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838042825-czzy5li&limit=50 "HTTP/2 200 OK"
+2025-03-24 23:10:57,278 [INFO] Processing chat message
+2025-03-24 23:10:57,278 [INFO] Chat request from visitor: visitor-1742838042825-czzy5li, name: Sharath, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 23:10:57,278 [INFO] User message: What are the fuck are you up to ...
+2025-03-24 23:10:57,359 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:10:57,360 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 23:10:57,360 [INFO] Querying vector DB for relevant context and conversation history
+2025-03-24 23:10:57,397 [INFO] Getting sequential conversation history for visitor: visitor-1742838042825-czzy5li
+2025-03-24 23:10:57,465 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838042825-czzy5li&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 23:10:57,466 [INFO] No previous conversation history found
+2025-03-24 23:11:00,397 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 23:11:00,405 [INFO] Generated AI response: I'm currently involved in several projects related...
+2025-03-24 23:11:00,405 [INFO] Saving chat message to database...
+2025-03-24 23:11:00,470 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 23:11:00,471 [INFO] Adding conversation to vector database for future reference
+2025-03-24 23:11:01,320 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:11:01,343 [INFO] Chat message saved: True
+2025-03-24 23:11:10,212 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:10,294 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:19,183 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:20,196 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:20,887 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:21,392 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:21,940 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:22,266 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:22,437 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:22,610 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:22,900 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:23,059 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:23,223 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:35,212 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:35,464 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:37,902 [INFO] Getting profile data
+2025-03-24 23:11:37,966 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:11:38,004 [INFO] Getting profile data
+2025-03-24 23:11:38,069 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:11:39,515 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:39,598 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:11:51,792 [INFO] Getting profile data
+2025-03-24 23:11:51,884 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:11:51,888 [INFO] Getting profile data
+2025-03-24 23:11:51,953 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:11:52,022 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838111893-5gzp3ds&limit=50 "HTTP/2 200 OK"
+2025-03-24 23:11:52,091 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838111893-5gzp3ds&limit=50 "HTTP/2 200 OK"
+2025-03-24 23:12:04,995 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:12:05,064 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:12:05,286 [INFO] Processing chat message
+2025-03-24 23:12:05,287 [INFO] Chat request from visitor: visitor-1742838111893-5gzp3ds, name: Ann, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 23:12:05,287 [INFO] User message: Hi where are you based out of ...
+2025-03-24 23:12:05,351 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:12:05,356 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 23:12:05,356 [INFO] Querying vector DB for relevant context and conversation history
+2025-03-24 23:12:06,210 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:12:06,218 [WARNING] Number of requested results 3 is greater than number of elements in index 1, updating n_results = 1
+2025-03-24 23:12:06,230 [INFO] Getting sequential conversation history for visitor: visitor-1742838111893-5gzp3ds
+2025-03-24 23:12:06,292 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838111893-5gzp3ds&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 23:12:06,292 [INFO] No previous conversation history found
+2025-03-24 23:12:07,372 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 23:12:07,375 [INFO] Generated AI response: I am based out of Bengaluru....
+2025-03-24 23:12:07,375 [INFO] Saving chat message to database...
+2025-03-24 23:12:07,435 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 23:12:07,435 [INFO] Adding conversation to vector database for future reference
+2025-03-24 23:12:08,111 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:12:08,117 [INFO] Chat message saved: True
+2025-03-24 23:12:17,024 [INFO] Processing chat message
+2025-03-24 23:12:17,025 [INFO] Chat request from visitor: visitor-1742838111893-5gzp3ds, name: Ann, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 23:12:17,025 [INFO] User message: years of experiance ...
+2025-03-24 23:12:17,119 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:12:17,123 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 23:12:17,123 [INFO] Querying vector DB for relevant context and conversation history
+2025-03-24 23:12:17,821 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:12:17,835 [WARNING] Number of requested results 3 is greater than number of elements in index 2, updating n_results = 2
+2025-03-24 23:12:17,836 [INFO] Getting sequential conversation history for visitor: visitor-1742838111893-5gzp3ds
+2025-03-24 23:12:17,905 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838111893-5gzp3ds&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 23:12:17,906 [INFO] Found 1 previous messages in conversation history
+2025-03-24 23:12:20,359 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 23:12:20,362 [INFO] Generated AI response: I prefer not to discuss that topic. However, I can...
+2025-03-24 23:12:20,362 [INFO] Saving chat message to database...
+2025-03-24 23:12:20,431 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 23:12:20,431 [INFO] Adding conversation to vector database for future reference
+2025-03-24 23:12:21,295 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:12:21,301 [INFO] Chat message saved: True
+2025-03-24 23:12:34,095 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:12:53,213 [INFO] Updating profile data
+2025-03-24 23:12:53,301 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:12:53,370 [INFO] HTTP Request: PATCH https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?id=eq.754093fa-dca3-4ec8-892c-b278e3207dc1 "HTTP/2 200 OK"
+2025-03-24 23:12:54,095 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:12:54,534 [INFO] Getting profile data
+2025-03-24 23:12:54,600 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:13:05,585 [INFO] Processing chat message
+2025-03-24 23:13:05,586 [INFO] Chat request from visitor: visitor-1742838042825-czzy5li, name: Sharath, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 23:13:05,586 [INFO] User message: How many years of experiance do you have ...
+2025-03-24 23:13:05,692 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:13:05,693 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 23:13:05,693 [INFO] Querying vector DB for relevant context and conversation history
+2025-03-24 23:13:06,587 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:13:06,594 [INFO] Getting sequential conversation history for visitor: visitor-1742838042825-czzy5li
+2025-03-24 23:13:06,667 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838042825-czzy5li&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 23:13:06,667 [INFO] Found 1 previous messages in conversation history
+2025-03-24 23:13:07,982 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 23:13:07,983 [INFO] Generated AI response: I have 5 years of experience in UX design, product...
+2025-03-24 23:13:07,984 [INFO] Saving chat message to database...
+2025-03-24 23:13:08,044 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 23:13:08,045 [INFO] Adding conversation to vector database for future reference
+2025-03-24 23:13:08,917 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:13:08,925 [INFO] Chat message saved: True
+2025-03-24 23:13:32,456 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:13:32,524 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:13:35,260 [INFO] Getting profile data
+2025-03-24 23:13:35,339 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:13:35,385 [INFO] Getting profile data
+2025-03-24 23:13:35,452 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:14:14,999 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:14:15,064 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:16:49,146 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:16:49,216 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:20:50,117 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:20:50,214 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:21:27,579 [INFO] Updating profile data
+2025-03-24 23:21:27,682 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:21:27,763 [INFO] HTTP Request: PATCH https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?id=eq.754093fa-dca3-4ec8-892c-b278e3207dc1 "HTTP/2 200 OK"
+2025-03-24 23:21:28,577 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:21:29,065 [INFO] Getting profile data
+2025-03-24 23:21:29,132 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:21:32,421 [INFO] Getting profile data
+2025-03-24 23:21:32,498 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:21:32,502 [INFO] Getting profile data
+2025-03-24 23:21:32,567 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:21:32,635 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838111893-5gzp3ds&limit=50 "HTTP/2 200 OK"
+2025-03-24 23:21:32,707 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838111893-5gzp3ds&limit=50 "HTTP/2 200 OK"
+2025-03-24 23:21:37,580 [INFO] Getting profile data
+2025-03-24 23:21:37,654 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:21:37,658 [INFO] Getting profile data
+2025-03-24 23:21:37,722 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:21:37,795 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838111893-5gzp3ds&limit=50 "HTTP/2 200 OK"
+2025-03-24 23:21:37,864 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838111893-5gzp3ds&limit=50 "HTTP/2 200 OK"
+2025-03-24 23:22:00,107 [INFO] Getting profile data
+2025-03-24 23:22:00,254 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:22:00,265 [INFO] Getting profile data
+2025-03-24 23:22:00,334 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:22:00,416 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838042825-czzy5li&limit=50 "HTTP/2 200 OK"
+2025-03-24 23:22:00,496 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838042825-czzy5li&limit=50 "HTTP/2 200 OK"
+2025-03-24 23:22:15,481 [INFO] Processing chat message
+2025-03-24 23:22:15,481 [INFO] Chat request from visitor: visitor-1742838042825-czzy5li, name: Sharath, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 23:22:15,482 [INFO] User message: hi...
+2025-03-24 23:22:15,567 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:22:15,568 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 23:22:15,568 [INFO] Querying vector DB for relevant context and conversation history
+2025-03-24 23:22:16,033 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:22:16,043 [INFO] Getting sequential conversation history for visitor: visitor-1742838042825-czzy5li
+2025-03-24 23:22:16,103 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838042825-czzy5li&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 23:22:16,104 [INFO] Found 2 previous messages in conversation history
+2025-03-24 23:22:17,084 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 23:22:17,090 [INFO] Generated AI response: Hello! How can I assist you today?...
+2025-03-24 23:22:17,090 [INFO] Saving chat message to database...
+2025-03-24 23:22:17,148 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 23:22:17,148 [INFO] Adding conversation to vector database for future reference
+2025-03-24 23:22:17,732 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:22:17,740 [INFO] Chat message saved: True
+2025-03-24 23:22:25,949 [INFO] Processing chat message
+2025-03-24 23:22:25,949 [INFO] Chat request from visitor: visitor-1742838042825-czzy5li, name: Sharath, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 23:22:25,949 [INFO] User message: do you love ammus...
+2025-03-24 23:22:26,032 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:22:26,034 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 23:22:26,034 [INFO] Querying vector DB for relevant context and conversation history
+2025-03-24 23:22:27,051 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:22:27,070 [INFO] Getting sequential conversation history for visitor: visitor-1742838042825-czzy5li
+2025-03-24 23:22:27,155 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838042825-czzy5li&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 23:22:27,156 [INFO] Found 3 previous messages in conversation history
+2025-03-24 23:22:28,320 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 23:22:28,322 [INFO] Generated AI response: Yes, I do love ammus....
+2025-03-24 23:22:28,323 [INFO] Saving chat message to database...
+2025-03-24 23:22:28,383 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 23:22:28,384 [INFO] Adding conversation to vector database for future reference
+2025-03-24 23:22:29,446 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:22:29,452 [INFO] Chat message saved: True
+2025-03-24 23:22:41,996 [INFO] Processing chat message
+2025-03-24 23:22:41,996 [INFO] Chat request from visitor: visitor-1742838042825-czzy5li, name: Sharath, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 23:22:41,996 [INFO] User message: what are your skills...
+2025-03-24 23:22:43,123 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:22:43,126 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 23:22:43,127 [INFO] Querying vector DB for relevant context and conversation history
+2025-03-24 23:22:43,702 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:22:43,706 [INFO] Getting sequential conversation history for visitor: visitor-1742838042825-czzy5li
+2025-03-24 23:22:43,777 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838042825-czzy5li&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 23:22:43,778 [INFO] Found 4 previous messages in conversation history
+2025-03-24 23:23:00,965 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 23:23:00,971 [INFO] Generated AI response: I have a diverse set of skills spanning several ar...
+2025-03-24 23:23:00,971 [INFO] Saving chat message to database...
+2025-03-24 23:23:01,056 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 23:23:01,057 [INFO] Adding conversation to vector database for future reference
+2025-03-24 23:23:01,480 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:23:01,485 [INFO] Chat message saved: True
+2025-03-24 23:23:14,831 [INFO] Processing chat message
+2025-03-24 23:23:14,831 [INFO] Chat request from visitor: visitor-1742838042825-czzy5li, name: Sharath, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 23:23:14,831 [INFO] User message: are you a good team player...
+2025-03-24 23:23:14,952 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:23:14,955 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 23:23:14,955 [INFO] Querying vector DB for relevant context and conversation history
+2025-03-24 23:23:15,398 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:23:15,401 [INFO] Getting sequential conversation history for visitor: visitor-1742838042825-czzy5li
+2025-03-24 23:23:15,485 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838042825-czzy5li&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 23:23:15,486 [INFO] Found 5 previous messages in conversation history
+2025-03-24 23:23:18,390 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 23:23:18,392 [INFO] Generated AI response: In my professional roles, I've collaborated with v...
+2025-03-24 23:23:18,392 [INFO] Saving chat message to database...
+2025-03-24 23:23:18,461 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 23:23:18,461 [INFO] Adding conversation to vector database for future reference
+2025-03-24 23:23:19,668 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:23:19,742 [INFO] Chat message saved: True
+2025-03-24 23:23:44,272 [INFO] Processing chat message
+2025-03-24 23:23:44,272 [INFO] Chat request from visitor: visitor-1742838042825-czzy5li, name: Sharath, user_id: e1cd716d-247f-4c35-aac7-17422aad35ac
+2025-03-24 23:23:44,272 [INFO] User message: can we schedule an meeting tommoroow...
+2025-03-24 23:23:44,353 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:23:44,356 [INFO] Retrieved profile data: 754093fa-dca3-4ec8-892c-b278e3207dc1
+2025-03-24 23:23:44,356 [INFO] Querying vector DB for relevant context and conversation history
+2025-03-24 23:23:44,882 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:23:44,887 [INFO] Getting sequential conversation history for visitor: visitor-1742838042825-czzy5li
+2025-03-24 23:23:44,950 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&visitor_id=eq.visitor-1742838042825-czzy5li&target_user_id=eq.e1cd716d-247f-4c35-aac7-17422aad35ac&limit=10 "HTTP/2 400 Bad Request"
+2025-03-24 23:23:44,950 [INFO] Found 6 previous messages in conversation history
+2025-03-24 23:23:46,453 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-24 23:23:46,473 [INFO] Generated AI response: I prefer not to discuss that topic. If you have qu...
+2025-03-24 23:23:46,473 [INFO] Saving chat message to database...
+2025-03-24 23:23:46,539 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 400 Bad Request"
+2025-03-24 23:23:46,540 [INFO] Adding conversation to vector database for future reference
+2025-03-24 23:23:47,236 [INFO] HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-03-24 23:23:47,242 [INFO] Chat message saved: True
+2025-03-24 23:24:13,251 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:24:13,318 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:24:22,613 [INFO] Getting profile data
+2025-03-24 23:24:22,689 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:24:22,746 [INFO] Getting profile data
+2025-03-24 23:24:22,806 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:24:25,497 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:24:25,570 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:24:29,102 [INFO] Getting profile data
+2025-03-24 23:24:29,171 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:24:29,201 [INFO] Getting profile data
+2025-03-24 23:24:29,267 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:24:30,729 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:24:30,797 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:27:03,401 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:27:03,491 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&order=timestamp.desc&limit=1000 "HTTP/2 200 OK"
+2025-03-24 23:27:09,205 [INFO] Getting profile data
+2025-03-24 23:27:09,302 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:27:09,305 [INFO] Getting profile data
+2025-03-24 23:27:09,384 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:28:00,438 [INFO] Getting profile data
+2025-03-24 23:28:00,539 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-24 23:28:00,542 [INFO] Getting profile data
+2025-03-24 23:28:00,611 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/profiles?select=%2A&limit=1 "HTTP/2 200 OK"
