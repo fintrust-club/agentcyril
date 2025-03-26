@@ -10,7 +10,7 @@ class ChatRequest(BaseModel):
     message: str = Field(..., description="The message sent by the user")
     visitor_id: str = Field(..., description="Unique identifier for the visitor")
     visitor_name: Optional[str] = Field(None, description="Optional name for the visitor")
-    target_user_id: Optional[str] = Field(None, description="Optional target user ID for user-specific chatbots")
+    chatbot_id: Optional[str] = Field(None, description="Identifier for the specific chatbot to chat with")
 
 
 class ChatResponse(BaseModel):
@@ -31,7 +31,6 @@ class ChatHistoryItem(BaseModel):
     response: Optional[str] = None
     visitor_id: str
     visitor_name: Optional[str] = None
-    target_user_id: Optional[str] = None
     timestamp: str
 
 
@@ -50,10 +49,10 @@ class Project(BaseModel):
     id: Optional[str] = None
     title: str = Field(..., description="Project title")
     description: str = Field(..., description="Project description")
-    category: str = Field(..., description="Project category (tech, design, other)")
-    details: str = Field(..., description="Project details")
-    content: Optional[str] = Field(None, description="Rich document content in Lexical format")
-    content_html: Optional[str] = Field(None, description="HTML representation of the Lexical content for fallback display")
+    technologies: Optional[str] = Field(None, description="Technologies used")
+    image_url: Optional[str] = Field(None, description="Project image URL")
+    project_url: Optional[str] = Field(None, description="Project URL")
+    is_featured: Optional[bool] = Field(False, description="Whether project is featured")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -69,11 +68,37 @@ class ProfileData(BaseModel):
     bio: str
     skills: str
     experience: str
-    projects: Optional[str] = None  # Keeping for backward compatibility
-    project_list: Optional[List[Project]] = Field(default_factory=list, description="List of projects")
     interests: str
+    project_list: Optional[List[Project]] = Field(default_factory=list, description="List of projects")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+
+class ChatbotModel(BaseModel):
+    """
+    Model for a chatbot
+    """
+    id: Optional[str] = None
+    user_id: str
+    name: str = Field(..., description="The name of the chatbot")
+    description: Optional[str] = Field(None, description="Description of the chatbot")
+    is_public: bool = Field(True, description="Whether the chatbot is publicly accessible")
+    configuration: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Configuration options for the chatbot")
+    public_url_slug: Optional[str] = Field(None, description="URL slug for public access")
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
+class VisitorModel(BaseModel):
+    """
+    Model for a visitor
+    """
+    id: Optional[str] = None
+    visitor_id: str
+    name: Optional[str] = None
+    email: Optional[str] = None
+    first_seen: Optional[datetime] = None
+    last_seen: Optional[datetime] = None
 
 
 class AdminLoginRequest(BaseModel):

@@ -102,7 +102,7 @@ export default function ChatbotsPage() {
         <div className="container mx-auto px-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-primary">AI Assistants</h1>
           <nav className="flex items-center space-x-4">
-            <Link href="/dashboard" className="text-sm font-medium">
+            <Link href="/" className="text-sm font-medium">
               Dashboard
             </Link>
             <ThemeToggle />

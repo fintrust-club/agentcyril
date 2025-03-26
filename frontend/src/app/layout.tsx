@@ -6,7 +6,7 @@ import { Inter } from 'next/font/google';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
-import { supabase } from '@/utils/supabase';
+import { AuthProvider } from '@/hooks/useAuth';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -17,31 +17,10 @@ export default function RootLayout({
 }) {
   const [queryClient] = useState(() => new QueryClient());
   const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<any>(null);
 
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
-    
-    // Check if user is logged in
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      setUser(data.session?.user || null);
-      
-      // Subscribe to auth changes
-      const { data: authListener } = supabase.auth.onAuthStateChange(
-        (event, session) => {
-          setUser(session?.user || null);
-        }
-      );
-      
-      // Cleanup
-      return () => {
-        authListener.subscription.unsubscribe();
-      };
-    };
-    
-    checkAuth();
   }, []);
 
   return (
@@ -59,12 +38,14 @@ export default function RootLayout({
         {mounted && (
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <QueryClientProvider client={queryClient}>
-              <div className="flex flex-col min-h-screen">
-                <div className="flex-1">
-                  {children}
+              <AuthProvider>
+                <div className="flex flex-col min-h-screen">
+                  <div className="flex-1">
+                    {children}
+                  </div>
                 </div>
-              </div>
-              <Toaster />
+                <Toaster />
+              </AuthProvider>
             </QueryClientProvider>
           </ThemeProvider>
         )}

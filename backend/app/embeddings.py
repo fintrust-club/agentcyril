@@ -51,7 +51,7 @@ portfolio_collection = chroma_client.get_or_create_collection(
 def add_profile_to_vector_db(profile_data, user_id=None):
     """
     Add profile data to the vector database
-    Note: user_id param is kept for compatibility but we use a single collection for now
+    Includes user_id in metadata to allow filtering by specific user
     """
     try:
         # For simplicity, we'll use a single collection for all profiles
@@ -64,10 +64,24 @@ def add_profile_to_vector_db(profile_data, user_id=None):
             embedding_function=openai_ef
         )
         
-        # Clear existing documents from this collection
+        # Extract user ID from profile data if not explicitly provided
+        effective_user_id = user_id or profile_data.get("user_id")
+        
+        if not effective_user_id:
+            print("Warning: No user_id provided for vector DB entry. Profile data will not be user-specific.")
+            effective_user_id = "default"
+        else:
+            print(f"Adding profile data to vector DB for user_id: {effective_user_id}")
+        
+        # Clear existing profile documents for this specific user
         try:
-            collection.delete(where={"category": {"$eq": "profile"}})
-            print(f"Cleared existing profile documents from collection {collection_name}")
+            collection.delete(where={
+                "$and": [
+                    {"category": {"$eq": "profile"}},
+                    {"user_id": {"$eq": effective_user_id}}
+                ]
+            })
+            print(f"Cleared existing profile documents for user {effective_user_id}")
         except Exception as clear_error:
             print(f"Error clearing collection (may be empty): {clear_error}")
         
@@ -79,44 +93,44 @@ def add_profile_to_vector_db(profile_data, user_id=None):
         # Add name
         if profile_data.get("name"):
             documents.append(profile_data["name"])
-            metadatas.append({"category": "profile", "subcategory": "name"})
-            ids.append("name")
+            metadatas.append({"category": "profile", "subcategory": "name", "user_id": effective_user_id})
+            ids.append(f"name_{effective_user_id}")
         
         # Add location
         if profile_data.get("location"):
             documents.append(profile_data["location"])
-            metadatas.append({"category": "profile", "subcategory": "location"})
-            ids.append("location")
+            metadatas.append({"category": "profile", "subcategory": "location", "user_id": effective_user_id})
+            ids.append(f"location_{effective_user_id}")
         
         # Add bio
         if profile_data.get("bio"):
             documents.append(profile_data["bio"])
-            metadatas.append({"category": "profile", "subcategory": "bio"})
-            ids.append("bio")
+            metadatas.append({"category": "profile", "subcategory": "bio", "user_id": effective_user_id})
+            ids.append(f"bio_{effective_user_id}")
         
         # Add skills
         if profile_data.get("skills"):
             documents.append(profile_data["skills"])
-            metadatas.append({"category": "profile", "subcategory": "skills"})
-            ids.append("skills")
+            metadatas.append({"category": "profile", "subcategory": "skills", "user_id": effective_user_id})
+            ids.append(f"skills_{effective_user_id}")
         
         # Add experience
         if profile_data.get("experience"):
             documents.append(profile_data["experience"])
-            metadatas.append({"category": "profile", "subcategory": "experience"})
-            ids.append("experience")
+            metadatas.append({"category": "profile", "subcategory": "experience", "user_id": effective_user_id})
+            ids.append(f"experience_{effective_user_id}")
         
         # Add legacy projects text if it exists
         if profile_data.get("projects"):
             documents.append(profile_data["projects"])
-            metadatas.append({"category": "profile", "subcategory": "projects"})
-            ids.append("projects")
+            metadatas.append({"category": "profile", "subcategory": "projects", "user_id": effective_user_id})
+            ids.append(f"projects_{effective_user_id}")
         
         # Add interests
         if profile_data.get("interests"):
             documents.append(profile_data["interests"])
-            metadatas.append({"category": "profile", "subcategory": "interests"})
-            ids.append("interests")
+            metadatas.append({"category": "profile", "subcategory": "interests", "user_id": effective_user_id})
+            ids.append(f"interests_{effective_user_id}")
         
         # Add documents to collection
         if documents:
@@ -125,17 +139,17 @@ def add_profile_to_vector_db(profile_data, user_id=None):
                 metadatas=metadatas,
                 ids=ids
             )
-            print(f"Successfully added {len(documents)} profile documents to vector database")
+            print(f"Successfully added {len(documents)} profile documents to vector database for user {effective_user_id}")
             
         # Now add projects from project_list if available
-        add_projects_to_vector_db(profile_data.get("project_list", []))
+        add_projects_to_vector_db(profile_data.get("project_list", []), user_id=effective_user_id)
         
         return True
     except Exception as e:
         print(f"Error adding profile to vector database: {e}")
         return False
 
-def add_projects_to_vector_db(projects_list):
+def add_projects_to_vector_db(projects_list, user_id=None):
     """
     Add project items to the vector database
     """
@@ -178,9 +192,10 @@ def add_projects_to_vector_db(projects_list):
                     "category": "project", 
                     "subcategory": "title",
                     "project_id": project_id,
-                    "project_category": project.get("category", "")
+                    "project_category": project.get("category", ""),
+                    "user_id": user_id
                 })
-                ids.append(f"project_title_{project_id}")
+                ids.append(f"project_title_{project_id}_{user_id}")
             
             # Add project description
             if project.get("description"):
@@ -189,9 +204,10 @@ def add_projects_to_vector_db(projects_list):
                     "category": "project", 
                     "subcategory": "description",
                     "project_id": project_id,
-                    "project_category": project.get("category", "")
+                    "project_category": project.get("category", ""),
+                    "user_id": user_id
                 })
-                ids.append(f"project_description_{project_id}")
+                ids.append(f"project_description_{project_id}_{user_id}")
                 
             # Add project details
             if project.get("details"):
@@ -200,9 +216,10 @@ def add_projects_to_vector_db(projects_list):
                     "category": "project", 
                     "subcategory": "details",
                     "project_id": project_id,
-                    "project_category": project.get("category", "")
+                    "project_category": project.get("category", ""),
+                    "user_id": user_id
                 })
-                ids.append(f"project_details_{project_id}")
+                ids.append(f"project_details_{project_id}_{user_id}")
                 
             # Add project content - supporting both Lexical and legacy content
             content_text = ""
@@ -256,9 +273,10 @@ def add_projects_to_vector_db(projects_list):
                             "chunk_index": i,
                             "total_chunks": len(chunks),
                             "project_id": project_id,
-                            "project_category": project.get("category", "")
+                            "project_category": project.get("category", ""),
+                            "user_id": user_id
                         })
-                        ids.append(f"project_content_{project_id}_{i}")
+                        ids.append(f"project_content_{project_id}_{i}_{user_id}")
                 else:
                     # Add the whole content as one document
                     documents.append(content_text)
@@ -266,9 +284,10 @@ def add_projects_to_vector_db(projects_list):
                         "category": "project", 
                         "subcategory": "content",
                         "project_id": project_id,
-                        "project_category": project.get("category", "")
+                        "project_category": project.get("category", ""),
+                        "user_id": user_id
                     })
-                    ids.append(f"project_content_{project_id}")
+                    ids.append(f"project_content_{project_id}_{user_id}")
         
         # Add documents to collection
         if documents:
@@ -277,16 +296,17 @@ def add_projects_to_vector_db(projects_list):
                 metadatas=metadatas,
                 ids=ids
             )
-            print(f"Successfully added {len(documents)} project documents to vector database")
+            print(f"Successfully added {len(documents)} project documents to vector database for user {user_id}")
         
         return True
     except Exception as e:
         print(f"Error adding projects to vector database: {e}")
         return False
 
-def add_conversation_to_vector_db(message, response, visitor_id, message_id=None):
+def add_conversation_to_vector_db(message, response, visitor_id, message_id=None, user_id=None):
     """
     Add conversation exchange to the vector database for future context retrieval
+    Include user_id to ensure proper segregation of conversation data by chatbot owner
     """
     try:
         # Use the portfolio collection for simplicity, but with different category
@@ -306,15 +326,23 @@ def add_conversation_to_vector_db(message, response, visitor_id, message_id=None
         # Format the conversation as a complete exchange for context
         conversation_text = f"User asked: {message}\nYou responded: {response}"
         
+        # Create metadata with user_id if provided
+        metadata = {
+            "category": "conversation",
+            "subcategory": "exchange",
+            "visitor_id": visitor_id,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+        # Add user_id if provided
+        if user_id:
+            metadata["user_id"] = user_id
+            print(f"Including user_id {user_id} in conversation metadata")
+        
         # Add to vector DB
         collection.add(
             documents=[conversation_text],
-            metadatas=[{
-                "category": "conversation",
-                "subcategory": "exchange",
-                "visitor_id": visitor_id,
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
-            }],
+            metadatas=[metadata],
             ids=[f"conversation_{message_id}"]
         )
         
@@ -350,44 +378,95 @@ def query_vector_db(query, n_results=3, user_id=None, visitor_id=None, include_c
                 "distances": []
             }
         
-        # Query collection with query text
+        # Initial query without user filtering - we'll filter results later
+        # This avoids potential issues with complex where clauses
+        print(f"Executing initial vector DB query")
         results = collection.query(
             query_texts=[query],
-            n_results=n_results,
-            where=({"category": {"$ne": "conversation"}} if not include_conversation else None)
+            n_results=n_results
         )
         
         # If visitor_id is provided and include_conversation is True,
         # also search for relevant conversation history
         if visitor_id and include_conversation:
             print(f"Also searching conversation history for visitor: {visitor_id}")
-            conversation_results = collection.query(
-                query_texts=[query],
-                n_results=3,  # Get top 3 relevant conversation exchanges
-                where={"category": "conversation", "visitor_id": visitor_id}
-            )
-            
-            # Append conversation results if any found
-            if conversation_results and len(conversation_results.get("documents", [[]])[0]) > 0:
-                print(f"Found {len(conversation_results['documents'][0])} relevant conversation exchanges")
+            try:
+                # Fixed proper where clause format with $eq operators
+                conversation_filter = {
+                    "$and": [
+                        {"category": {"$eq": "conversation"}},
+                        {"visitor_id": {"$eq": visitor_id}}
+                    ]
+                }
                 
-                # Add to results
-                for i, doc in enumerate(conversation_results["documents"][0]):
-                    results["documents"][0].append(doc)
-                    results["metadatas"][0].append(conversation_results["metadatas"][0][i])
-                    results["distances"][0].append(conversation_results["distances"][0][i])
+                conversation_results = collection.query(
+                    query_texts=[query],
+                    n_results=3,  # Get top 3 relevant conversation exchanges
+                    where=conversation_filter
+                )
+                
+                # Append conversation results if any found
+                if conversation_results and len(conversation_results.get("documents", [[]])[0]) > 0:
+                    print(f"Found {len(conversation_results['documents'][0])} relevant conversation exchanges")
+                    
+                    # Add to results
+                    for i, doc in enumerate(conversation_results["documents"][0]):
+                        results["documents"][0].append(doc)
+                        results["metadatas"][0].append(conversation_results["metadatas"][0][i])
+                        results["distances"][0].append(conversation_results["distances"][0][i])
+            except Exception as conv_error:
+                print(f"Error fetching conversation history: {str(conv_error)}")
+                # Continue with the regular results if conversation query fails
         
         # Extract and structure results
-        query_results = {
-            "documents": results.get("documents", [[]])[0],
-            "metadatas": results.get("metadatas", [[]])[0],
-            "distances": results.get("distances", [[]])[0]
-        }
+        documents = results.get("documents", [[]])[0]
+        metadatas = results.get("metadatas", [[]])[0]
+        distances = results.get("distances", [[]])[0]
+        
+        # Now manually filter the results if user_id is provided
+        if user_id:
+            print(f"Filtering results by user_id: {user_id}")
+            filtered_docs = []
+            filtered_meta = []
+            filtered_dist = []
+            
+            for i, meta in enumerate(metadatas):
+                # Include documents that:
+                # 1. Match the user's profile or project data, OR
+                # 2. Are conversation data
+                category = meta.get("category")
+                doc_user_id = meta.get("user_id")
+                
+                if category == "conversation":
+                    # Always include conversation data
+                    filtered_docs.append(documents[i])
+                    filtered_meta.append(meta)
+                    filtered_dist.append(distances[i])
+                elif doc_user_id == user_id:
+                    # Include user-specific data
+                    filtered_docs.append(documents[i])
+                    filtered_meta.append(meta)
+                    filtered_dist.append(distances[i])
+            
+            # Replace the results with filtered results
+            query_results = {
+                "documents": filtered_docs,
+                "metadatas": filtered_meta,
+                "distances": filtered_dist
+            }
+        else:
+            # No filtering needed
+            query_results = {
+                "documents": documents,
+                "metadatas": metadatas,
+                "distances": distances
+            }
         
         print(f"Query '{query}' returned {len(query_results['documents'])} total results")
         return query_results
     except Exception as e:
-        print(f"Error querying vector database: {e}")
+        print(f"Error querying vector database: {str(e)}")
+        # Return empty results on error to avoid breaking the chat flow
         return {
             "documents": [],
             "metadatas": [],
@@ -413,17 +492,35 @@ def generate_ai_response(query, search_results, profile_data=None, chat_history=
         print("[WARNING] No vector DB results to include in context - response will be limited")
     
     # Extract name from profile data for better personalization
-    user_name = profile_data.get('name', '') if profile_data else ''
-    if not user_name and profile_data and profile_data.get('bio'):
-        # Try to extract name from bio if name field is empty
-        bio = profile_data.get('bio', '')
-        if 'I am ' in bio:
-            try:
-                name_part = bio.split('I am ')[1].split(' ')[0]
-                if len(name_part) > 2:  # Ensure it's likely a name, not just "a" or "an"
-                    user_name = name_part
-            except:
-                pass
+    user_name = ""
+    if profile_data:
+        # First try to use the dedicated name field
+        if profile_data.get('name') and profile_data.get('name').strip():
+            user_name = profile_data.get('name').strip()
+            print(f"[INFO] Using name from profile: '{user_name}'")
+        # If no name field, try to extract from bio if available
+        elif profile_data.get('bio'):
+            bio = profile_data.get('bio', '')
+            print(f"[INFO] No name field found, attempting to extract from bio: '{bio[:100]}...'")
+            if 'I am ' in bio:
+                try:
+                    name_part = bio.split('I am ')[1].split(' ')[0]
+                    if name_part and len(name_part) > 2:  # Ensure it's likely a name, not just "a" or "an"
+                        user_name = name_part
+                        print(f"[INFO] Successfully extracted name '{user_name}' from bio")
+                    else:
+                        print(f"[WARNING] Extracted name too short: '{name_part}', using default")
+                except Exception as e:
+                    print(f"[ERROR] Error extracting name from bio: {str(e)}")
+            else:
+                print(f"[WARNING] Bio doesn't contain 'I am ' pattern, couldn't extract name")
+        
+        if not user_name:
+            user_name = "the person"
+            print(f"[WARNING] No name available, using generic placeholder '{user_name}'")
+    else:
+        print(f"[ERROR] No profile data provided, using generic placeholder for name")
+        user_name = "the person"
     
     # Create a comprehensive profile context
     profile_context = ""

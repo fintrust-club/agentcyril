@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@modelcontextprotocol/server-postgres": "^0.6.2"
+    "@modelcontextprotocol/server-postgres": "^0.6.2",
+    "@supabase/auth-helpers-nextjs": "^0.10.0"
   }
 }

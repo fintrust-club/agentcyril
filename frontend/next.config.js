@@ -34,7 +34,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
               "font-src 'self' https://fonts.gstatic.com; " +
               "img-src 'self' data: blob: https://lh3.googleusercontent.com; " +
-              "connect-src 'self' http://localhost:8000 https://*.supabase.co https://api.openai.com " +
+              "connect-src 'self' " + process.env.NEXT_PUBLIC_BACKEND_URL + " https://*.supabase.co https://api.openai.com " +
               "https://fonts.googleapis.com https://fonts.gstatic.com; " +
               "frame-ancestors 'none';"
           }

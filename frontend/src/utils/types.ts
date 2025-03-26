@@ -13,11 +13,12 @@ export interface Project {
 
 export interface ProfileData {
   id?: string;
+  user_id?: string;
   bio: string;
   skills: string;
   experience: string;
-  projects?: string; // Keeping for backward compatibility
-  project_list?: Project[];
+  projects?: string; // Text field for projects (used in older/current schema)
+  project_list?: Project[]; // Array of Project objects (used in newer schema)
   interests: string;
   name?: string;
   location?: string;
@@ -32,4 +33,16 @@ export interface ChatMessage {
 
 export interface ChatResponse {
   response: string;
+}
+
+export interface Chatbot {
+  id?: string;
+  user_id: string;
+  name: string;
+  description?: string;
+  is_public?: boolean;
+  configuration?: Record<string, any>;
+  public_url_slug?: string;
+  created_at?: string;
+  updated_at?: string;
 } 
