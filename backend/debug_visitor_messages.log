@@ -1,0 +1,54 @@
+2025-03-27 14:34:01,756 [INFO] Starting visitor message debug script
+2025-03-27 14:34:01,780 [INFO] Connected to Supabase
+2025-03-27 14:34:01,781 [INFO] Testing visitor message flow
+2025-03-27 14:34:01,781 [INFO] Generated test visitor ID: debug_v_7a5d602a
+2025-03-27 14:34:01,781 [INFO] Getting or creating visitor with ID: debug_v_7a5d602a
+2025-03-27 14:34:01,896 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/visitors?select=%2A&visitor_id=eq.debug_v_7a5d602a "HTTP/2 200 OK"
+2025-03-27 14:34:01,965 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/visitors "HTTP/2 201 Created"
+2025-03-27 14:34:01,966 [INFO] Created new visitor with database ID: 9e8383fd-e946-4e57-a0a0-2f1456b79b42
+2025-03-27 14:34:01,966 [INFO] Getting a chatbot for testing
+2025-03-27 14:34:02,026 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/chatbots?select=%2A&limit=1 "HTTP/2 200 OK"
+2025-03-27 14:34:02,026 [INFO] Found chatbot with ID: a9c03dad-2a1f-4aec-816e-f3aed88158a8
+2025-03-27 14:34:02,026 [INFO] Sending test message 1/3
+2025-03-27 14:34:02,026 [INFO] Logging chat message: This is test message 1
+2025-03-27 14:34:02,026 [INFO] Message data: {"message": "This is test message 1", "sender": "user", "response": "Test response to: This is test message 1", "visitor_id": "9e8383fd-e946-4e57-a0a0-2f1456b79b42", "visitor_id_text": "debug_v_7a5d602a", "chatbot_id": "a9c03dad-2a1f-4aec-816e-f3aed88158a8", "created_at": "2025-03-27T09:04:02Z", "timestamp": "2025-03-27T09:04:02Z"}
+2025-03-27 14:34:02,092 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 201 Created"
+2025-03-27 14:34:02,093 [INFO] Successfully logged message with ID: c371c5a2-a024-44d5-a5d0-84b66c035483
+2025-03-27 14:34:02,093 [INFO] Message 1 recorded successfully
+2025-03-27 14:34:02,093 [INFO] Sending test message 2/3
+2025-03-27 14:34:02,093 [INFO] Logging chat message: This is test message 2
+2025-03-27 14:34:02,093 [INFO] Message data: {"message": "This is test message 2", "sender": "user", "response": "Test response to: This is test message 2", "visitor_id": "9e8383fd-e946-4e57-a0a0-2f1456b79b42", "visitor_id_text": "debug_v_7a5d602a", "chatbot_id": "a9c03dad-2a1f-4aec-816e-f3aed88158a8", "created_at": "2025-03-27T09:04:02Z", "timestamp": "2025-03-27T09:04:02Z"}
+2025-03-27 14:34:02,170 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 201 Created"
+2025-03-27 14:34:02,172 [INFO] Successfully logged message with ID: 62b3c2a7-687e-4269-a4a9-71a433eda4b6
+2025-03-27 14:34:02,173 [INFO] Message 2 recorded successfully
+2025-03-27 14:34:02,173 [INFO] Sending test message 3/3
+2025-03-27 14:34:02,173 [INFO] Logging chat message: This is test message 3
+2025-03-27 14:34:02,173 [INFO] Message data: {"message": "This is test message 3", "sender": "user", "response": "Test response to: This is test message 3", "visitor_id": "9e8383fd-e946-4e57-a0a0-2f1456b79b42", "visitor_id_text": "debug_v_7a5d602a", "chatbot_id": "a9c03dad-2a1f-4aec-816e-f3aed88158a8", "created_at": "2025-03-27T09:04:02Z", "timestamp": "2025-03-27T09:04:02Z"}
+2025-03-27 14:34:02,242 [INFO] HTTP Request: POST https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages "HTTP/2 201 Created"
+2025-03-27 14:34:02,242 [INFO] Successfully logged message with ID: adbd8ce4-e9e5-407f-83ed-94625abfdf33
+2025-03-27 14:34:02,242 [INFO] Message 3 recorded successfully
+2025-03-27 14:34:02,243 [INFO] Sent 3/3 test messages
+2025-03-27 14:34:03,245 [INFO] Getting chat history for visitor ID: debug_v_7a5d602a
+2025-03-27 14:34:03,316 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/visitors?select=id&visitor_id=eq.debug_v_7a5d602a "HTTP/2 200 OK"
+2025-03-27 14:34:03,316 [INFO] Found visitor with UUID: 9e8383fd-e946-4e57-a0a0-2f1456b79b42
+2025-03-27 14:34:03,386 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&visitor_id=eq.9e8383fd-e946-4e57-a0a0-2f1456b79b42&order=created_at.desc&limit=50 "HTTP/2 200 OK"
+2025-03-27 14:34:03,387 [INFO] Found 3 messages using visitor UUID
+2025-03-27 14:34:03,388 [INFO] Retrieved 3 messages from chat history
+2025-03-27 14:34:03,388 [INFO] ✅ Successfully retrieved all test messages!
+2025-03-27 14:34:03,388 [INFO] Message 1: This is test message 1
+2025-03-27 14:34:03,388 [INFO] Message 2: This is test message 2
+2025-03-27 14:34:03,388 [INFO] Message 3: This is test message 3
+2025-03-27 14:34:03,388 [INFO] ✅ Visitor message flow test passed!
+2025-03-27 14:34:11,971 [INFO] Starting visitor message debug script
+2025-03-27 14:34:11,994 [INFO] Connected to Supabase
+2025-03-27 14:34:11,995 [INFO] Debugging specific visitor ID: 009ab473-dfe7-4370-8ddc-3e66d55099f7
+2025-03-27 14:34:11,995 [INFO] Debugging visitor queries for ID: 009ab473-dfe7-4370-8ddc-3e66d55099f7
+2025-03-27 14:34:12,413 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/visitors?select=%2A&visitor_id=eq.009ab473-dfe7-4370-8ddc-3e66d55099f7 "HTTP/2 200 OK"
+2025-03-27 14:34:12,417 [INFO] ✅ Found visitor in visitors table:
+2025-03-27 14:34:12,418 [INFO]   - Database ID (UUID): 4d25b331-68b0-4071-9196-6867e68067ea
+2025-03-27 14:34:12,418 [INFO]   - Visitor ID (TEXT): 009ab473-dfe7-4370-8ddc-3e66d55099f7
+2025-03-27 14:34:12,418 [INFO]   - Name: Ciril
+2025-03-27 14:34:12,482 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&visitor_id=eq.4d25b331-68b0-4071-9196-6867e68067ea "HTTP/2 200 OK"
+2025-03-27 14:34:12,483 [INFO] ✅ Found 1 messages with visitor UUID
+2025-03-27 14:34:12,550 [INFO] HTTP Request: GET https://byddvbuzcgegasqeyuuc.supabase.co/rest/v1/messages?select=%2A&visitor_id_text=eq.009ab473-dfe7-4370-8ddc-3e66d55099f7 "HTTP/2 200 OK"
+2025-03-27 14:34:12,551 [INFO] ✅ Found 1 messages with visitor_id_text

@@ -427,7 +427,7 @@ def get_or_create_visitor(visitor_id, visitor_name=None):
         if not visitor_id:
             return None
         
-        # Check if visitor already exists
+        # Check if visitor already exists using visitor_id field (TEXT) from frontend
         response = supabase.table("visitors").select("*").eq("visitor_id", visitor_id).execute()
         
         if response.data and len(response.data) > 0:
@@ -444,10 +444,10 @@ def get_or_create_visitor(visitor_id, visitor_name=None):
                 return update_response.data[0]
             return visitor
         
-        # Create new visitor
+        # Create new visitor with TEXT visitor_id 
         visitor_data = {
-            "visitor_id": visitor_id,
-            "name": visitor_name,
+            "visitor_id": visitor_id,  # This is the frontend-generated text ID
+            "name": visitor_name or "",  # Use empty string if name is not provided
             "first_seen": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
             "last_seen": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
         }
@@ -455,11 +455,13 @@ def get_or_create_visitor(visitor_id, visitor_name=None):
         response = supabase.table("visitors").insert(visitor_data).execute()
         
         if response.data and len(response.data) > 0:
+            logger.info(f"Successfully created new visitor with DB ID: {response.data[0]['id']}")
             return response.data[0]
         
         return None
     except Exception as e:
         logger.error(f"Error getting or creating visitor: {e}")
+        logger.error(f"Error trace: {traceback.format_exc()}")
         return None
 
 def log_chat_message(message, sender="user", response=None, visitor_id=None, visitor_name=None, target_user_id=None, chatbot_id=None):
@@ -514,13 +516,26 @@ def log_chat_message(message, sender="user", response=None, visitor_id=None, vis
             "response": response,
             "created_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
             "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-            "visitor_id_text": visitor_id  # Store the original visitor ID text
         }
         
-        # Add visitor ID if available (using the database ID)
-        if visitor:
-            message_data["visitor_id"] = visitor["id"]
-        
+        # Handle visitor_id fields: 
+        # 1. visitor_id should be the UUID primary key from visitors table
+        # 2. visitor_id_text should be the original string ID from the frontend
+        if visitor_id:
+            # For compatibility, check if visitor_id_text column exists
+            schema_check = supabase.table("messages").select("visitor_id_text").limit(1).execute()
+            has_visitor_id_text = schema_check.data and len(schema_check.data) > 0 and 'visitor_id_text' in schema_check.data[0]
+            
+            if has_visitor_id_text:
+                # Store the original text ID in visitor_id_text for direct lookup
+                message_data["visitor_id_text"] = visitor_id
+                logger.info(f"Added visitor_id_text: {visitor_id}")
+            
+            # If we got a visitor record, use its UUID primary key for the visitor_id field
+            if visitor and "id" in visitor:
+                message_data["visitor_id"] = visitor["id"]
+                logger.info(f"Added visitor_id UUID: {visitor['id']}")
+            
         # Add target user ID if available (for backward compatibility)
         if target_user_id:
             message_data["target_user_id"] = target_user_id
@@ -565,7 +580,7 @@ def log_chat_message(message, sender="user", response=None, visitor_id=None, vis
                 return None
         
         # Log the message data for debugging
-        logger.info(f"Logging chat message: {message_data}")
+        logger.info(f"Final message data for insertion: {message_data}")
         
         try:
             # Insert the message
@@ -591,58 +606,102 @@ def log_chat_message(message, sender="user", response=None, visitor_id=None, vis
 def get_chat_history(limit=50, visitor_id=None, chatbot_id=None, target_user_id=None):
     """
     Get chat history from Supabase using the new schema
+    Handles both UUID references and direct visitor_id_text lookups
     """
     try:
+        logger.info(f"Getting chat history with params: limit={limit}, visitor_id={visitor_id}, chatbot_id={chatbot_id}, target_user_id={target_user_id}")
         result_messages = []
         
         if supabase:
             try:
+                # Start building the query
+                query = supabase.table("messages").select("*").order("created_at", desc=True).limit(limit)
+                
+                # Filter by chatbot_id if provided
                 if chatbot_id:
-                    # Direct query by chatbot_id
-                    query = supabase.table("messages").select("*").eq("chatbot_id", chatbot_id)
+                    query = query.eq("chatbot_id", chatbot_id)
+                    logger.info(f"Filtering messages by chatbot_id: {chatbot_id}")
                 
-                    # Filter by visitor_id if provided
-                if visitor_id:
-                        # First find the visitor record
-                        visitor_response = supabase.table("visitors").select("id").eq("visitor_id", visitor_id).execute()
-                        if visitor_response.data and len(visitor_response.data) > 0:
-                            visitor_db_id = visitor_response.data[0]["id"]
-                            query = query.eq("visitor_id", visitor_db_id)
+                # If we have a target_user_id but no chatbot_id, get the user's chatbots
                 elif target_user_id:
-                    # Find chatbots owned by the target user
+                    logger.info(f"Finding chatbots for user_id: {target_user_id}")
                     chatbot_response = supabase.table("chatbots").select("id").eq("user_id", target_user_id).execute()
+                    
                     if chatbot_response.data and len(chatbot_response.data) > 0:
-                        # Use the first chatbot found
-                        chatbot_id = chatbot_response.data[0]["id"]
-                        query = supabase.table("messages").select("*").eq("chatbot_id", chatbot_id)
+                        chatbot_ids = [cb["id"] for cb in chatbot_response.data]
+                        logger.info(f"Found {len(chatbot_ids)} chatbots for user_id {target_user_id}")
                         
-                        # Filter by visitor_id if provided
-                        if visitor_id:
-                            visitor_response = supabase.table("visitors").select("id").eq("visitor_id", visitor_id).execute()
-                            if visitor_response.data and len(visitor_response.data) > 0:
-                                visitor_db_id = visitor_response.data[0]["id"]
-                                query = query.eq("visitor_id", visitor_db_id)
+                        if len(chatbot_ids) == 1:
+                            # If only one chatbot, use equality
+                            query = query.eq("chatbot_id", chatbot_ids[0])
+                        else:
+                            # If multiple chatbots, use "in" operator
+                            query = query.in_("chatbot_id", chatbot_ids)
                     else:
-                        # Fallback to old method if no chatbot found
-                        query = supabase.table("messages").select("*")
-                if target_user_id:
-                    query = query.eq("target_user_id", target_user_id)
-                    if visitor_id:
-                        query = query.eq("visitor_id", visitor_id)
+                        logger.warning(f"No chatbots found for user_id: {target_user_id}")
+                        # Fallback to legacy target_user_id field if available
+                        query = query.eq("target_user_id", target_user_id)
+                
+                # Handle visitor_id filtering - this is the most complex part
+                if visitor_id:
+                    logger.info(f"Processing visitor_id: {visitor_id}")
+                    
+                    # Try two approaches in parallel for maximum compatibility
+                    try:
+                        # First, try to find the visitor record by visitor_id field (TEXT)
+                        logger.info(f"Looking up visitor by visitor_id (TEXT): {visitor_id}")
+                        visitor_response = supabase.table("visitors").select("id").eq("visitor_id", visitor_id).execute()
+                        
+                        if visitor_response.data and len(visitor_response.data) > 0:
+                            # We found the visitor - use their UUID in the visitor_id column
+                            visitor_uuid = visitor_response.data[0]["id"]
+                            logger.info(f"Found visitor with UUID: {visitor_uuid}")
+                            
+                            # Create a copy of the query for visitor_id match
+                            uuid_query = query.eq("visitor_id", visitor_uuid)
+                            uuid_response = uuid_query.execute()
+                            
+                            if uuid_response.data and len(uuid_response.data) > 0:
+                                logger.info(f"Retrieved {len(uuid_response.data)} messages using visitor UUID")
+                                result_messages = uuid_response.data
+                            else:
+                                logger.info("No messages found using visitor UUID, trying visitor_id_text")
+                                # No results with UUID, try visitor_id_text
+                                text_query = query.eq("visitor_id_text", visitor_id)
+                                text_response = text_query.execute()
+                                
+                                if text_response.data and len(text_response.data) > 0:
+                                    logger.info(f"Retrieved {len(text_response.data)} messages using visitor_id_text")
+                                    result_messages = text_response.data
+                        else:
+                            # No visitor record found, try direct lookup with visitor_id_text
+                            logger.info(f"No visitor record found, trying direct visitor_id_text lookup")
+                            text_query = query.eq("visitor_id_text", visitor_id)
+                            text_response = text_query.execute()
+                            
+                            if text_response.data and len(text_response.data) > 0:
+                                logger.info(f"Retrieved {len(text_response.data)} messages using visitor_id_text")
+                                result_messages = text_response.data
+                    
+                    except Exception as visitor_error:
+                        logger.error(f"Error processing visitor_id: {visitor_error}")
+                        logger.error(traceback.format_exc())
+                        
+                        # Last resort - try basic query without visitor filter
+                        basic_response = query.execute()
+                        if basic_response.data and len(basic_response.data) > 0:
+                            logger.info(f"Retrieved {len(basic_response.data)} messages using basic query")
+                            result_messages = basic_response.data
                 else:
-                    # Fallback to old method
-                    query = supabase.table("messages").select("*")
-                    if visitor_id:
-                        query = query.eq("visitor_id", visitor_id)
-                
-                # Apply limit and ordering
-                query = query.order("created_at", desc=True).limit(limit)
-                response = query.execute()
-                
-                if response.data:
-                    result_messages = response.data
+                    # No visitor_id filter, just execute the query
+                    response = query.execute()
+                    if response.data and len(response.data) > 0:
+                        logger.info(f"Retrieved {len(response.data)} messages without visitor filter")
+                        result_messages = response.data
+            
             except Exception as db_error:
                 logger.error(f"Error querying chat history from Supabase: {db_error}")
+                logger.error(traceback.format_exc())
         
         # Fallback to in-memory if needed
         if not result_messages and in_memory_messages:
@@ -650,7 +709,7 @@ def get_chat_history(limit=50, visitor_id=None, chatbot_id=None, target_user_id=
             filtered_messages = in_memory_messages
             
             if visitor_id:
-                filtered_messages = [m for m in filtered_messages if m.get("visitor_id") == visitor_id]
+                filtered_messages = [m for m in filtered_messages if m.get("visitor_id") == visitor_id or m.get("visitor_id_text") == visitor_id]
             
             if target_user_id:
                 filtered_messages = [m for m in filtered_messages if m.get("target_user_id") == target_user_id]
@@ -659,9 +718,11 @@ def get_chat_history(limit=50, visitor_id=None, chatbot_id=None, target_user_id=
             filtered_messages.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
             result_messages = filtered_messages[:limit]
         
+        logger.info(f"Returning {len(result_messages)} chat history messages")
         return result_messages
     except Exception as e:
         logger.error(f"Error getting chat history: {e}")
+        logger.error(traceback.format_exc())
         return []
 
 def verify_admin_login(username, password):
