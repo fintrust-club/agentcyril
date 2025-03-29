@@ -6,6 +6,7 @@ import json
 import uuid
 import logging
 import traceback
+from typing import List, Dict
 
 # Load environment variables
 load_dotenv()
@@ -216,7 +217,8 @@ def update_profile_data(data, user_id=None):
         # These are the known safe fields in our profiles table
         safe_fields = ["id", "user_id", "bio", "skills", "experience", 
                         "interests", "name", "location", 
-                        "created_at", "updated_at", "project_list", "projects"]
+                        "created_at", "updated_at", "project_list", "projects",
+                        "calendly_link", "meeting_rules"]
         
         filtered_data = {k: v for k, v in data.items() if k in safe_fields}
         logger.info(f"Filtered profile data to: {list(filtered_data.keys())}")
@@ -605,8 +607,7 @@ def log_chat_message(message, sender="user", response=None, visitor_id=None, vis
 
 def get_chat_history(limit=50, visitor_id=None, chatbot_id=None, target_user_id=None):
     """
-    Get chat history from Supabase using the new schema
-    Handles both UUID references and direct visitor_id_text lookups
+    Get chat history from Supabase using the messages_with_visitors view
     """
     try:
         logger.info(f"Getting chat history with params: limit={limit}, visitor_id={visitor_id}, chatbot_id={chatbot_id}, target_user_id={target_user_id}")
@@ -614,109 +615,68 @@ def get_chat_history(limit=50, visitor_id=None, chatbot_id=None, target_user_id=
         
         if supabase:
             try:
-                # Start building the query
-                query = supabase.table("messages").select("*").order("created_at", desc=True).limit(limit)
+                # Start building the query using the view
+                query = supabase.table("messages_with_visitors").select("*").order("created_at", desc=True).limit(limit)
+                
+                # Always filter by target_user_id if provided
+                if target_user_id:
+                    query = query.eq("target_user_id", target_user_id)
+                    logger.info(f"Filtering messages by target_user_id: {target_user_id}")
                 
                 # Filter by chatbot_id if provided
                 if chatbot_id:
                     query = query.eq("chatbot_id", chatbot_id)
                     logger.info(f"Filtering messages by chatbot_id: {chatbot_id}")
                 
-                # If we have a target_user_id but no chatbot_id, get the user's chatbots
-                elif target_user_id:
-                    logger.info(f"Finding chatbots for user_id: {target_user_id}")
-                    chatbot_response = supabase.table("chatbots").select("id").eq("user_id", target_user_id).execute()
-                    
-                    if chatbot_response.data and len(chatbot_response.data) > 0:
-                        chatbot_ids = [cb["id"] for cb in chatbot_response.data]
-                        logger.info(f"Found {len(chatbot_ids)} chatbots for user_id {target_user_id}")
-                        
-                        if len(chatbot_ids) == 1:
-                            # If only one chatbot, use equality
-                            query = query.eq("chatbot_id", chatbot_ids[0])
-                        else:
-                            # If multiple chatbots, use "in" operator
-                            query = query.in_("chatbot_id", chatbot_ids)
-                    else:
-                        logger.warning(f"No chatbots found for user_id: {target_user_id}")
-                        # Fallback to legacy target_user_id field if available
-                        query = query.eq("target_user_id", target_user_id)
-                
-                # Handle visitor_id filtering - this is the most complex part
+                # Handle visitor_id filtering
                 if visitor_id:
                     logger.info(f"Processing visitor_id: {visitor_id}")
                     
-                    # Try two approaches in parallel for maximum compatibility
-                    try:
-                        # First, try to find the visitor record by visitor_id field (TEXT)
-                        logger.info(f"Looking up visitor by visitor_id (TEXT): {visitor_id}")
-                        visitor_response = supabase.table("visitors").select("id").eq("visitor_id", visitor_id).execute()
-                        
-                        if visitor_response.data and len(visitor_response.data) > 0:
-                            # We found the visitor - use their UUID in the visitor_id column
-                            visitor_uuid = visitor_response.data[0]["id"]
-                            logger.info(f"Found visitor with UUID: {visitor_uuid}")
-                            
-                            # Create a copy of the query for visitor_id match
-                            uuid_query = query.eq("visitor_id", visitor_uuid)
-                            uuid_response = uuid_query.execute()
-                            
-                            if uuid_response.data and len(uuid_response.data) > 0:
-                                logger.info(f"Retrieved {len(uuid_response.data)} messages using visitor UUID")
-                                result_messages = uuid_response.data
-                            else:
-                                logger.info("No messages found using visitor UUID, trying visitor_id_text")
-                                # No results with UUID, try visitor_id_text
-                                text_query = query.eq("visitor_id_text", visitor_id)
-                                text_response = text_query.execute()
-                                
-                                if text_response.data and len(text_response.data) > 0:
-                                    logger.info(f"Retrieved {len(text_response.data)} messages using visitor_id_text")
-                                    result_messages = text_response.data
-                        else:
-                            # No visitor record found, try direct lookup with visitor_id_text
-                            logger.info(f"No visitor record found, trying direct visitor_id_text lookup")
-                            text_query = query.eq("visitor_id_text", visitor_id)
-                            text_response = text_query.execute()
-                            
-                            if text_response.data and len(text_response.data) > 0:
-                                logger.info(f"Retrieved {len(text_response.data)} messages using visitor_id_text")
-                                result_messages = text_response.data
+                    # Try to find the visitor record by visitor_id field (TEXT)
+                    logger.info(f"Looking up visitor by visitor_id (TEXT): {visitor_id}")
+                    visitor_response = supabase.table("visitors").select("id").eq("visitor_id", visitor_id).execute()
                     
-                    except Exception as visitor_error:
-                        logger.error(f"Error processing visitor_id: {visitor_error}")
-                        logger.error(traceback.format_exc())
-                        
-                        # Last resort - try basic query without visitor filter
-                        basic_response = query.execute()
-                        if basic_response.data and len(basic_response.data) > 0:
-                            logger.info(f"Retrieved {len(basic_response.data)} messages using basic query")
-                            result_messages = basic_response.data
+                    if visitor_response.data and len(visitor_response.data) > 0:
+                        # We found the visitor - use their UUID in the visitor_id column
+                        visitor_uuid = visitor_response.data[0]["id"]
+                        logger.info(f"Found visitor with UUID: {visitor_uuid}")
+                        query = query.eq("visitor_id", visitor_uuid)
+                    else:
+                        # No visitor record found, try direct lookup with visitor_id_text
+                        logger.info(f"No visitor record found, using visitor_id_text: {visitor_id}")
+                        query = query.eq("visitor_id_text", visitor_id)
+                
+                # Execute the final query
+                response = query.execute()
+                if response.data:
+                    logger.info(f"Retrieved {len(response.data)} messages")
+                    # Process the response
+                    for msg in response.data:
+                        message = {
+                            "id": msg["id"],
+                            "message": msg["message"],
+                            "response": msg["response"],
+                            "sender": msg["sender"],
+                            "created_at": msg["created_at"],
+                            "timestamp": msg["timestamp"],
+                            "chatbot_id": msg["chatbot_id"],
+                            "visitor_id": msg["visitor_id"],
+                            "visitor_id_text": msg["visitor_id_text"],
+                            "target_user_id": msg["target_user_id"],
+                            "visitor_name": msg["visitor_name"]
+                        }
+                        result_messages.append(message)
                 else:
-                    # No visitor_id filter, just execute the query
-                    response = query.execute()
-                    if response.data and len(response.data) > 0:
-                        logger.info(f"Retrieved {len(response.data)} messages without visitor filter")
-                        result_messages = response.data
+                    logger.warning("No messages found in database")
+                    result_messages = []
             
             except Exception as db_error:
                 logger.error(f"Error querying chat history from Supabase: {db_error}")
                 logger.error(traceback.format_exc())
+                result_messages = []
         
-        # Fallback to in-memory if needed
-        if not result_messages and in_memory_messages:
-            logger.info("Using in-memory chat history")
-            filtered_messages = in_memory_messages
-            
-            if visitor_id:
-                filtered_messages = [m for m in filtered_messages if m.get("visitor_id") == visitor_id or m.get("visitor_id_text") == visitor_id]
-            
-            if target_user_id:
-                filtered_messages = [m for m in filtered_messages if m.get("target_user_id") == target_user_id]
-            
-            # Sort by timestamp (newest first) and apply limit
-            filtered_messages.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
-            result_messages = filtered_messages[:limit]
+        # Sort messages by timestamp
+        result_messages.sort(key=lambda x: x.get("created_at") or x.get("timestamp") or "", reverse=True)
         
         logger.info(f"Returning {len(result_messages)} chat history messages")
         return result_messages
@@ -924,4 +884,101 @@ def check_schema_applied():
         return False
 
 # Call this function on startup to check schema status
-schema_ok = check_schema_applied() 
+schema_ok = check_schema_applied()
+
+def search_projects(query: str, user_id: str = None) -> List[Dict]:
+    """
+    Search for projects using full-text search
+    If user_id is provided, only search that user's projects
+    """
+    try:
+        if not supabase:
+            logger.warning("No Supabase connection available")
+            return []
+
+        # Build the search query
+        search_query = supabase.from_('projects').select('*')
+        
+        # Add text search condition
+        search_query = search_query.textSearch('searchable_content', query)
+        
+        # Filter by user if provided
+        if user_id:
+            search_query = search_query.eq('user_id', user_id)
+        
+        # Execute query
+        response = search_query.execute()
+        
+        if response.data:
+            logger.info(f"Found {len(response.data)} projects matching query: {query}")
+            return response.data
+        else:
+            logger.info(f"No projects found matching query: {query}")
+            return []
+            
+    except Exception as e:
+        logger.error(f"Error searching projects: {e}")
+        logger.error(f"Error trace: {traceback.format_exc()}")
+        return []
+
+def get_all_profiles():
+    """
+    Get all user profiles from the database
+    """
+    try:
+        if not supabase:
+            print("Supabase client not initialized")
+            return []
+        
+        response = supabase.table("profiles").select("*").execute()
+        profiles = response.data
+        
+        # Convert each profile's projects JSON to project_list if needed
+        for profile in profiles:
+            if profile.get("projects") and not profile.get("project_list"):
+                try:
+                    import json
+                    projects_json = profile.get("projects")
+                    project_list = json.loads(projects_json)
+                    profile["project_list"] = project_list
+                except Exception as e:
+                    print(f"Error parsing projects JSON: {e}")
+                    profile["project_list"] = []
+            elif not profile.get("project_list"):
+                profile["project_list"] = []
+                
+        return profiles
+    except Exception as e:
+        print(f"Error getting all profiles: {e}")
+        return []
+
+def get_all_documents():
+    """
+    Get all documents from the database
+    """
+    try:
+        if not supabase:
+            print("Supabase client not initialized")
+            return []
+        
+        response = supabase.table("user_documents").select("*").execute()
+        return response.data
+    except Exception as e:
+        print(f"Error getting all documents: {e}")
+        return []
+
+def get_all_projects_from_table():
+    """
+    Get all projects directly from the projects table
+    This is needed to ensure projects are properly added to the vector database
+    """
+    try:
+        if not supabase:
+            print("Supabase client not initialized")
+            return []
+        
+        response = supabase.table("projects").select("*").execute()
+        return response.data
+    except Exception as e:
+        print(f"Error getting all projects from table: {e}")
+        return [] 

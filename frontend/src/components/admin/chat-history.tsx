@@ -8,6 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { chatApi, type ChatHistoryItem } from '@/utils/api';
 import { formatDistanceToNow, format } from 'date-fns';
+import { supabase } from '@/utils/supabase';
+import { Input } from "@/components/ui/input";
 
 // Group chats by visitor/user
 type UserThread = {
@@ -18,12 +20,25 @@ type UserThread = {
   messageCount: number;
 };
 
-export function AdminChatHistory() {
+interface AdminChatHistoryProps {
+  userId: string;
+}
+
+export function AdminChatHistory({ userId }: AdminChatHistoryProps) {
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [visitorThreads, setVisitorThreads] = useState<UserThread[]>([]);
   const [selectedVisitor, setSelectedVisitor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, []);
 
   // Fetch chat history on component mount
   useEffect(() => {
@@ -39,9 +54,13 @@ export function AdminChatHistory() {
       // Group messages by visitor
       chatHistory.forEach(item => {
         // Ensure item has required fields
-        if (!item) return;
+        if (!item) {
+          console.warn("Found null item in chat history");
+          return;
+        }
         
-        const visitorId = item.visitor_id || 'unknown';
+        // Use visitor_id_text if available, otherwise use visitor_id
+        const visitorId = item.visitor_id_text || item.visitor_id || 'unknown';
         
         if (!threads[visitorId]) {
           console.log(`Creating new thread for visitor: ${visitorId}, name: ${item.visitor_name || 'unnamed'}`);
@@ -49,16 +68,17 @@ export function AdminChatHistory() {
             visitorId,
             visitorName: item.visitor_name,
             messages: [],
-            lastActive: new Date(item.timestamp || Date.now()),
+            lastActive: new Date(item.created_at || item.timestamp || Date.now()),
             messageCount: 0,
           };
         }
         
+        // Add message to thread
         threads[visitorId].messages.push(item);
         threads[visitorId].messageCount += 1;
         
         // Update last active timestamp if more recent
-        const messageDate = new Date(item.timestamp || Date.now());
+        const messageDate = new Date(item.created_at || item.timestamp || Date.now());
         if (messageDate > threads[visitorId].lastActive) {
           threads[visitorId].lastActive = messageDate;
         }
@@ -67,8 +87,8 @@ export function AdminChatHistory() {
       // Sort messages by timestamp within each thread
       Object.values(threads).forEach(thread => {
         thread.messages.sort((a, b) => {
-          const dateA = new Date(a.timestamp || 0).getTime();
-          const dateB = new Date(b.timestamp || 0).getTime();
+          const dateA = new Date(a.created_at || a.timestamp || 0).getTime();
+          const dateB = new Date(b.created_at || b.timestamp || 0).getTime();
           return dateA - dateB;
         });
       });
@@ -81,6 +101,7 @@ export function AdminChatHistory() {
       console.log(`Created ${threadsArray.length} visitor threads`);
       if (threadsArray.length > 0) {
         console.log(`First thread: Visitor ${threadsArray[0].visitorId} with ${threadsArray[0].messageCount} messages`);
+        console.log('Sample messages from first thread:', threadsArray[0].messages.slice(0, 2));
       }
       
       setVisitorThreads(threadsArray);
@@ -103,21 +124,21 @@ export function AdminChatHistory() {
       setIsLoading(true);
       setError(null);
       
-      // Use the chatApi service instead of direct fetch
-      const messagesArray = await chatApi.getAllChatHistory(1000);
-      console.log(`Retrieved ${messagesArray.length} messages from chat history API`);
+      // Get all chat history using the chatApi
+      const messages = await chatApi.getAllChatHistory();
+      console.log(`Retrieved ${messages.length} messages from chat history API`);
       
-      if (messagesArray.length > 0) {
-        console.log('First few messages:', messagesArray.slice(0, 2));
+      if (messages.length > 0) {
+        console.log('First few messages:', messages.slice(0, 2));
       } else {
         console.log("No chat history found. Check if messages are being saved properly.");
       }
       
       // Update state with the messages
-      setChatHistory(messagesArray);
+      setChatHistory(messages);
     } catch (err) {
       console.error('Error fetching chat history:', err);
-      setError('Failed to load chat history.');
+      setError('Failed to load chat history. Please check your authentication and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -153,122 +174,228 @@ export function AdminChatHistory() {
     fetchChatHistory();
   };
 
+  // Add this function to render messages
+  const renderMessage = (message: ChatHistoryItem) => {
+    if (!message || (!message.message && !message.response)) {
+      console.warn("Received invalid message object:", message);
+      return null;
+    }
+
+    const messageDate = new Date(message.created_at || message.timestamp || 0);
+    
+    return (
+      <React.Fragment key={message.id}>
+        {/* User Message */}
+        {message.message && (
+          <div className="flex justify-end mb-4">
+            <div className="max-w-[70%] bg-blue-500 text-white rounded-lg p-3">
+              <div className="text-sm mb-1">Visitor</div>
+              <div className="text-base break-words whitespace-pre-wrap">{message.message}</div>
+              <div className="text-xs mt-1 opacity-70">
+                {messageDate.toLocaleString()}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* AI Response */}
+        {message.response && (
+          <div className="flex justify-start mb-4">
+            <div className="max-w-[70%] bg-gray-100 text-black rounded-lg p-3">
+              <div className="text-sm mb-1">AI Response</div>
+              <div className="text-base break-words whitespace-pre-wrap">{message.response}</div>
+              <div className="text-xs mt-1 opacity-70">
+                {messageDate.toLocaleString()}
+              </div>
+            </div>
+          </div>
+        )}
+      </React.Fragment>
+    );
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex justify-end mb-6">
-        <Button 
-          variant="outline" 
-          onClick={handleRefresh} 
-          disabled={isLoading}
-        >
-          {isLoading ? 'Loading...' : 'Refresh'}
-        </Button>
-      </div>
-      
-      {error && (
-        <div className="mb-6 p-4 rounded-md bg-red-50 border border-red-200 text-red-700">
-          <p className="font-medium">Error</p>
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
-      
-      {isLoading ? (
-        <div className="py-8 text-center">Loading chat history...</div>
-      ) : visitorThreads.length === 0 ? (
-        <div className="py-8 space-y-4">
-          <div className="text-center text-muted-foreground">
-            No chat history available. Try sending a message in the chat first.
-          </div>
-          {/* Debug information - only shown when there are no threads */}
-          <div className="p-4 border rounded-md bg-muted/20 text-xs overflow-auto max-h-60">
-            <p className="font-medium mb-2">Debug Information:</p>
-            <p>Raw messages count: {chatHistory ? chatHistory.length : 0}</p>
-            {chatHistory && chatHistory.length > 0 ? (
-              <div>
-                <p>First message sample:</p>
-                <pre className="mt-2 p-2 bg-slate-800 text-slate-200 rounded overflow-auto">
-                  {JSON.stringify(chatHistory[0], null, 2)}
-                </pre>
+      <Card className="shadow-lg h-[800px] flex flex-col">
+        <CardHeader className="border-b shrink-0">
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl font-semibold">Chat History</CardTitle>
+              <Button 
+                variant="outline" 
+                onClick={handleRefresh} 
+                disabled={isLoading}
+                className="px-6"
+              >
+                {isLoading ? 'Loading...' : 'Refresh'}
+              </Button>
+            </div>
+            
+            {user && (
+              <div className="bg-muted/30 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-medium">Your Public Chat Link</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/chat/${user.id}`);
+                      alert('Link copied to clipboard!');
+                    }}
+                    className="px-4"
+                  >
+                    Copy Link
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input 
+                    readOnly
+                    value={`${window.location.origin}/chat/${user.id}`}
+                    className="font-mono text-sm bg-background"
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Share this link with anyone who wants to chat with your AI assistant.
+                </p>
               </div>
-            ) : (
-              <p>No messages received from API.</p>
             )}
           </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[600px] md:h-[700px] border rounded-lg overflow-hidden">
-          {/* Visitors List */}
-          <div className="border rounded-lg overflow-hidden md:col-span-1">
-            <div className="bg-muted/50 p-3 border-b">
-              <h3 className="font-medium">Visitors ({visitorThreads.length})</h3>
+        </CardHeader>
+        
+        <CardContent className="p-0 flex-1 overflow-hidden">
+          {error && (
+            <div className="m-6 p-4 rounded-md bg-red-50 border border-red-200 text-red-700">
+              <p className="font-medium">Error</p>
+              <p className="text-sm">{error}</p>
             </div>
-            <ScrollArea className="h-[300px] md:h-[650px]">
-              {visitorThreads.map((thread) => (
-                <div 
-                  key={thread.visitorId}
-                  onClick={() => setSelectedVisitor(thread.visitorId)}
-                  className={`p-3 rounded-lg mb-2 cursor-pointer hover:bg-muted/50 ${
-                    selectedVisitor === thread.visitorId ? 'bg-muted/50 border-primary' : 'bg-background'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback>
-                          {(thread.visitorName?.[0] || 'V').toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-sm">
-                          {thread.visitorName || `Visitor ${thread.visitorId.substring(0, 8)}`}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatTimeAgo(thread.lastActive.toISOString())}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {thread.messageCount}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </ScrollArea>
-          </div>
+          )}
           
-          {/* Chat Thread */}
-          <div className="border rounded-lg overflow-hidden md:col-span-2">
-            <div className="bg-muted/50 p-3 border-b">
-              <h3 className="font-medium">
-                {getSelectedVisitorThread()?.visitorName || 
-                 `Visitor ${getSelectedVisitorThread()?.visitorId.substring(0, 8) || ''}`}
-              </h3>
+          {isLoading ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+                <p className="text-muted-foreground">Loading chat history...</p>
+              </div>
             </div>
-            <ScrollArea className="h-[300px] md:h-[650px]">
-              <div className="p-4 space-y-4">
-                {getSelectedVisitorThread()?.messages.map((item, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="bg-muted/40 rounded-lg p-3 mr-12">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs font-medium">Visitor</p>
-                        <p className="text-xs text-muted-foreground">{formatDate(item.timestamp)}</p>
-                      </div>
-                      <p className="text-sm">{item.message}</p>
+          ) : visitorThreads.length === 0 ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-lg font-medium">No chat history available</p>
+                <p className="text-sm mt-2 text-muted-foreground">Chat conversations will appear here once visitors start chatting.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 h-full divide-x">
+              {/* Visitor List */}
+              <div className="flex flex-col h-full overflow-hidden">
+                <div className="p-4 border-b bg-muted/10 shrink-0">
+                  <h3 className="text-lg font-semibold">Visitors</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {visitorThreads.length} {visitorThreads.length === 1 ? 'visitor' : 'visitors'} total
+                  </p>
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <ScrollArea className="h-full">
+                    <div className="p-2">
+                      {visitorThreads.map(thread => (
+                        <div
+                          key={thread.visitorId}
+                          className={`p-4 mb-2 rounded-lg cursor-pointer transition-colors ${
+                            selectedVisitor === thread.visitorId 
+                              ? 'bg-primary/5 border border-primary/10' 
+                              : 'hover:bg-muted/50'
+                          }`}
+                          onClick={() => setSelectedVisitor(thread.visitorId)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="font-medium text-base">
+                                {thread.visitorName || 'Anonymous Visitor'}
+                              </div>
+                              <div className="text-sm text-muted-foreground mt-1">
+                                {thread.messageCount} {thread.messageCount === 1 ? 'message' : 'messages'}
+                              </div>
+                            </div>
+                            <Badge variant="secondary" className="ml-2 shrink-0">
+                              {formatTimeAgo(thread.lastActive.toISOString())}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    
-                    <div className="bg-primary/5 rounded-lg p-3 ml-12">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs font-medium">AI Response</p>
+                  </ScrollArea>
+                </div>
+              </div>
+              
+              {/* Chat Messages */}
+              <div className="md:col-span-2 flex flex-col h-full overflow-hidden">
+                {selectedVisitor && getSelectedVisitorThread() ? (
+                  <>
+                    <div className="p-4 border-b bg-muted/10 shrink-0">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold">
+                            {getSelectedVisitorThread()?.visitorName || 'Anonymous Visitor'}
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {getSelectedVisitorThread()?.messageCount} messages in conversation
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm">{item.response}</p>
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <ScrollArea className="h-full">
+                        <div className="p-6 space-y-6">
+                          {getSelectedVisitorThread()?.messages.map((message) => (
+                            <React.Fragment key={message.id}>
+                              {/* User Message */}
+                              {message.message && (
+                                <div className="flex justify-end mb-4">
+                                  <div className="max-w-[70%]">
+                                    <div className="bg-primary text-primary-foreground rounded-lg p-4">
+                                      <div className="text-sm font-medium mb-1 opacity-80">Visitor</div>
+                                      <div className="text-base break-words whitespace-pre-wrap">{message.message}</div>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-2 text-right">
+                                      {formatDate(message.created_at || message.timestamp || '')}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* AI Response */}
+                              {message.response && (
+                                <div className="flex justify-start mb-4">
+                                  <div className="max-w-[70%]">
+                                    <div className="bg-muted rounded-lg p-4">
+                                      <div className="text-sm font-medium mb-1 opacity-80">AI Response</div>
+                                      <div className="text-base break-words whitespace-pre-wrap">{message.response}</div>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-2">
+                                      {formatDate(message.created_at || message.timestamp || '')}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </React.Fragment>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  </>
+                ) : (
+                  <div className="h-full flex items-center justify-center p-6">
+                    <div className="text-center">
+                      <p className="text-lg font-medium text-muted-foreground">Select a visitor to view their chat history</p>
+                      <p className="text-sm text-muted-foreground mt-2">Choose from the list on the left to view the conversation</p>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
-            </ScrollArea>
-          </div>
-        </div>
-      )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 } 

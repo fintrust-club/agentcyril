@@ -4,9 +4,12 @@ export interface Project {
   id?: string;
   title: string;
   description: string;
-  category: string;
-  details: string;
-  content?: string; // Rich markdown content
+  technologies: string;
+  image_url?: string;
+  project_url?: string;
+  is_featured: boolean;
+  database_config?: Record<string, any>;
+  user_id?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -22,6 +25,8 @@ export interface ProfileData {
   interests: string;
   name?: string;
   location?: string;
+  calendly_link?: string; // Calendly meeting scheduling link
+  meeting_rules?: string; // Rules/criteria for allowing meeting requests
   created_at?: string;
   updated_at?: string;
 }

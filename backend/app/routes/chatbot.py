@@ -109,8 +109,8 @@ async def chat(request: models.ChatRequest):
         
         # Generate the AI response
         logger.info(f"Generating AI response with conversation context")
-        ai_response = generate_ai_response(
-            query=message,
+        ai_response = await generate_ai_response(
+            message=message,
             search_results=search_results,
             profile_data=profile_data,
             chat_history=chat_history
@@ -185,8 +185,8 @@ async def chat(request: models.ChatRequest):
             # Try to generate a response if we at least have profile data
             if profile_data:
                 try:
-                    ai_response = generate_ai_response(
-                        query=request.message,
+                    ai_response = await generate_ai_response(
+                        message=request.message,
                         search_results={"documents": [], "metadatas": [], "distances": []},
                         profile_data=profile_data,
                         chat_history=[]
@@ -466,8 +466,8 @@ async def chat_with_public_chatbot(user_id: str, request: models.ChatRequest):
         
         # Generate the AI response
         logger.info(f"Generating AI response with conversation context")
-        ai_response = generate_ai_response(
-            query=message,
+        ai_response = await generate_ai_response(
+            message=message,
             search_results=search_results,
             profile_data=profile_data,
             chat_history=chat_history
@@ -517,13 +517,38 @@ async def chat_with_public_chatbot(user_id: str, request: models.ChatRequest):
             # Generate a basic response without vector DB if possible
             if 'profile_data' in locals() and profile_data:
                 try:
-                    ai_response = generate_ai_response(
-                        query=message,
+                    ai_response = await generate_ai_response(
+                        message=request.message,
                         search_results={"documents": [], "metadatas": [], "distances": []},
                         profile_data=profile_data,
                         chat_history=[]
                     )
                     logger.info("Generated fallback AI response after error")
+                    
+                    # Save the fallback response to the database
+                    log_result = log_chat_message(
+                        message=request.message, 
+                        sender="user", 
+                        response=ai_response, 
+                        visitor_id=visitor_id, 
+                        visitor_name=visitor_name,
+                        target_user_id=owner_user_id,
+                        chatbot_id=chatbot.get("id")
+                    )
+                    
+                    # Add to vector DB if possible
+                    try:
+                        message_id = log_result[0]["id"] if log_result and len(log_result) > 0 else None
+                        add_conversation_to_vector_db(
+                            message=request.message,
+                            response=ai_response,
+                            visitor_id=visitor_id,
+                            message_id=message_id,
+                            user_id=owner_user_id
+                        )
+                    except Exception as vector_error:
+                        logger.error(f"Error adding fallback response to vector DB: {str(vector_error)}")
+                    
                     return models.ChatResponse(
                         response=ai_response,
                         query_time_ms=(time.time() - start_time) * 1000

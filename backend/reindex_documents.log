@@ -1,0 +1,100 @@
+2025-03-29 20:11:05,790 [INFO] Connected to Supabase
+2025-03-29 20:11:05,790 [INFO] Starting document reindexing process
+2025-03-29 20:11:05,935 [INFO] Found 0 documents in Supabase
+2025-03-29 20:11:05,936 [INFO] No documents to reindex
+2025-03-29 20:11:05,936 [INFO] Document reindexing process completed
+2025-03-29 20:13:07,418 [INFO] Connected to Supabase
+2025-03-29 20:13:07,419 [INFO] Starting document reindexing process
+2025-03-29 20:13:07,568 [INFO] Found 0 documents in Supabase
+2025-03-29 20:13:07,568 [WARNING] No documents found through Supabase client. Trying manual indexing...
+2025-03-29 20:13:07,568 [INFO] Manually indexing Dr. John Doe document
+2025-03-29 20:13:09,150 [INFO] Successfully indexed Dr. John Doe document manually
+2025-03-29 20:13:09,150 [INFO] Document reindexing process completed
+2025-03-29 20:21:18,785 - app.database - INFO - Connecting to Supabase at https://byddvbuzcgeg...
+2025-03-29 20:21:18,856 - app.database - INFO - Successfully connected to Supabase
+2025-03-29 20:21:18,857 - app.database - INFO - Loaded profile from backup file with name: John Doe
+2025-03-29 20:21:18,857 - app.database - INFO - Checking if schema has been properly applied...
+2025-03-29 20:21:18,999 - app.database - INFO - Profiles table exists, sample response: [{'id': '235a200f-2da1-44cd-b058-b624ccee9b0f', 'projects': '[]'}]
+2025-03-29 20:21:18,999 - app.database - INFO - Schema verification passed: profiles table has projects column
+2025-03-29 20:21:49,444 - app.database - INFO - Connecting to Supabase at https://byddvbuzcgeg...
+2025-03-29 20:21:49,502 - app.database - INFO - Successfully connected to Supabase
+2025-03-29 20:21:49,502 - app.database - INFO - Loaded profile from backup file with name: John Doe
+2025-03-29 20:21:49,503 - app.database - INFO - Checking if schema has been properly applied...
+2025-03-29 20:21:49,653 - app.database - INFO - Profiles table exists, sample response: [{'id': '235a200f-2da1-44cd-b058-b624ccee9b0f', 'projects': '[]'}]
+2025-03-29 20:21:49,653 - app.database - INFO - Schema verification passed: profiles table has projects column
+2025-03-29 20:21:50,431 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-03-29 20:21:50,883 - __main__ - INFO - Starting reindexing of all profiles and projects
+2025-03-29 20:21:50,883 - __main__ - INFO - Retrieving all user profiles from Supabase
+2025-03-29 20:21:50,962 - __main__ - INFO - Found 3 profiles to reindex
+2025-03-29 20:21:50,966 - __main__ - INFO - Vector DB has 0 documents before reindexing
+2025-03-29 20:21:50,966 - __main__ - INFO - Processing profile for user_id: ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 20:21:50,966 - app.database - INFO - Fetching profile for user_id: ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 20:21:51,036 - app.database - INFO - Profile query response: [{'id': '235a200f-2da1-44cd-b058-b624ccee9b0f', 'user_id': 'ef041bad-3617-444f-9426-a1e928d52bdc', 'name': 'John Anderson', 'location': 'Bengaluru', 'bio': 'John Anderson is a visionary leader with over 20 years of experience in corporate strategy, business development, and organizational leadership. He is known for his ability to drive growth, foster innovation, and build high-performing teams. As the CEO of a multinational technology company, John is committed to transforming industries through cutting-edge solutions and strategic decision-making.', 'skills': 'Strategic Planning & Execution\n✅ Leadership & Team Building\n✅ Business Development & Growth\n✅ Financial & Risk Management\n✅ Digital Transformation & Innovation\n✅ Mergers & Acquisitions\n✅ Investor Relations & Fundraising\n✅ Public Speaking & Thought Leadership', 'experience': 'Current Role: CEO of InnovateTech Inc. (2018 – Present)\n\nSpearheaded digital transformation, increasing company revenue by 40% over five years.\n\nExpanded the company’s global footprint, entering emerging markets in Asia and Europe.\n\nLed mergers and acquisitions to strengthen the company’s position in AI and cloud computing.\n\nPrevious Roles:\n\nCOO at FutureTech Solutions (2013 – 2018)\n\nOptimized operational efficiency, reducing costs by 25%.\n\nImplemented new technology adoption strategies, boosting productivity.\n\nVP of Business Strategy at Global Innovators (2008 – 2013)\n\nDeveloped long-term growth strategies, leading to a 30% increase in market share.\n\nBuilt strategic partnerships with Fortune 500 companies.\n\nEarly Career:\n\nBegan as a management consultant, advising Fortune 100 companies on business expansion.', 'interests': 'Driving', 'created_at': '2025-03-28T07:53:03+00:00', 'updated_at': '2025-03-28T07:53:03+00:00', 'project_list': [], 'projects': '[]', 'calendly_link': None, 'meeting_rules': None}]
+2025-03-29 20:21:51,036 - app.database - INFO - Found profile for user_id ef041bad-3617-444f-9426-a1e928d52bdc: 235a200f-2da1-44cd-b058-b624ccee9b0f
+2025-03-29 20:21:51,036 - app.database - INFO - Converting projects JSON to project_list: []...
+2025-03-29 20:21:51,036 - __main__ - INFO - Adding profile data to vector DB for user_id: ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 20:21:52,408 - __main__ - INFO - Successfully added profile data for user_id: ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 20:21:52,408 - __main__ - INFO - Processing profile for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 20:21:52,408 - app.database - INFO - Fetching profile for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 20:21:52,475 - app.database - INFO - Profile query response: [{'id': 'dbe67430-fa5a-42e7-b21d-09ade6401505', 'user_id': '9837e518-80f6-46d4-9aec-cf60c0d8be37', 'name': 'Ciril Cyriac', 'location': 'Kochi', 'bio': 'I am a UX designer, product thinker, and technology enthusiast with a strong foundation in digital product design, embedded systems, and content creation. My work revolves around designing user-centric experiences, particularly in automotive, e-commerce, and technology-driven products. With a keen eye for innovation and problem-solving, I specialize in crafting intuitive digital interfaces while integrating technology to enhance usability.\n\nBeyond UX design, I have a deep passion for electronics, embedded systems, and hardware-software integration. I enjoy working on projects that bridge the gap between design, technology, and business, exploring new ways to monetize and scale digital and hardware solutions. Additionally, I am actively involved in content creation and filmmaking, using storytelling as a tool to engage and educate audiences about technology, product design, and innovation.\n\nI also have an interest in business strategy and investment, with a focus on building sustainable, high-value projects. I constantly seek opportunities to apply my expertise in design, technology, and content creation to create impactful solutions that blend creativity and functionality.', 'skills': 'User Experience & Product Design\nDesign Systems & UI Frameworks – Building scalable and reusable design systems\n\nUser-Centered Design – Researching and designing for intuitive and seamless digital experiences\n\nInteraction & Visual Design – Crafting engaging interfaces with strong usability principles\n\nAutomotive UX – Enhancing digital experiences in car buying and management platforms\n\nElectronics & Embedded Systems\nIoT & Smart Systems – Designing and prototyping smart electronics solutions\n\nEmbedded Programming – Working with microcontrollers and dev boards for automation projects\n\nHardware-Software Integration – Bridging physical and digital interactions through custom solutions\n\nContent Creation & Media Production\nFilmmaking & Video Production – Planning, shooting, and editing content for educational and commercial use\n\nTech Storytelling – Creating engaging narratives around technology and product development\n\nEducational Content – Developing tutorials, reviews, and breakdowns of emerging tech trends\n\nBusiness & Strategy\nInvestment & Financial Planning – Exploring scalable revenue models and financial growth opportunities\n\nMonetization of Digital & Hardware Products – Creating sustainable business models for tech-driven solutions\n\nCommunity-Driven Projects – Building and engaging audiences through valuable and innovative initiatives', 'experience': 'UX Designer at Cars24 – Working on the AU Design System 2024, streamlining design documentation and improving digital interfaces for automotive users\n\nElectronics & IoT Prototyping – Developing hardware-driven solutions with a focus on automation and smart systems\n\nVehicle Work Documentation & Summarization – Structuring and improving efficiency in automotive workflows\n\nShort Film & Digital Content Production – Conceptualizing and producing engaging tech-related video content', 'interests': 'I am deeply passionate about technology, design, storytelling, and business innovation. My interests span:\n\nElectronics & Hardware Development – Experimenting with microcontrollers, IoT devices, and automation systems\n\nProduct Design & UX – Exploring how digital interfaces can improve real-world experiences\n\nFilmmaking & Visual Storytelling – Creating content that educates and inspires\n\nBusiness & Investments – Studying market trends and financial strategies for long-term growth\n\nSci-Fi & Futuristic Concepts – Engaging with ideas that push the boundaries of technology and human experience', 'created_at': '2025-03-29T10:31:08+00:00', 'updated_at': '2025-03-29T10:31:08+00:00', 'project_list': [], 'projects': '[{"title": "tESTAD", "description": "DADAD", "category": "ADADA", "details": "", "content": "", "id": "1d72a7e8-5f36-42a1-a4d8-617b6c986304", "created_at": "2025-03-27T15:24:19Z"}]', 'calendly_link': 'https://calendly.com/mailsforcyril/30min', 'meeting_rules': 'only accept ux design related calls'}]
+2025-03-29 20:21:52,476 - app.database - INFO - Found profile for user_id 9837e518-80f6-46d4-9aec-cf60c0d8be37: dbe67430-fa5a-42e7-b21d-09ade6401505
+2025-03-29 20:21:52,476 - app.database - INFO - Converting projects JSON to project_list: [{"title": "tESTAD", "description": "DADAD", "category": "ADADA", "details": "", "content": "", "id"...
+2025-03-29 20:21:52,476 - __main__ - INFO - Adding profile data to vector DB for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 20:21:57,758 - __main__ - INFO - Successfully added profile data for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 20:21:57,759 - __main__ - INFO - Adding 1 projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 20:22:00,897 - __main__ - INFO - Successfully added projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 20:22:00,897 - __main__ - INFO - Processing profile for user_id: 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 20:22:00,897 - app.database - INFO - Fetching profile for user_id: 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 20:22:01,038 - app.database - INFO - Profile query response: [{'id': '5aa0af5e-9830-433f-9ea0-e837052cfcef', 'user_id': '1ec263e2-6aae-40d0-9c84-0ae358ecda03', 'name': 'John Doe', 'location': None, 'bio': 'I am John, a software engineer with a passion for building AI and web applications. I specialize in full-stack development and have experience across the entire development lifecycle.', 'skills': 'JavaScript, TypeScript, React, Node.js, Python, FastAPI, PostgreSQL, ChromaDB, Supabase, Next.js, TailwindCSS', 'experience': '5+ years of experience in full-stack development, with a focus on building AI-powered applications and responsive web interfaces.', 'interests': 'AI, machine learning, web development, reading sci-fi, hiking', 'created_at': '2025-03-29T13:02:05+00:00', 'updated_at': '2025-03-29T13:02:05+00:00', 'project_list': [], 'projects': '[]', 'calendly_link': None, 'meeting_rules': None}]
+2025-03-29 20:22:01,039 - app.database - INFO - Found profile for user_id 1ec263e2-6aae-40d0-9c84-0ae358ecda03: 5aa0af5e-9830-433f-9ea0-e837052cfcef
+2025-03-29 20:22:01,039 - app.database - INFO - Converting projects JSON to project_list: []...
+2025-03-29 20:22:01,039 - __main__ - INFO - Adding profile data to vector DB for user_id: 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 20:22:01,646 - __main__ - INFO - Successfully added profile data for user_id: 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 20:22:01,647 - __main__ - INFO - Vector DB has 22 documents after reindexing (added 22 documents)
+2025-03-29 20:22:01,647 - __main__ - INFO - Successfully reindexed 3 out of 3 profiles
+2025-03-29 20:22:01,647 - __main__ - INFO - Reindexing completed successfully
+2025-03-29 20:41:42,296 - app.database - INFO - Connecting to Supabase at https://byddvbuzcgeg...
+2025-03-29 20:41:42,364 - app.database - INFO - Successfully connected to Supabase
+2025-03-29 20:41:42,365 - app.database - INFO - Loaded profile from backup file with name: John Doe
+2025-03-29 20:41:42,365 - app.database - INFO - Checking if schema has been properly applied...
+2025-03-29 20:41:42,511 - app.database - INFO - Profiles table exists, sample response: [{'id': '235a200f-2da1-44cd-b058-b624ccee9b0f', 'projects': '[]'}]
+2025-03-29 20:41:42,511 - app.database - INFO - Schema verification passed: profiles table has projects column
+2025-03-29 20:42:16,887 - app.database - INFO - Connecting to Supabase at https://byddvbuzcgeg...
+2025-03-29 20:42:16,962 - app.database - INFO - Successfully connected to Supabase
+2025-03-29 20:42:16,963 - app.database - INFO - Loaded profile from backup file with name: John Doe
+2025-03-29 20:42:16,963 - app.database - INFO - Checking if schema has been properly applied...
+2025-03-29 20:42:17,129 - app.database - INFO - Profiles table exists, sample response: [{'id': '235a200f-2da1-44cd-b058-b624ccee9b0f', 'projects': '[]'}]
+2025-03-29 20:42:17,142 - app.database - INFO - Schema verification passed: profiles table has projects column
+2025-03-29 20:42:17,641 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-03-29 20:42:17,971 - __main__ - INFO - === Starting vector database reindexing ===
+2025-03-29 20:42:17,972 - __main__ - INFO - Clearing vector database...
+2025-03-29 20:42:17,986 - __main__ - INFO - Vector database contains 8 items before clearing
+2025-03-29 20:42:17,987 - __main__ - ERROR - Error clearing vector database: 
+                You must provide either ids, where, or where_document to delete. If
+                you want to delete all data in a collection you can delete the
+                collection itself using the delete_collection method. Or alternatively,
+                you can get() all the relevant ids and then delete them.
+                
+2025-03-29 20:42:17,987 - __main__ - WARNING - Failed to clear vector database, proceeding with reindexing anyway
+2025-03-29 20:42:17,987 - __main__ - INFO - Starting profile reindexing...
+2025-03-29 20:42:18,065 - __main__ - INFO - Retrieved 3 profiles to reindex
+2025-03-29 20:42:18,066 - __main__ - INFO - Reindexing profile for user ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 20:42:18,699 - __main__ - INFO - Successfully reindexed profile for user ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 20:42:18,699 - __main__ - INFO - Reindexing profile for user 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 20:42:21,247 - __main__ - INFO - Successfully reindexed profile for user 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 20:42:21,252 - __main__ - INFO - Reindexing profile for user 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 20:42:24,229 - __main__ - INFO - Successfully reindexed profile for user 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 20:42:24,229 - __main__ - INFO - Profile reindexing complete. Success: 3, Errors: 0
+2025-03-29 20:42:24,229 - __main__ - INFO - Starting projects table reindexing...
+2025-03-29 20:42:24,385 - __main__ - INFO - Retrieved 1 projects from projects table to reindex
+2025-03-29 20:42:24,385 - __main__ - INFO - Adding 1 projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 20:42:25,585 - __main__ - INFO - Successfully added projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 20:42:25,586 - __main__ - INFO - Projects reindexing complete. Success: 1, Errors: 0
+2025-03-29 20:42:25,586 - __main__ - INFO - Starting document reindexing...
+2025-03-29 20:42:25,659 - __main__ - INFO - Retrieved 0 documents to reindex
+2025-03-29 20:42:25,660 - __main__ - INFO - Document reindexing complete. Success: 0, Errors: 0
+2025-03-29 20:42:25,660 - __main__ - INFO - === Reindexing completed ===
+2025-03-29 20:42:25,660 - __main__ - INFO - Total duration: 7.69 seconds
+2025-03-29 20:42:25,660 - __main__ - INFO - Profiles reindexed: 3 success, 0 errors
+2025-03-29 20:42:25,660 - __main__ - INFO - Projects reindexed: 1 success, 0 errors
+2025-03-29 20:42:25,660 - __main__ - INFO - Documents reindexed: 0 success, 0 errors
