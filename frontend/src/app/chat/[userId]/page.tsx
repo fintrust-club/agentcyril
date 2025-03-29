@@ -83,26 +83,24 @@ export default function ChatPage() {
 
   // Display the page with the chatbot data
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
-      <div className="flex flex-col flex-1">
-        {isLoading ? (
-          <div className="flex flex-1 items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : error ? (
-          <div className="flex flex-1 items-center justify-center text-red-500 p-4">
-            {error}
-          </div>
-        ) : (
-          <ChatInterface
-            chatbotId={chatbotData?.id}
-            userName={visitorName || undefined}
-            onSetName={handleSetVisitorName}
-            botName={chatbotData?.name || profileData?.name || 'AI Assistant'}
-            userId={userId}
-          />
-        )}
-      </div>
-    </div>
+    <>
+      {isLoading ? (
+        <div className="flex flex-1 items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : error ? (
+        <div className="flex flex-1 items-center justify-center text-red-500 p-4">
+          {error}
+        </div>
+      ) : (
+        <ChatInterface
+          chatbotId={chatbotData?.id}
+          userName={visitorName || undefined}
+          onSetName={handleSetVisitorName}
+          botName={chatbotData?.name || profileData?.name || 'AI Assistant'}
+          userId={userId}
+        />
+      )}
+    </>
   );
 } 

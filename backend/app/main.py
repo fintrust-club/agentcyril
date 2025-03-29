@@ -10,6 +10,18 @@ from app import models
 from app.database import get_profile_data, update_profile_data, log_chat_message, get_chat_history, get_or_create_chatbot
 from app.embeddings import add_profile_to_vector_db, query_vector_db, generate_ai_response, add_conversation_to_vector_db
 from app.routes import chatbot, profiles, admin
+import time
+import openai
+from dotenv import load_dotenv
+from app.auth import get_current_user, User
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response, FileResponse, JSONResponse
+import re
+import jwt
+from fastapi.staticfiles import StaticFiles
+from app.routes import chatbot as chatbot_routes
+from app.routes import documents
 
 # EMERGENCY FIX - Import the emergency endpoint
 try:
@@ -24,14 +36,9 @@ try:
     from app.routes import auth
 except ImportError:
     logging.warning("Auth routes not imported. Make sure app/routes/auth.py exists.")
-from app.auth import get_current_user, User
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import Response, FileResponse, JSONResponse
-import re
-import jwt
-from fastapi.staticfiles import StaticFiles
-from app.routes import chatbot as chatbot_routes
+
+# Load environment variables
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -42,6 +49,24 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+logger = logging.getLogger(__name__)
+
+# Configure OpenAI
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if not openai_api_key:
+    raise ValueError("Missing OpenAI API key. Set OPENAI_API_KEY in .env file.")
+
+try:
+    # Initialize OpenAI client
+    openai.api_key = openai_api_key
+    # Test the API key with a simple request
+    openai.models.list()
+    logger.info("Successfully initialized OpenAI client")
+except Exception as e:
+    logger.error(f"Error initializing OpenAI client: {str(e)}")
+    if "invalid_api_key" in str(e).lower():
+        logger.error("Invalid API key format detected. Please check your OpenAI API key format.")
+    raise
 
 # Create the FastAPI app
 app = FastAPI()
@@ -100,6 +125,7 @@ app.add_middleware(
 app.include_router(chatbot.router, prefix="/chat", tags=["chatbot"])
 app.include_router(profiles.router, prefix="/profile", tags=["profiles"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
+app.include_router(documents.router, prefix="/documents", tags=["documents"])
 try:
     app.include_router(auth.router, prefix="/auth", tags=["auth"])
 except NameError:
@@ -118,6 +144,8 @@ class ProfileData(BaseModel):
     name: Optional[str] = None
     location: Optional[str] = None
     user_id: Optional[str] = None  # Add user_id field for Supabase
+    calendly_link: Optional[str] = None  # Calendly meeting scheduling link
+    meeting_rules: Optional[str] = None  # Rules for allowing meeting requests
 
 class ChatMessage(BaseModel):
     role: str
@@ -231,11 +259,62 @@ async def update_profile_handler(profile_data: ProfileData, user_id: Optional[st
         logging.error(f"Error updating profile data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Chat endpoint - kept for backward compatibility
+# Helper function to check if meeting request is valid based on rules
+def is_valid_meeting_request(message: str, meeting_rules: str) -> bool:
+    """
+    Check if a meeting request is valid based on the configured rules
+    """
+    if not meeting_rules:
+        return True  # If no rules are set, allow all meeting requests
+        
+    # Convert message and rules to lowercase for case-insensitive matching
+    message = message.lower()
+    rules = meeting_rules.lower()
+    
+    # Common meeting request keywords
+    meeting_keywords = ["meet", "meeting", "schedule", "appointment", "chat", "discuss", "call"]
+    
+    # Check if this is actually a meeting request
+    is_meeting_request = any(keyword in message for keyword in meeting_keywords)
+    if not is_meeting_request:
+        return False
+        
+    # Extract purposes mentioned in the rules
+    # Example rule: "Only allow meetings for: project discussions, job opportunities, consulting"
+    allowed_purposes = [purpose.strip() for purpose in rules.split(",")]
+    
+    # Check if any of the allowed purposes are mentioned in the message
+    return any(purpose in message for purpose in allowed_purposes)
+
+# Update the chat function to handle meeting requests
 @app.post("/chat")
 async def chat(chat_request: models.ChatRequest):
-    """Process chat messages and generate AI response"""
     try:
+        # Get the latest user message
+        user_message = chat_request.messages[-1].content.lower() if chat_request.messages else ""
+        
+        # Check if this might be a meeting request
+        if any(keyword in user_message for keyword in ["meet", "meeting", "schedule", "appointment", "chat", "discuss", "call"]):
+            # Get the profile data to check meeting rules and Calendly link
+            profile_data = None
+            if chat_request.user_id:
+                profile_data = get_profile_data(user_id=chat_request.user_id)
+            
+            if profile_data and profile_data.get("calendly_link"):
+                # Check if the meeting request is valid based on rules
+                if is_valid_meeting_request(user_message, profile_data.get("meeting_rules", "")):
+                    calendly_link = profile_data["calendly_link"]
+                    meeting_response = (
+                        f"I'd be happy to help you schedule a meeting! You can use my Calendly link to find a suitable time: "
+                        f"{calendly_link}\n\nPlease select a time that works best for you."
+                    )
+                    return {"response": meeting_response}
+                else:
+                    return {"response": "I understand you'd like to schedule a meeting. However, based on our meeting policy, "
+                                      "I can only schedule meetings for specific purposes. Could you please clarify the purpose "
+                                      "of the meeting?"}
+        
+        # If not a meeting request or no Calendly link set, proceed with normal chat handling
         logging.info(f"Processing chat message")
         
         # Extract visitor information
@@ -308,10 +387,10 @@ async def chat(chat_request: models.ChatRequest):
         
         # Generate AI response using the embeddings.py implementation
         ai_response = generate_ai_response(
-            message,  # Using the message as the query
-            search_results,
-            profile_data,
-            chat_history
+            message=message,  # Using the message as the query
+            search_results=search_results,
+            profile_data=profile_data,
+            chat_history=chat_history
         )
         
         logging.info(f"Generated AI response: {ai_response[:50]}...")

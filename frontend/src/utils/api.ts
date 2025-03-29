@@ -93,8 +93,12 @@ export type ChatHistoryItem = {
   sender: string;
   response: string | null;
   visitor_id: string;
+  visitor_id_text?: string;
   visitor_name?: string;
   timestamp: string;
+  created_at?: string;
+  chatbot_id?: string;
+  target_user_id?: string;
 };
 
 export const chatApi = {
@@ -155,14 +159,14 @@ export const chatApi = {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`API error (${response.status}): ${errorText}`);
-        throw new Error(`API responded with status ${response.status}: ${errorText}`);
+        return { error: `API responded with status ${response.status}: ${errorText}` };
       }
       
       const data = await response.json();
       return data;
     } catch (error) {
       console.error('Error sending message:', error);
-      throw error;
+      return { error: error instanceof Error ? error.message : 'Unknown error occurred' };
     }
   },
   
@@ -200,14 +204,14 @@ export const chatApi = {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`API error (${response.status}): ${errorText}`);
-        throw new Error(`API responded with status ${response.status}: ${errorText}`);
+        return { error: `API responded with status ${response.status}: ${errorText}` };
       }
       
       const data = await response.json();
       return data;
     } catch (error) {
       console.error('Error sending public message:', error);
-      throw error;
+      return { error: error instanceof Error ? error.message : 'Unknown error occurred' };
     }
   },
 
@@ -250,99 +254,74 @@ export const chatApi = {
       return [];
     } catch (error) {
       console.error('Error getting chat history:', error);
-      throw error;
+      return [];
     }
   },
 
-  /**
-   * Get chat history for a public chatbot using the user ID
-   * This doesn't require authentication and uses a separate endpoint
-   */
-  getPublicChatHistory: async (userId: string) => {
+  getAllChatHistory: async () => {
     try {
-      const visitorId = getOrCreateVisitorId();
-      console.log(`Fetching public chat history for user ID: ${userId}, visitor ID: ${visitorId}`);
+      // Get the current user's session
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
       
-      // Use the public history endpoint with the user ID
-      const url = `${API_URL}/chat/${userId}/public/history?visitor_id=${visitorId}`;
-      
-      // Use fetch API directly for better error handling for public endpoints
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`API error (${response.status}): ${errorText}`);
-        throw new Error(`API responded with status ${response.status}: ${errorText}`);
+      if (!userId) {
+        throw new Error('No authenticated user found');
       }
       
-      const data = await response.json();
-      console.log('Public chat history API response:', data);
+      // Include target_user_id in the request
+      const response = await api.get(`/admin/chat/history?target_user_id=${userId}`);
+      console.log('Admin chat history API response:', response.data);
       
       // Check if response has the expected format with history array
-      if (data && Array.isArray(data.history)) {
-        return data.history;
-      } else if (data && typeof data === 'object') {
-        // Try to extract history if it exists
-        if (Array.isArray(data.history)) {
-          return data.history;
-        } 
-        // If the whole response is an array, use that
-        else if (Array.isArray(data)) {
-          return data;
-        }
-      }
-      
-      // Fallback if we couldn't extract a proper array
-      console.error('Failed to extract public chat history from response:', data);
-      return [];
-    } catch (error) {
-      console.error('Error getting public chat history:', error);
-      // Return empty array instead of throwing to avoid breaking the UI
-      return [];
-    }
-  },
-
-  /**
-   * Get all chat history for an admin/owner (all visitors for their chatbots)
-   */
-  getAllChatHistory: async (limit: number = 100, chatbotId?: string) => {
-    try {
-      // Build URL with appropriate params
-      let url = `/chat/history?limit=${limit}`;
-      if (chatbotId) {
-        url += `&chatbot_id=${chatbotId}`;
-      }
-      
-      const response = await api.get(url);
-      console.log('All chat history API response:', response.data);
-      
-      // Check if response has the expected format with history array and count
       if (response.data && Array.isArray(response.data.history)) {
-        // If we have a count, log it
-        if (typeof response.data.count === 'number') {
-          console.log(`Retrieved ${response.data.count} chat history messages`);
-        }
         return response.data.history;
       } else if (response.data && typeof response.data === 'object') {
-        console.warn('Unexpected response format for all chat history, trying to handle it:', response.data);
-        // Try to extract history if it exists
         if (Array.isArray(response.data.history)) {
           return response.data.history;
-        }
-        // If the whole response is an array, use that
-        else if (Array.isArray(response.data)) {
+        } else if (Array.isArray(response.data)) {
           return response.data;
         }
       }
       
-      // Fallback if we couldn't extract a proper array
-      console.error('Failed to extract all chat history from response:', response.data);
+      console.error('Failed to extract chat history from response:', response.data);
       return [];
     } catch (error) {
-      console.error('Error getting all chat history:', error);
-      throw error;
+      console.error('Error getting admin chat history:', error);
+      return [];
     }
   },
+
+  /**
+   * Get chat history for a public chatbot
+   */
+  getPublicChatHistory: async (userId: string) => {
+    try {
+      const visitorId = getOrCreateVisitorId();
+      
+      // Build the URL with appropriate query parameters
+      const url = `/chat/${userId}/public/history?visitor_id=${visitorId}`;
+      
+      const response = await api.get(url);
+      console.log('Public chat history API response:', response.data);
+      
+      // Handle response format consistently with getChatHistory
+      if (response.data && Array.isArray(response.data.history)) {
+        return response.data.history;
+      } else if (response.data && typeof response.data === 'object') {
+        if (Array.isArray(response.data.history)) {
+          return response.data.history;
+        } else if (Array.isArray(response.data)) {
+          return response.data;
+        }
+      }
+      
+      console.error('Failed to extract public chat history from response:', response.data);
+      return [];
+    } catch (error) {
+      console.error('Error getting public chat history:', error);
+      return [];
+    }
+  }
 };
 
 export const profileApi = {

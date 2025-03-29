@@ -7,34 +7,16 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import dynamic from 'next/dynamic';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Save, X } from "lucide-react";
-
-// Dynamically import the Markdown Editor with no SSR to avoid hydration issues
-const MDEditor = dynamic(
-  () => import('@uiw/react-md-editor').then((mod) => mod.default),
-  { ssr: false }
-);
-
-// Dynamically import the Markdown Preview component
-const MDPreview = dynamic(
-  () => import('@uiw/react-md-editor').then((mod) => {
-    const { default: ReactMarkdown } = mod;
-    return ({ source }: { source: string }) => (
-      <div className="markdown-body" style={{ padding: '20px' }}>
-        <div data-color-mode="light" className="wmde-markdown-var">
-          <ReactMarkdown value={source} />
-        </div>
-      </div>
-    );
-  }),
-  { ssr: false }
-);
+import { Edit, Save, X } from "lucide-react";
 
 interface ProjectDetailViewProps {
   project: Project;
@@ -52,10 +34,13 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   const [editMode, setEditMode] = useState(false);
   const [editedProject, setEditedProject] = useState<Project>({ ...project });
   
-  const handleContentChange = (value?: string) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
     setEditedProject(prev => ({
       ...prev,
-      content: value || ''
+      [name]: value,
     }));
   };
   
@@ -64,41 +49,16 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     setEditMode(false);
   };
   
-  const getCategoryBadgeClass = (category: string) => {
-    switch (category) {
-      case 'tech':
-        return 'bg-blue-50 text-blue-600 border-blue-200';
-      case 'design':
-        return 'bg-purple-50 text-purple-600 border-purple-200';
-      default:
-        return 'bg-gray-50 text-gray-600 border-gray-200';
-    }
-  };
-  
-  const getCategoryDisplayName = (category: string) => {
-    switch (category) {
-      case 'tech':
-        return 'Technology';
-      case 'design':
-        return 'Design';
-      default:
-        return 'Other';
-    }
-  };
-  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-5xl lg:max-w-6xl max-h-[90vh] overflow-auto">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <DialogTitle className="text-2xl">{project.title}</DialogTitle>
-              <Badge 
-                variant="outline" 
-                className={getCategoryBadgeClass(project.category)}
-              >
-                {getCategoryDisplayName(project.category)}
-              </Badge>
+              <DialogTitle className="text-2xl font-bold">{project.title}</DialogTitle>
+              {project.is_featured && (
+                <Badge variant="secondary">Featured</Badge>
+              )}
             </div>
             <div className="flex items-center gap-2">
               {editMode ? (
@@ -111,7 +71,10 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                     <Save size={16} /> Save
                   </Button>
                   <Button
-                    onClick={() => setEditMode(false)}
+                    onClick={() => {
+                      setEditMode(false);
+                      setEditedProject({ ...project });
+                    }}
                     variant="outline"
                     className="flex items-center gap-1"
                     size="sm"
@@ -124,58 +87,123 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                   onClick={() => setEditMode(true)}
                   variant="outline"
                   size="sm"
+                  className="flex items-center gap-1"
                 >
-                  Edit Content
+                  <Edit size={16} /> Edit
                 </Button>
               )}
             </div>
           </div>
-          <DialogDescription>
-            {project.description}
-          </DialogDescription>
         </DialogHeader>
         
-        <div className="py-4">
-          <div className="border rounded-md mb-6">
-            <div className="bg-muted p-3 border-b">
-              <h3 className="text-sm font-medium">Project Details</h3>
+        {editMode ? (
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Project Title</Label>
+              <Input
+                id="title"
+                name="title"
+                value={editedProject.title}
+                onChange={handleChange}
+                placeholder="Enter project title"
+              />
             </div>
-            <div className="p-4 text-sm">
-              {project.details}
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={editedProject.description}
+                onChange={handleChange}
+                placeholder="Enter project description"
+                className="resize-none"
+                rows={4}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="technologies">Technologies</Label>
+              <Input
+                id="technologies"
+                name="technologies"
+                value={editedProject.technologies}
+                onChange={handleChange}
+                placeholder="Enter technologies used (comma separated)"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="project_url">Project URL (optional)</Label>
+              <Input
+                id="project_url"
+                name="project_url"
+                value={editedProject.project_url}
+                onChange={handleChange}
+                placeholder="Enter project URL"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="image_url">Image URL (optional)</Label>
+              <Input
+                id="image_url"
+                name="image_url"
+                value={editedProject.image_url}
+                onChange={handleChange}
+                placeholder="Enter image URL"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="is_featured"
+                checked={editedProject.is_featured}
+                onCheckedChange={(checked) => 
+                  setEditedProject(prev => ({ ...prev, is_featured: checked }))
+                }
+              />
+              <Label htmlFor="is_featured">Featured Project</Label>
             </div>
           </div>
-          
-          <div className="border rounded-md">
-            <div className="bg-muted p-3 border-b flex justify-between items-center">
-              <h3 className="text-sm font-medium">Project Content</h3>
+        ) : (
+          <div className="py-4 space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Description</h3>
+              <p className="text-muted-foreground">{project.description}</p>
             </div>
-            <div className="p-0">
-              {editMode ? (
-                <div data-color-mode="light" className="p-2">
-                  <MDEditor
-                    value={editedProject.content || ''}
-                    onChange={handleContentChange}
-                    height={500} 
-                    preview="edit"
-                    className="w-full"
-                  />
-                </div>
-              ) : (
-                <div className="p-4 prose max-w-none overflow-auto h-[500px]" data-color-mode="light">
-                  {project.content ? (
-                    <div className="wmde-markdown wmde-markdown-color">
-                      <MDPreview source={project.content} />
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No content added yet. Click Edit Content to add markdown content.</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            
+            {project.technologies && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Technologies</h3>
+                <p className="text-muted-foreground">{project.technologies}</p>
+              </div>
+            )}
+            
+            {project.project_url && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Project URL</h3>
+                <p className="text-muted-foreground">
+                  <a 
+                    href={project.project_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-primary hover:underline"
+                  >
+                    {project.project_url}
+                  </a>
+                </p>
+              </div>
+            )}
+            
+            {project.image_url && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Image URL</h3>
+                <p className="text-muted-foreground">{project.image_url}</p>
+              </div>
+            )}
           </div>
-        </div>
+        )}
         
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

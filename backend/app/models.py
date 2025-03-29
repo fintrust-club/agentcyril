@@ -38,8 +38,9 @@ class ChatHistoryResponse(BaseModel):
     """
     Response model for chat history endpoint
     """
+    success: bool = Field(True, description="Whether the request was successful")
     history: List[ChatHistoryItem] = Field(default_factory=list)
-    count: int
+    count: Optional[int] = Field(None, description="Total number of messages")
 
 
 class Project(BaseModel):

@@ -16,6 +16,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { redirect } from 'next/navigation';
+import { ProjectManagement } from '@/components/admin/project-management';
+import { DocumentManagement } from '@/components/admin/document-management';
 
 export default function AdminPage() {
   const [formData, setFormData] = useState<ProfileData>({
@@ -23,13 +25,16 @@ export default function AdminPage() {
     skills: "",
     experience: "",
     projects: "",
-    interests: ""
+    interests: "",
+    calendly_link: "",
+    meeting_rules: ""
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("profile");
+  const [isEditMode, setIsEditMode] = useState(false);
   
   // Use the standardized useAuth hook
   const { user, loading, signOut } = useAuth();
@@ -65,6 +70,8 @@ export default function AdminPage() {
         name: data.name || "",
         location: data.location || "",
         user_id: data.user_id || userId, // Preserve user_id
+        calendly_link: data.calendly_link || "",
+        meeting_rules: data.meeting_rules || "",
         // Don't include projects field here as it might not exist in newer schemas
       });
       
@@ -80,6 +87,8 @@ export default function AdminPage() {
         experience: "Enter your experience here",
         interests: "Enter your interests here",
         user_id: userId, // Always include user_id even with default values
+        calendly_link: "",
+        meeting_rules: "",
       });
     } finally {
       setIsLoading(false);
@@ -115,6 +124,8 @@ export default function AdminPage() {
         name: formData.name,
         location: formData.location,
         user_id: user.id,
+        calendly_link: formData.calendly_link,
+        meeting_rules: formData.meeting_rules,
       };
       
       console.log('Submitting profile data with user_id:', user.id);
@@ -125,6 +136,7 @@ export default function AdminPage() {
       console.log('Profile update result:', result);
       
       setSaveSuccess(true);
+      setIsEditMode(false); // Exit edit mode after successful save
       
       // Display success message and automatically clear it after 3 seconds
       setTimeout(() => {
@@ -224,16 +236,30 @@ export default function AdminPage() {
               <TabsTrigger value="chat">
                 Chat History
               </TabsTrigger>
+              <TabsTrigger value="projects">
+                Projects
+              </TabsTrigger>
+              <TabsTrigger value="documents">
+                Documents
+              </TabsTrigger>
             </TabsList>
           </div>
           
           <TabsContent value="profile">
             <Card className="shadow-md">
-              <CardHeader>
-                <CardTitle>Update Portfolio Content</CardTitle>
-                <CardDescription>
-                  Manage the information used in your AI assistant responses.
-                </CardDescription>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl font-semibold">What the AI knows about you</CardTitle>
+                  {!isEditMode && !isLoading && (
+                    <Button
+                      onClick={() => setIsEditMode(true)}
+                      variant="outline"
+                      className="px-6"
+                    >
+                      Edit Profile
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               
               <CardContent className="p-6">
@@ -261,130 +287,205 @@ export default function AdminPage() {
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
                     <p>Loading profile data...</p>
                   </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                ) : isEditMode ? (
+                  <form onSubmit={handleSubmit} className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Name</Label>
+                        <Label htmlFor="name" className="text-base font-medium">Name</Label>
                         <Input
                           id="name"
                           name="name"
                           value={formData.name || ''}
                           onChange={handleChange}
                           placeholder="Your name"
+                          className="text-base"
                         />
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="location">Location</Label>
+                        <Label htmlFor="location" className="text-base font-medium">Location</Label>
                         <Input
                           id="location"
                           name="location"
                           value={formData.location || ''}
                           onChange={handleChange}
                           placeholder="Your location"
+                          className="text-base"
                         />
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Bio <Badge variant="outline" className="ml-2">Personal</Badge>
-                      </label>
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <label className="text-base font-medium">Bio</label>
+                        <Badge variant="outline" className="ml-2 text-xs">Personal</Badge>
+                      </div>
                       <Textarea
                         name="bio"
                         value={formData.bio}
                         onChange={handleChange}
                         rows={3}
-                        className="resize-none"
+                        className="resize-none text-base"
                         required
                       />
                     </div>
                     
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Skills <Badge variant="outline" className="ml-2">Technical</Badge>
-                      </label>
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <label className="text-base font-medium">Skills</label>
+                        <Badge variant="outline" className="ml-2 text-xs">Technical</Badge>
+                      </div>
                       <Textarea
                         name="skills"
                         value={formData.skills}
                         onChange={handleChange}
                         rows={3}
-                        className="resize-none"
+                        className="resize-none text-base"
                         required
                       />
                     </div>
                     
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Experience <Badge variant="outline" className="ml-2">Professional</Badge>
-                      </label>
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <label className="text-base font-medium">Experience</label>
+                        <Badge variant="outline" className="ml-2 text-xs">Professional</Badge>
+                      </div>
                       <Textarea
                         name="experience"
                         value={formData.experience}
                         onChange={handleChange}
                         rows={3}
-                        className="resize-none"
+                        className="resize-none text-base"
                         required
                       />
                     </div>
                     
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Interests & Hobbies <Badge variant="outline" className="ml-2">Personal</Badge>
-                      </label>
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <label className="text-base font-medium">Interests & Hobbies</label>
+                        <Badge variant="outline" className="ml-2 text-xs">Personal</Badge>
+                      </div>
                       <Textarea
                         name="interests"
                         value={formData.interests}
                         onChange={handleChange}
                         rows={2}
-                        className="resize-none"
+                        className="resize-none text-base"
                         required
                       />
                     </div>
                     
-                    <div className="flex justify-end pt-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <label className="text-base font-medium">Calendly Link</label>
+                        <Badge variant="outline" className="ml-2 text-xs">Meeting</Badge>
+                      </div>
+                      <Input
+                        name="calendly_link"
+                        value={formData.calendly_link || ''}
+                        onChange={handleChange}
+                        placeholder="Your Calendly scheduling link"
+                        className="text-base"
+                      />
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <label className="text-base font-medium">Meeting Rules</label>
+                        <Badge variant="outline" className="ml-2 text-xs">Policy</Badge>
+                      </div>
+                      <Textarea
+                        name="meeting_rules"
+                        value={formData.meeting_rules || ''}
+                        onChange={handleChange}
+                        rows={3}
+                        placeholder="Define rules for when meetings should be allowed (e.g., 'Only allow meetings for project discussions, job opportunities, or consulting inquiries')"
+                        className="resize-none text-base"
+                      />
+                    </div>
+                    
+                    <div className="flex justify-end gap-2 pt-6">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsEditMode(false)}
+                        disabled={isSaving}
+                        className="px-6"
+                      >
+                        Cancel
+                      </Button>
                       <Button
                         type="submit"
                         disabled={isSaving}
-                        className="px-6"
+                        className="px-8"
                       >
                         {isSaving ? 'Saving...' : 'Save Changes'}
                       </Button>
                     </div>
                   </form>
-                )}
-
-                {/* Public Chatbot Link Section */}
-                {user && (
-                  <div className="border-t mt-8 pt-6">
-                    <h3 className="text-lg font-medium mb-4">Your Public Chatbot Link</h3>
-                    <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
-                        Share this link with anyone who wants to chat with your AI assistant.
-                        They'll be asked for their name and then can chat with an AI trained on your profile data.
-                      </p>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Input 
-                          readOnly
-                          value={`${window.location.origin}/chat/${user.id}`}
-                          className="font-mono text-sm"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            navigator.clipboard.writeText(`${window.location.origin}/chat/${user.id}`);
-                            alert('Link copied to clipboard!');
-                          }}
-                        >
-                          Copy
-                        </Button>
+                ) : (
+                  <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-2">
+                        <h3 className="text-base font-semibold">Name</h3>
+                        <p className="text-lg">{formData.name || 'Not specified'}</p>
                       </div>
                       
-                      <p className="text-xs text-muted-foreground mt-2">
-                        All chats will appear in your Chat History tab. Update your profile info to change what the AI knows about you.
+                      <div className="space-y-2">
+                        <h3 className="text-base font-semibold">Location</h3>
+                        <p className="text-lg">{formData.location || 'Not specified'}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center border-b pb-2">
+                        <h3 className="text-base font-semibold">Bio</h3>
+                        <Badge variant="outline" className="ml-2 text-xs">Personal</Badge>
+                      </div>
+                      <p className="text-base leading-relaxed whitespace-pre-wrap">{formData.bio}</p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center border-b pb-2">
+                        <h3 className="text-base font-semibold">Skills</h3>
+                        <Badge variant="outline" className="ml-2 text-xs">Technical</Badge>
+                      </div>
+                      <p className="text-base leading-relaxed whitespace-pre-wrap">{formData.skills}</p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center border-b pb-2">
+                        <h3 className="text-base font-semibold">Experience</h3>
+                        <Badge variant="outline" className="ml-2 text-xs">Professional</Badge>
+                      </div>
+                      <p className="text-base leading-relaxed whitespace-pre-wrap">{formData.experience}</p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center border-b pb-2">
+                        <h3 className="text-base font-semibold">Interests & Hobbies</h3>
+                        <Badge variant="outline" className="ml-2 text-xs">Personal</Badge>
+                      </div>
+                      <p className="text-base leading-relaxed whitespace-pre-wrap">{formData.interests}</p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center border-b pb-2">
+                        <h3 className="text-base font-semibold">Calendly Link</h3>
+                        <Badge variant="outline" className="ml-2 text-xs">Meeting</Badge>
+                      </div>
+                      <p className="text-base leading-relaxed break-all">
+                        {formData.calendly_link || 'No meeting link configured'}
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center border-b pb-2">
+                        <h3 className="text-base font-semibold">Meeting Rules</h3>
+                        <Badge variant="outline" className="ml-2 text-xs">Policy</Badge>
+                      </div>
+                      <p className="text-base leading-relaxed whitespace-pre-wrap">
+                        {formData.meeting_rules || 'No meeting rules configured'}
                       </p>
                     </div>
                   </div>
@@ -394,7 +495,15 @@ export default function AdminPage() {
           </TabsContent>
           
           <TabsContent value="chat">
-            <AdminChatHistory />
+            <AdminChatHistory userId={user.id} />
+          </TabsContent>
+
+          <TabsContent value="projects">
+            <ProjectManagement userId={user.id} />
+          </TabsContent>
+          
+          <TabsContent value="documents">
+            <DocumentManagement userId={user.id} />
           </TabsContent>
         </Tabs>
       </main>
