@@ -2,15 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
-import { Trash2, Upload, FileText, X } from 'lucide-react';
+import { FileText, Upload, Eye, Trash2, Info } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
-import { createClient } from '@supabase/supabase-js';
 import { useToast } from '@/components/ui/use-toast';
+import { DocumentUploadModal } from "@/components/ui/document-upload-modal";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface DocumentManagementProps {
   userId: string;
@@ -18,25 +16,62 @@ interface DocumentManagementProps {
 
 interface Document {
   id: string;
-  name: string;
-  size: number;
-  type: string;
-  created_at: string;
-  status: string;
-  storage_path: string;
   user_id: string;
+  title: string;
+  description: string | null;
+  file_name: string;
+  file_size: number;
+  storage_path: string;
+  mime_type: string;
+  extracted_text: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export function DocumentManagement({ userId }: DocumentManagementProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [documentPreview, setDocumentPreview] = useState<Document | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
+    // Ensure the document bucket exists when the component loads
+    ensureDocumentBucketExists();
     fetchDocuments();
   }, [userId]);
+  
+  // Ensure the documents storage bucket exists
+  const ensureDocumentBucketExists = async () => {
+    try {
+      // Get the current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        return;
+      }
+      
+      // Check if the bucket exists
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const documentsBucketExists = buckets?.some(bucket => bucket.name === 'documents');
+      
+      if (!documentsBucketExists) {
+        // Create the documents bucket
+        const { data, error } = await supabase.storage.createBucket('documents', {
+          public: false,
+          fileSizeLimit: 10485760 // 10MB
+        });
+        
+        if (error) {
+          console.error('Error creating documents bucket:', error);
+        } else {
+          console.log('Documents bucket created successfully');
+        }
+      }
+    } catch (err) {
+      console.error('Error checking/creating documents bucket:', err);
+    }
+  };
   
   const fetchDocuments = async () => {
     try {
@@ -64,96 +99,11 @@ export function DocumentManagement({ userId }: DocumentManagementProps) {
       }
       
       const data = await response.json();
+      console.log("Fetched documents:", data);
       setDocuments(data || []);
     } catch (err: any) {
       console.error('Error fetching documents:', err);
       setError(err?.message || 'Failed to load documents');
-    }
-  };
-  
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Check if file is too large (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('File is too large. Maximum size is 10MB.');
-      return;
-    }
-    
-    // Only allow PDF, DOC, DOCX, TXT
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
-    if (!allowedTypes.includes(file.type)) {
-      setError('Only PDF, DOC, DOCX, and TXT files are allowed.');
-      return;
-    }
-    
-    try {
-      setIsUploading(true);
-      setUploadProgress(0);
-      setError(null);
-      
-      // Get the current session
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('You must be logged in to upload documents');
-      }
-      
-      // Create FormData
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('userId', userId);
-      
-      // Upload with progress tracking
-      const xhr = new XMLHttpRequest();
-      
-      xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-          const percentComplete = Math.round((event.loaded / event.total) * 100);
-          setUploadProgress(percentComplete);
-        }
-      });
-      
-      xhr.addEventListener('load', async () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          toast({
-            title: "Document Uploaded",
-            description: "Your document has been uploaded successfully and is being processed.",
-            type: "success"
-          });
-          await fetchDocuments();
-        } else {
-          let errorMessage = 'Failed to upload document';
-          try {
-            const response = JSON.parse(xhr.responseText);
-            errorMessage = response.error || errorMessage;
-          } catch (e) {
-            // If parsing fails, use the default error message
-          }
-          setError(errorMessage);
-        }
-        setIsUploading(false);
-        setUploadProgress(0);
-      });
-      
-      xhr.addEventListener('error', () => {
-        setError('Network error occurred during upload');
-        setIsUploading(false);
-        setUploadProgress(0);
-      });
-      
-      xhr.open('POST', '/api/documents/process');
-      xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
-      xhr.send(formData);
-      
-    } catch (err: any) {
-      console.error('Error uploading document:', err);
-      setError(err?.message || 'Failed to upload document');
-      setIsUploading(false);
-      setUploadProgress(0);
     }
   };
   
@@ -188,7 +138,6 @@ export function DocumentManagement({ userId }: DocumentManagementProps) {
       toast({
         title: "Document Deleted",
         description: "The document has been removed successfully.",
-        type: "info"
       });
       
     } catch (err: any) {
@@ -212,37 +161,19 @@ export function DocumentManagement({ userId }: DocumentManagementProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Documents</h2>
-        <div>
-          <Input
-            type="file"
-            id="document-upload"
-            className="hidden"
-            onChange={handleFileChange}
-            accept=".pdf,.doc,.docx,.txt"
-            disabled={isUploading}
-          />
-          <Label htmlFor="document-upload" asChild>
-            <Button variant="default" disabled={isUploading} className="flex items-center gap-2">
-              <Upload size={16} /> Upload Document
-            </Button>
-          </Label>
-        </div>
+        <Button 
+          variant="default" 
+          onClick={() => setShowUploadModal(true)} 
+          className="flex items-center gap-2"
+        >
+          <Upload size={16} /> Upload Document
+        </Button>
       </div>
       
       {error && (
         <Alert variant="destructive" className="my-4">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
-      )}
-      
-      {isUploading && (
-        <div className="my-4 p-4 border rounded-md">
-          <div className="flex justify-between items-center mb-2">
-            <span className="font-medium">Uploading Document...</span>
-            <span>{uploadProgress}%</span>
-          </div>
-          <Progress value={uploadProgress} className="h-2" />
-        </div>
       )}
       
       {documents.length === 0 ? (
@@ -263,37 +194,102 @@ export function DocumentManagement({ userId }: DocumentManagementProps) {
                 <div className="flex-1">
                   <div className="flex items-center">
                     <FileText className="h-5 w-5 mr-2 text-blue-500" />
-                    <h3 className="font-medium">{doc.name}</h3>
+                    <h3 className="font-medium">{doc.title}</h3>
                   </div>
-                  <div className="mt-1 text-sm text-muted-foreground flex gap-4">
-                    <span>{formatFileSize(doc.size)}</span>
+                  <div className="mt-1 text-sm text-muted-foreground flex gap-4 flex-wrap">
+                    <span>{doc.file_name}</span>
+                    <span>•</span>
+                    <span>{formatFileSize(doc.file_size)}</span>
                     <span>•</span>
                     <span>Added {formatDate(doc.created_at)}</span>
-                    <span>•</span>
-                    <span className="capitalize">
-                      {doc.status === 'processed' ? (
-                        <span className="text-green-600">✓ Processed</span>
-                      ) : doc.status === 'failed' ? (
-                        <span className="text-red-600">✗ Failed</span>
-                      ) : (
-                        <span className="text-amber-600">⏳ Processing</span>
-                      )}
-                    </span>
+                    {doc.description && (
+                      <>
+                        <span>•</span>
+                        <span title={doc.description}>
+                          <Info size={14} className="inline mr-1" />
+                          Has description
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="text-destructive hover:bg-destructive/10" 
-                  onClick={() => handleDeleteDocument(doc.id)}
-                >
-                  <Trash2 className="h-5 w-5" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="text-primary hover:bg-primary/10"
+                    onClick={() => setDocumentPreview(doc)}
+                  >
+                    <Eye className="h-5 w-5" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="text-destructive hover:bg-destructive/10" 
+                    onClick={() => handleDeleteDocument(doc.id)}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Document Upload Modal */}
+      <DocumentUploadModal
+        open={showUploadModal}
+        onOpenChange={setShowUploadModal}
+        onUploadComplete={fetchDocuments}
+        userId={userId}
+      />
+      
+      {/* Document Preview Modal */}
+      <Dialog open={!!documentPreview} onOpenChange={(open) => !open && setDocumentPreview(null)}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{documentPreview?.title}</DialogTitle>
+            <DialogDescription>
+              Document Details
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-[120px_1fr] gap-2">
+              <p className="font-medium text-muted-foreground">Filename:</p>
+              <p>{documentPreview?.file_name}</p>
+              
+              <p className="font-medium text-muted-foreground">Size:</p>
+              <p>{documentPreview?.file_size && formatFileSize(documentPreview.file_size)}</p>
+              
+              <p className="font-medium text-muted-foreground">Uploaded:</p>
+              <p>{documentPreview?.created_at && formatDate(documentPreview.created_at)}</p>
+              
+              <p className="font-medium text-muted-foreground">Type:</p>
+              <p>{documentPreview?.mime_type}</p>
+            </div>
+            
+            {documentPreview?.description && (
+              <div className="space-y-2">
+                <h4 className="font-medium">Description</h4>
+                <p className="p-3 border rounded-md bg-muted/50 text-sm">{documentPreview.description}</p>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <h4 className="font-medium">Extracted Text</h4>
+              <div className="border rounded-md p-3 bg-muted/50 max-h-[300px] overflow-y-auto">
+                <pre className="text-xs whitespace-pre-wrap">{documentPreview?.extracted_text}</pre>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDocumentPreview(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

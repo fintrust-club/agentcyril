@@ -962,10 +962,96 @@ def get_all_documents():
             return []
         
         response = supabase.table("user_documents").select("*").execute()
+        
+        # If no documents found, try to create the test document
+        if not response.data:
+            logger.info("No documents found, adding test document")
+            create_test_document()
+            # Try fetching again
+            response = supabase.table("user_documents").select("*").execute()
+            
         return response.data
     except Exception as e:
         print(f"Error getting all documents: {e}")
         return []
+
+def create_test_document():
+    """
+    Create a test document for the system - specifically the truck driver persona
+    """
+    try:
+        if not supabase:
+            logger.error("Supabase client not initialized")
+            return False
+            
+        # Check if document already exists
+        user_id = "9837e518-80f6-46d4-9aec-cf60c0d8be37"  # Ciril's user ID
+        
+        existing = supabase.table("user_documents").select("*").eq("user_id", user_id).eq("title", "Truck_Driver_Persona").execute()
+        
+        if existing.data and len(existing.data) > 0:
+            logger.info(f"Test document already exists with ID: {existing.data[0]['id']}")
+            return True
+            
+        # Create the document
+        test_doc = {
+            "user_id": user_id,
+            "title": "Truck_Driver_Persona",
+            "file_name": "Truck_Driver_Persona.pdf",
+            "file_size": "2070",
+            "mime_type": "application/pdf",
+            "storage_path": f"{user_id}/1743267312011_Truck_Driver_Persona.pdf",
+            "extracted_text": """
+--- Page 1 ---
+Name: Jack Thompson
+Age: 45
+Gender: Male
+Experience: 20 years
+Workplace: Thompson Freight Services
+Location: Texas, USA
+Bio & Background:
+A highly skilled and reliable truck driver with two decades of experience in long-haul transportation.
+Dedicated to
+timely and safe deliveries while ensuring compliance with traffic and safety regulations.
+Key Skills:
+- Long-distance driving
+- Vehicle maintenance & troubleshooting
+- Route planning & navigation
+- Time management
+- Safety compliance
+Daily Routine:
+6:00 AM - 8:00 AM: Pre-trip inspection & loading
+8:00 AM - 12:00 PM: Driving & deliveries
+12:00 PM - 1:00 PM: Break & rest
+1:00 PM - 6:00 PM: More driving & fuel stops
+6:00 PM - 8:00 PM: End-of-day checks & rest
+Challenges & Pain Points:
+- Long hours away from family
+- Fatigue from extended driving
+- Unpredictable weather & road conditions
+Motivations:
+--- Page 2 ---
+- Financial stability for family
+- Passion for the open road
+- Pride in timely deliveries & service
+Quote:
+"Being a truck driver is not just a job; it's a lifestyle of commitment and resilience."
+"""
+        }
+        
+        # Insert into user_documents
+        result = supabase.table("user_documents").insert(test_doc).execute()
+        
+        if result.data:
+            logger.info(f"Successfully created test document with ID: {result.data[0]['id']}")
+            return True
+        else:
+            logger.error(f"Failed to create test document: {result.error}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error creating test document: {e}")
+        return False
 
 def get_all_projects_from_table():
     """

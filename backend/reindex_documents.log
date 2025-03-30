@@ -98,3 +98,187 @@
 2025-03-29 20:42:25,660 - __main__ - INFO - Profiles reindexed: 3 success, 0 errors
 2025-03-29 20:42:25,660 - __main__ - INFO - Projects reindexed: 1 success, 0 errors
 2025-03-29 20:42:25,660 - __main__ - INFO - Documents reindexed: 0 success, 0 errors
+2025-03-29 22:34:09,143 - app.database - INFO - Connecting to Supabase at https://byddvbuzcgeg...
+2025-03-29 22:34:09,200 - app.database - INFO - Successfully connected to Supabase
+2025-03-29 22:34:09,201 - app.database - INFO - Loaded profile from backup file with name: John Doe
+2025-03-29 22:34:09,201 - app.database - INFO - Checking if schema has been properly applied...
+2025-03-29 22:34:09,361 - app.database - INFO - Profiles table exists, sample response: [{'id': '235a200f-2da1-44cd-b058-b624ccee9b0f', 'projects': '[]'}]
+2025-03-29 22:34:09,361 - app.database - INFO - Schema verification passed: profiles table has projects column
+2025-03-29 22:34:09,842 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-03-29 22:34:10,174 - __main__ - INFO - === Starting vector database reindexing ===
+2025-03-29 22:34:29,950 - __main__ - INFO - Clearing vector database...
+2025-03-29 22:34:29,966 - __main__ - INFO - Vector database contains 34 items before clearing
+2025-03-29 22:34:30,025 - __main__ - INFO - Cleared all 34 items from portfolio_data collection
+2025-03-29 22:34:30,041 - __main__ - INFO - Recreated empty collection portfolio_data
+2025-03-29 22:34:30,041 - __main__ - INFO - Starting profile reindexing...
+2025-03-29 22:34:30,191 - __main__ - INFO - Retrieved 3 profiles to reindex
+2025-03-29 22:34:30,191 - __main__ - INFO - Reindexing profile for user ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 22:34:33,920 - __main__ - INFO - Successfully reindexed profile for user ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 22:34:33,920 - __main__ - INFO - Reindexing profile for user 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:34:35,683 - __main__ - INFO - Successfully reindexed profile for user 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:34:35,683 - __main__ - INFO - Reindexing profile for user 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 22:34:36,621 - __main__ - INFO - Successfully reindexed profile for user 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 22:34:36,621 - __main__ - INFO - Profile reindexing complete. Success: 3, Errors: 0
+2025-03-29 22:34:36,622 - __main__ - INFO - Starting projects table reindexing...
+2025-03-29 22:34:36,778 - __main__ - INFO - Retrieved 1 projects from projects table to reindex
+2025-03-29 22:34:36,778 - __main__ - INFO - Adding 1 projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:34:37,463 - __main__ - INFO - Successfully added projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:34:37,463 - __main__ - INFO - Projects reindexing complete. Success: 1, Errors: 0
+2025-03-29 22:34:37,463 - __main__ - INFO - Starting document reindexing...
+2025-03-29 22:34:37,539 - __main__ - INFO - Retrieved 0 documents to reindex
+2025-03-29 22:34:37,539 - __main__ - INFO - Document reindexing complete. Success: 0, Errors: 0
+2025-03-29 22:34:37,539 - __main__ - INFO - === Reindexing completed ===
+2025-03-29 22:34:37,539 - __main__ - INFO - Total duration: 27.37 seconds
+2025-03-29 22:34:37,540 - __main__ - INFO - Profiles reindexed: 3 success, 0 errors
+2025-03-29 22:34:37,540 - __main__ - INFO - Projects reindexed: 1 success, 0 errors
+2025-03-29 22:34:37,540 - __main__ - INFO - Documents reindexed: 0 success, 0 errors
+2025-03-29 22:34:44,989 - app.database - INFO - Connecting to Supabase at https://byddvbuzcgeg...
+2025-03-29 22:34:45,047 - app.database - INFO - Successfully connected to Supabase
+2025-03-29 22:34:45,048 - app.database - INFO - Loaded profile from backup file with name: John Doe
+2025-03-29 22:34:45,048 - app.database - INFO - Checking if schema has been properly applied...
+2025-03-29 22:34:45,198 - app.database - INFO - Profiles table exists, sample response: [{'id': '235a200f-2da1-44cd-b058-b624ccee9b0f', 'projects': '[]'}]
+2025-03-29 22:34:45,198 - app.database - INFO - Schema verification passed: profiles table has projects column
+2025-03-29 22:34:45,685 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-03-29 22:34:46,017 - reindex_vector_db - INFO - Starting document reindexing...
+2025-03-29 22:34:46,085 - reindex_vector_db - INFO - Retrieved 0 documents to reindex
+2025-03-29 22:34:46,085 - reindex_vector_db - INFO - Document reindexing complete. Success: 0, Errors: 0
+2025-03-29 22:39:14,601 - app.database - INFO - Connecting to Supabase at https://byddvbuzcgeg...
+2025-03-29 22:39:14,660 - app.database - INFO - Successfully connected to Supabase
+2025-03-29 22:39:14,660 - app.database - INFO - Loaded profile from backup file with name: John Doe
+2025-03-29 22:39:14,661 - app.database - INFO - Checking if schema has been properly applied...
+2025-03-29 22:39:16,428 - app.database - INFO - Profiles table exists, sample response: [{'id': '235a200f-2da1-44cd-b058-b624ccee9b0f', 'projects': '[]'}]
+2025-03-29 22:39:16,428 - app.database - INFO - Schema verification passed: profiles table has projects column
+2025-03-29 22:39:17,087 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-03-29 22:39:17,509 - __main__ - INFO - === Starting vector database reindexing ===
+2025-03-29 22:39:17,509 - __main__ - INFO - Clearing vector database...
+2025-03-29 22:39:17,523 - __main__ - INFO - Vector database contains 27 items before clearing
+2025-03-29 22:39:17,586 - __main__ - INFO - Cleared all 27 items from portfolio_data collection
+2025-03-29 22:39:17,603 - __main__ - INFO - Recreated empty collection portfolio_data
+2025-03-29 22:39:17,603 - __main__ - INFO - Starting profile reindexing...
+2025-03-29 22:39:17,696 - __main__ - INFO - Retrieved 3 profiles to reindex
+2025-03-29 22:39:17,697 - __main__ - INFO - Reindexing profile for user ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 22:39:18,847 - __main__ - INFO - Successfully reindexed profile for user ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 22:39:18,848 - __main__ - INFO - Reindexing profile for user 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:39:20,406 - __main__ - INFO - Successfully reindexed profile for user 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:39:20,406 - __main__ - INFO - Reindexing profile for user 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 22:39:21,183 - __main__ - INFO - Successfully reindexed profile for user 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 22:39:21,183 - __main__ - INFO - Profile reindexing complete. Success: 3, Errors: 0
+2025-03-29 22:39:21,183 - __main__ - INFO - Starting projects table reindexing...
+2025-03-29 22:39:21,257 - __main__ - INFO - Retrieved 1 projects from projects table to reindex
+2025-03-29 22:39:21,258 - __main__ - INFO - Adding 1 projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:39:22,684 - __main__ - INFO - Successfully added projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:39:22,684 - __main__ - INFO - Projects reindexing complete. Success: 1, Errors: 0
+2025-03-29 22:39:22,684 - __main__ - INFO - Starting document reindexing...
+2025-03-29 22:39:22,766 - __main__ - INFO - Retrieved 0 documents to reindex
+2025-03-29 22:39:22,766 - __main__ - INFO - Document reindexing complete. Success: 0, Errors: 0
+2025-03-29 22:39:22,767 - __main__ - INFO - === Reindexing completed ===
+2025-03-29 22:39:22,767 - __main__ - INFO - Total duration: 5.26 seconds
+2025-03-29 22:39:22,767 - __main__ - INFO - Profiles reindexed: 3 success, 0 errors
+2025-03-29 22:39:22,767 - __main__ - INFO - Projects reindexed: 1 success, 0 errors
+2025-03-29 22:39:22,767 - __main__ - INFO - Documents reindexed: 0 success, 0 errors
+2025-03-29 22:40:14,384 - app.database - INFO - Connecting to Supabase at https://byddvbuzcgeg...
+2025-03-29 22:40:14,442 - app.database - INFO - Successfully connected to Supabase
+2025-03-29 22:40:14,442 - app.database - INFO - Loaded profile from backup file with name: John Doe
+2025-03-29 22:40:14,443 - app.database - INFO - Checking if schema has been properly applied...
+2025-03-29 22:40:14,607 - app.database - INFO - Profiles table exists, sample response: [{'id': '235a200f-2da1-44cd-b058-b624ccee9b0f', 'projects': '[]'}]
+2025-03-29 22:40:14,607 - app.database - INFO - Schema verification passed: profiles table has projects column
+2025-03-29 22:40:15,289 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-03-29 22:40:15,626 - __main__ - INFO - === Starting vector database reindexing ===
+2025-03-29 22:40:15,627 - __main__ - INFO - Clearing vector database...
+2025-03-29 22:40:15,641 - __main__ - INFO - Vector database contains 22 items before clearing
+2025-03-29 22:40:15,699 - __main__ - INFO - Cleared all 22 items from portfolio_data collection
+2025-03-29 22:40:15,715 - __main__ - INFO - Recreated empty collection portfolio_data
+2025-03-29 22:40:15,715 - __main__ - INFO - Starting profile reindexing...
+2025-03-29 22:40:15,799 - __main__ - INFO - Retrieved 3 profiles to reindex
+2025-03-29 22:40:15,799 - __main__ - INFO - Reindexing profile for user ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 22:40:16,922 - __main__ - INFO - Successfully reindexed profile for user ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 22:40:16,922 - __main__ - INFO - Reindexing profile for user 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:40:18,866 - __main__ - INFO - Successfully reindexed profile for user 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:40:18,866 - __main__ - INFO - Reindexing profile for user 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 22:40:19,814 - __main__ - INFO - Successfully reindexed profile for user 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 22:40:19,814 - __main__ - INFO - Profile reindexing complete. Success: 3, Errors: 0
+2025-03-29 22:40:19,814 - __main__ - INFO - Starting projects table reindexing...
+2025-03-29 22:40:19,950 - __main__ - INFO - Retrieved 1 projects from projects table to reindex
+2025-03-29 22:40:19,967 - __main__ - INFO - Adding 1 projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:40:20,563 - __main__ - INFO - Successfully added projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:40:20,563 - __main__ - INFO - Projects reindexing complete. Success: 1, Errors: 0
+2025-03-29 22:40:20,563 - __main__ - INFO - Starting document reindexing...
+2025-03-29 22:40:20,643 - __main__ - INFO - Retrieved 0 documents to reindex
+2025-03-29 22:40:20,643 - __main__ - INFO - Document reindexing complete. Success: 0, Errors: 0
+2025-03-29 22:40:20,644 - __main__ - INFO - === Reindexing completed ===
+2025-03-29 22:40:20,644 - __main__ - INFO - Total duration: 5.02 seconds
+2025-03-29 22:40:20,644 - __main__ - INFO - Profiles reindexed: 3 success, 0 errors
+2025-03-29 22:40:20,644 - __main__ - INFO - Projects reindexed: 1 success, 0 errors
+2025-03-29 22:40:20,644 - __main__ - INFO - Documents reindexed: 0 success, 0 errors
+2025-03-29 22:40:56,438 - app.database - INFO - Connecting to Supabase at https://byddvbuzcgeg...
+2025-03-29 22:40:56,500 - app.database - INFO - Successfully connected to Supabase
+2025-03-29 22:40:56,500 - app.database - INFO - Loaded profile from backup file with name: John Doe
+2025-03-29 22:40:56,500 - app.database - INFO - Checking if schema has been properly applied...
+2025-03-29 22:40:56,677 - app.database - INFO - Profiles table exists, sample response: [{'id': '235a200f-2da1-44cd-b058-b624ccee9b0f', 'projects': '[]'}]
+2025-03-29 22:40:56,677 - app.database - INFO - Schema verification passed: profiles table has projects column
+2025-03-29 22:40:57,265 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-03-29 22:40:57,638 - __main__ - INFO - === Starting vector database reindexing ===
+2025-03-29 22:40:57,639 - __main__ - INFO - Clearing vector database...
+2025-03-29 22:40:57,653 - __main__ - INFO - Vector database contains 22 items before clearing
+2025-03-29 22:40:57,715 - __main__ - INFO - Cleared all 22 items from portfolio_data collection
+2025-03-29 22:40:57,732 - __main__ - INFO - Recreated empty collection portfolio_data
+2025-03-29 22:40:57,733 - __main__ - INFO - Starting profile reindexing...
+2025-03-29 22:40:57,832 - __main__ - INFO - Retrieved 3 profiles to reindex
+2025-03-29 22:40:57,832 - __main__ - INFO - Reindexing profile for user ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 22:40:58,882 - __main__ - INFO - Successfully reindexed profile for user ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 22:40:58,882 - __main__ - INFO - Reindexing profile for user 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:41:04,360 - __main__ - INFO - Successfully reindexed profile for user 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:41:04,360 - __main__ - INFO - Reindexing profile for user 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 22:41:05,240 - __main__ - INFO - Successfully reindexed profile for user 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 22:41:05,240 - __main__ - INFO - Profile reindexing complete. Success: 3, Errors: 0
+2025-03-29 22:41:05,240 - __main__ - INFO - Starting projects table reindexing...
+2025-03-29 22:41:05,366 - __main__ - INFO - Retrieved 1 projects from projects table to reindex
+2025-03-29 22:41:05,367 - __main__ - INFO - Adding 1 projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:41:06,095 - __main__ - INFO - Successfully added projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:41:06,095 - __main__ - INFO - Projects reindexing complete. Success: 1, Errors: 0
+2025-03-29 22:41:06,095 - __main__ - INFO - Starting document reindexing...
+2025-03-29 22:41:06,168 - app.database - INFO - No documents found, adding test document
+2025-03-29 22:41:06,336 - app.database - ERROR - Error creating test document: {'code': '42501', 'details': None, 'hint': None, 'message': 'new row violates row-level security policy for table "user_documents"'}
+2025-03-29 22:41:06,407 - __main__ - INFO - Retrieved 0 documents to reindex
+2025-03-29 22:41:06,407 - __main__ - INFO - Document reindexing complete. Success: 0, Errors: 0
+2025-03-29 22:41:06,407 - __main__ - INFO - === Reindexing completed ===
+2025-03-29 22:41:06,407 - __main__ - INFO - Total duration: 8.77 seconds
+2025-03-29 22:41:06,408 - __main__ - INFO - Profiles reindexed: 3 success, 0 errors
+2025-03-29 22:41:06,408 - __main__ - INFO - Projects reindexed: 1 success, 0 errors
+2025-03-29 22:41:06,408 - __main__ - INFO - Documents reindexed: 0 success, 0 errors
+2025-03-29 22:42:05,780 - app.database - INFO - Connecting to Supabase at https://byddvbuzcgeg...
+2025-03-29 22:42:05,851 - app.database - INFO - Successfully connected to Supabase
+2025-03-29 22:42:05,860 - app.database - INFO - Loaded profile from backup file with name: John Doe
+2025-03-29 22:42:05,860 - app.database - INFO - Checking if schema has been properly applied...
+2025-03-29 22:42:06,147 - app.database - INFO - Profiles table exists, sample response: [{'id': '235a200f-2da1-44cd-b058-b624ccee9b0f', 'projects': '[]'}]
+2025-03-29 22:42:06,148 - app.database - INFO - Schema verification passed: profiles table has projects column
+2025-03-29 22:42:06,905 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-03-29 22:42:07,335 - __main__ - INFO - === Starting vector database reindexing ===
+2025-03-29 22:42:07,335 - __main__ - INFO - Clearing vector database...
+2025-03-29 22:42:07,350 - __main__ - INFO - Vector database contains 22 items before clearing
+2025-03-29 22:42:07,404 - __main__ - INFO - Cleared all 22 items from portfolio_data collection
+2025-03-29 22:42:07,421 - __main__ - INFO - Recreated empty collection portfolio_data
+2025-03-29 22:42:07,421 - __main__ - INFO - Starting profile reindexing...
+2025-03-29 22:42:07,509 - __main__ - INFO - Retrieved 3 profiles to reindex
+2025-03-29 22:42:07,510 - __main__ - INFO - Reindexing profile for user ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 22:42:08,689 - __main__ - INFO - Successfully reindexed profile for user ef041bad-3617-444f-9426-a1e928d52bdc
+2025-03-29 22:42:08,689 - __main__ - INFO - Reindexing profile for user 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:42:12,488 - __main__ - INFO - Successfully reindexed profile for user 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:42:12,488 - __main__ - INFO - Reindexing profile for user 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 22:42:13,514 - __main__ - INFO - Successfully reindexed profile for user 1ec263e2-6aae-40d0-9c84-0ae358ecda03
+2025-03-29 22:42:13,514 - __main__ - INFO - Profile reindexing complete. Success: 3, Errors: 0
+2025-03-29 22:42:13,514 - __main__ - INFO - Starting projects table reindexing...
+2025-03-29 22:42:13,657 - __main__ - INFO - Retrieved 1 projects from projects table to reindex
+2025-03-29 22:42:13,657 - __main__ - INFO - Adding 1 projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:42:14,536 - __main__ - INFO - Successfully added projects for user_id: 9837e518-80f6-46d4-9aec-cf60c0d8be37
+2025-03-29 22:42:14,536 - __main__ - INFO - Projects reindexing complete. Success: 1, Errors: 0
+2025-03-29 22:42:14,536 - __main__ - INFO - Starting document reindexing...
+2025-03-29 22:42:14,609 - app.database - INFO - No documents found, adding test document
+2025-03-29 22:42:14,795 - app.database - ERROR - Error creating test document: {'code': '42501', 'details': None, 'hint': None, 'message': 'new row violates row-level security policy for table "user_documents"'}
+2025-03-29 22:42:14,881 - __main__ - INFO - Retrieved 0 documents to reindex
+2025-03-29 22:42:14,882 - __main__ - INFO - Document reindexing complete. Success: 0, Errors: 0
+2025-03-29 22:42:14,882 - __main__ - INFO - === Reindexing completed ===
+2025-03-29 22:42:14,882 - __main__ - INFO - Total duration: 7.55 seconds
+2025-03-29 22:42:14,882 - __main__ - INFO - Profiles reindexed: 3 success, 0 errors
+2025-03-29 22:42:14,882 - __main__ - INFO - Projects reindexed: 1 success, 0 errors
+2025-03-29 22:42:14,882 - __main__ - INFO - Documents reindexed: 0 success, 0 errors

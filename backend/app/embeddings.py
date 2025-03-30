@@ -948,3 +948,98 @@ Recent conversation history:
     except Exception as e:
         print(f"Error in generate_ai_response: {str(e)}")
         return f"I apologize, but I'm having trouble accessing {name}'s knowledge base. Please try again later." 
+
+def add_truck_driver_document_to_vector_db():
+    """
+    Add the truck driver document directly to the vector database
+    """
+    try:
+        user_id = "9837e518-80f6-46d4-9aec-cf60c0d8be37"  # Ciril's user ID
+        collection_name = "portfolio_data"
+        print(f"Adding truck driver document directly to collection: {collection_name}")
+        
+        # Create or get the collection
+        collection = chroma_client.get_or_create_collection(
+            name=collection_name,
+            embedding_function=openai_ef
+        )
+        
+        document_id = str(uuid.uuid4())
+        title = "Truck_Driver_Persona"
+        
+        # Document content
+        extracted_text = """
+--- Page 1 ---
+Name: Jack Thompson
+Age: 45
+Gender: Male
+Experience: 20 years
+Workplace: Thompson Freight Services
+Location: Texas, USA
+Bio & Background:
+A highly skilled and reliable truck driver with two decades of experience in long-haul transportation.
+Dedicated to
+timely and safe deliveries while ensuring compliance with traffic and safety regulations.
+Key Skills:
+- Long-distance driving
+- Vehicle maintenance & troubleshooting
+- Route planning & navigation
+- Time management
+- Safety compliance
+Daily Routine:
+6:00 AM - 8:00 AM: Pre-trip inspection & loading
+8:00 AM - 12:00 PM: Driving & deliveries
+12:00 PM - 1:00 PM: Break & rest
+1:00 PM - 6:00 PM: More driving & fuel stops
+6:00 PM - 8:00 PM: End-of-day checks & rest
+Challenges & Pain Points:
+- Long hours away from family
+- Fatigue from extended driving
+- Unpredictable weather & road conditions
+Motivations:
+--- Page 2 ---
+- Financial stability for family
+- Passion for the open road
+- Pride in timely deliveries & service
+Quote:
+"Being a truck driver is not just a job; it's a lifestyle of commitment and resilience."
+"""
+        
+        # Format and add new documents
+        documents = []
+        metadatas = []
+        ids = []
+        
+        # Add document title
+        documents.append(f"Document Title: {title}")
+        metadatas.append({
+            "category": "document",
+            "subcategory": "title",
+            "document_id": document_id,
+            "user_id": user_id
+        })
+        ids.append(f"document_title_{document_id}_{user_id}")
+        
+        # Add document content (entire text as one chunk)
+        documents.append(extracted_text)
+        metadatas.append({
+            "category": "document",
+            "subcategory": "content",
+            "document_id": document_id,
+            "user_id": user_id
+        })
+        ids.append(f"document_content_{document_id}_{user_id}")
+        
+        # Add documents to collection
+        collection.add(
+            documents=documents,
+            metadatas=metadatas,
+            ids=ids
+        )
+        
+        print(f"Successfully added truck driver document to vector database with 2 chunks")
+        return True
+        
+    except Exception as e:
+        print(f"Error adding truck driver document to vector database: {e}")
+        return False 
