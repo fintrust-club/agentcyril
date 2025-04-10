@@ -36,15 +36,21 @@ class OpenAIEmbeddingFunction:
         if isinstance(input, str):
             input = [input]
         
-        # Get embeddings from OpenAI
-        response = openai.embeddings.create(
-            model=self.model_name,
-            input=input
-        )
-        
-        # Extract embeddings from response
-        embeddings = [item.embedding for item in response.data]
-        return embeddings
+        try:
+            # Get embeddings from OpenAI
+            response = openai.embeddings.create(
+                model=self.model_name,
+                input=input
+            )
+            
+            # Extract embeddings from response
+            embeddings = [item.embedding for item in response.data]
+            return embeddings
+        except Exception as e:
+            print(f"Error generating embeddings: {str(e)}")
+            # Return a simple embedding with zeros to avoid crashing
+            # This is a fallback for when the OpenAI API fails
+            return [[0.0] * 1536] * len(input)  # 1536 is the dimension for ada-002 embeddings
 
 # Initialize custom embedding function
 openai_ef = OpenAIEmbeddingFunction(api_key=openai.api_key)

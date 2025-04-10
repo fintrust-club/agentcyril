@@ -59,14 +59,19 @@ if not openai_api_key:
 try:
     # Initialize OpenAI client
     openai.api_key = openai_api_key
-    # Test the API key with a simple request
-    openai.models.list()
-    logger.info("Successfully initialized OpenAI client")
+    # Test the API key with a simple request - but don't crash if it fails
+    try:
+        openai.models.list()
+        logger.info("Successfully initialized OpenAI client")
+    except Exception as api_error:
+        logger.warning(f"OpenAI API list models test failed: {str(api_error)}")
+        logger.warning("Continuing with application startup despite API test failure")
 except Exception as e:
     logger.error(f"Error initializing OpenAI client: {str(e)}")
     if "invalid_api_key" in str(e).lower():
         logger.error("Invalid API key format detected. Please check your OpenAI API key format.")
-    raise
+    # Log the error but don't crash the application
+    logger.warning("Continuing application startup despite OpenAI client initialization issue")
 
 # Create the FastAPI app
 app = FastAPI()

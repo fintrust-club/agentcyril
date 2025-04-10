@@ -25,6 +25,7 @@ DEFAULT_PROFILE = {
     "skills": "JavaScript, TypeScript, React, Node.js, Python, FastAPI, PostgreSQL, ChromaDB, Supabase, Next.js, TailwindCSS",
     "experience": "5+ years of experience in full-stack development, with a focus on building AI-powered applications and responsive web interfaces.",
     "interests": "AI, machine learning, web development, reading sci-fi, hiking",
+    "location": "San Francisco, CA",
     "project_list": []
 }
 
@@ -100,6 +101,17 @@ def get_profile_data(user_id=None):
                     
                     # Create a new default profile for this user
                     new_profile = DEFAULT_PROFILE.copy()
+                    
+                    # Ensure name is set - if in_memory_profile has a custom name, use that
+                    if in_memory_profile.get("name") and in_memory_profile.get("name") != DEFAULT_PROFILE.get("name"):
+                        new_profile["name"] = in_memory_profile.get("name")
+                        logger.info(f"Using in-memory profile name: {new_profile['name']}")
+                    
+                    # Ensure location is set - if in_memory_profile has a custom location, use that
+                    if in_memory_profile.get("location") and in_memory_profile.get("location") != DEFAULT_PROFILE.get("location"):
+                        new_profile["location"] = in_memory_profile.get("location")
+                        logger.info(f"Using in-memory profile location: {new_profile['location']}")
+                    
                     new_profile.update({
                         "user_id": user_id,
                         "created_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
@@ -229,6 +241,27 @@ def update_profile_data(data, user_id=None):
             if field not in filtered_data or filtered_data[field] is None or filtered_data[field] == "":
                 filtered_data[field] = DEFAULT_PROFILE.get(field, "Not specified")
                 logger.info(f"Using default value for required field: {field}")
+        
+        # Ensure name and location are never NULL
+        if "name" not in filtered_data or filtered_data["name"] is None or filtered_data["name"] == "":
+            # Try to get name from in-memory profile
+            if in_memory_profile.get("name"):
+                filtered_data["name"] = in_memory_profile.get("name")
+                logger.info(f"Using in-memory profile name: {filtered_data['name']}")
+            else:
+                # Use default name if not available
+                filtered_data["name"] = DEFAULT_PROFILE.get("name", "User")
+                logger.info(f"Using default name: {filtered_data['name']}")
+                
+        if "location" not in filtered_data or filtered_data["location"] is None or filtered_data["location"] == "":
+            # Try to get location from in-memory profile
+            if in_memory_profile.get("location"):
+                filtered_data["location"] = in_memory_profile.get("location")
+                logger.info(f"Using in-memory profile location: {filtered_data['location']}")
+            else:
+                # Use default location if not available
+                filtered_data["location"] = DEFAULT_PROFILE.get("location", "Unknown Location")
+                logger.info(f"Using default location: {filtered_data['location']}")
         
         # Handle special fields
         if "project_list" in filtered_data and isinstance(filtered_data["project_list"], list):

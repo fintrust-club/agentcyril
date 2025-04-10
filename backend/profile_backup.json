@@ -1,9 +1,13 @@
 {
-  "name": "John Doe",
-  "bio": "I am John, a software engineer with a passion for building AI and web applications. I specialize in full-stack development and have experience across the entire development lifecycle.",
-  "skills": "JavaScript, TypeScript, React, Node.js, Python, FastAPI, PostgreSQL, ChromaDB, Supabase, Next.js, TailwindCSS",
-  "experience": "5+ years of experience in full-stack development, with a focus on building AI-powered applications and responsive web interfaces.",
+  "name": "Ciril Cyriac",
+  "bio": "I am a ux designer at cars24",
+  "skills": "Design, art and tech",
+  "experience": "4 years of experiance in UX design ",
   "interests": "AI, machine learning, web development, reading sci-fi, hiking",
   "project_list": [],
-  "updated_at": "2025-03-26T18:50:37Z"
+  "updated_at": "2025-04-08T06:14:31Z",
+  "location": "Bengaluru",
+  "calendly_link": "https://calendly.com/mailsforcyril/30min",
+  "meeting_rules": "None",
+  "created_at": "2025-04-08T06:14:31Z"
 }
