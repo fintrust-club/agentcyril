@@ -6,7 +6,7 @@ import json
 import uuid
 import logging
 import traceback
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 # Load environment variables
 load_dotenv()
@@ -18,6 +18,22 @@ logger = logging.getLogger(__name__)
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
+# --- Add Logging Here --- 
+logger.info(f"DATABASE INIT: Attempting Supabase connection.")
+logger.info(f"DATABASE INIT: SUPABASE_URL loaded: {bool(SUPABASE_URL)}")
+logger.info(f"DATABASE INIT: SUPABASE_KEY loaded: {bool(SUPABASE_KEY)}")
+if SUPABASE_KEY:
+    key_preview = SUPABASE_KEY[:5] + "..." + SUPABASE_KEY[-5:]
+    logger.info(f"DATABASE INIT: SUPABASE_KEY preview: {key_preview}")
+    # Check if it looks like a service key (usually starts with eyJ)
+    if SUPABASE_KEY.startswith("eyJ"):
+        logger.info("DATABASE INIT: Key appears to be a service role key (starts with eyJ).")
+    else:
+        logger.warning("DATABASE INIT: Key does NOT start with eyJ. Might be an anon key?")
+else:
+    logger.error("DATABASE INIT: SUPABASE_KEY is NOT LOADED from environment!")
+# --- End Logging --- 
+
 # Default profile data to use if DB is not available
 DEFAULT_PROFILE = {
     "name": "John Doe",
@@ -26,7 +42,6 @@ DEFAULT_PROFILE = {
     "experience": "5+ years of experience in full-stack development, with a focus on building AI-powered applications and responsive web interfaces.",
     "interests": "AI, machine learning, web development, reading sci-fi, hiking",
     "location": "San Francisco, CA",
-    "project_list": []
 }
 
 # Initialize Supabase client or None if connection fails
@@ -64,139 +79,91 @@ in_memory_messages = []
 in_memory_chatbots = []
 
 def get_profile_data(user_id=None):
-    """Get profile data from Supabase or fallback storage
-    If user_id is provided, try to get the profile for that user
-    otherwise return a default profile or the first profile found.
-    """
+    """Get profile data from Supabase or fallback storage"""
     try:
-        # If a user_id is provided, attempt to fetch from Supabase
-        if supabase and user_id:
-            logger.info(f"Fetching profile for user_id: {user_id}")
-
-            # First check in profiles table
-            try:
-                profiles_response = supabase.table("profiles").select("*").eq("user_id", user_id).execute()
-                logger.info(f"Profile query response: {profiles_response.data}")
-            
-                if profiles_response.data and len(profiles_response.data) > 0:
-                    # Found existing profile
-                    profile = profiles_response.data[0]
-                    logger.info(f"Found profile for user_id {user_id}: {profile['id']}")
-                    
-                    # Convert projects JSON string to project_list for compatibility
-                    if "projects" in profile and profile["projects"]:
-                        try:
-                            logger.info(f"Converting projects JSON to project_list: {profile['projects'][:100]}...")
-                            profile["project_list"] = json.loads(profile["projects"])
-                        except Exception as json_error:
-                            logger.error(f"Error parsing projects JSON: {json_error}")
-                            profile["project_list"] = []
-                    else:
-                        profile["project_list"] = []
-                    
-                    return profile
-                else:
-                    # No profile found for this user, create one
-                    logger.info(f"No profile found for user_id {user_id}, creating new profile")
-                    
-                    # Create a new default profile for this user
-                    new_profile = DEFAULT_PROFILE.copy()
-                    
-                    # Ensure name is set - if in_memory_profile has a custom name, use that
-                    if in_memory_profile.get("name") and in_memory_profile.get("name") != DEFAULT_PROFILE.get("name"):
-                        new_profile["name"] = in_memory_profile.get("name")
-                        logger.info(f"Using in-memory profile name: {new_profile['name']}")
-                    
-                    # Ensure location is set - if in_memory_profile has a custom location, use that
-                    if in_memory_profile.get("location") and in_memory_profile.get("location") != DEFAULT_PROFILE.get("location"):
-                        new_profile["location"] = in_memory_profile.get("location")
-                        logger.info(f"Using in-memory profile location: {new_profile['location']}")
-                    
-                    new_profile.update({
-                        "user_id": user_id,
-                        "created_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-                        "updated_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-                        "projects": "[]",  # Empty JSON array as string
-                        "project_list": []  # Empty list for project_list field
-                    })
-                    
-                    # Try to create the profile in Supabase
-                    try:
-                        # First check if user exists in users table, if not create it
-                        user_response = supabase.table("users").select("id").eq("id", user_id).execute()
-                        if not user_response.data:
-                            logger.info(f"User {user_id} not found in users table, creating it")
-                            # Create user in users table
-                            user_data = {
-                                "id": user_id,
-                                "username": f"user_{user_id[:8]}",
-                                "created_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-                                "updated_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-                            }
-                            supabase.table("users").upsert(user_data).execute()
-                        
-                        # Try creating profile with both fields
-                        try:
-                            profile_response = supabase.table("profiles").insert(new_profile).execute()
-                            
-                            if profile_response.data and len(profile_response.data) > 0:
-                                logger.info(f"Created new profile for user_id {user_id}: {profile_response.data[0]['id']}")
-                                created_profile = profile_response.data[0]
-                                if "project_list" not in created_profile:
-                                    created_profile["project_list"] = []  # Add empty project_list for compatibility
-                                return created_profile
-                            else:
-                                logger.error(f"Failed to create profile in Supabase: {profile_response}")
-                                # Fall back to in-memory profile with user_id
-                                
-                        except Exception as first_attempt_error:
-                            # If failed, it might be because one of the fields doesn't exist
-                            logger.error(f"Error in first profile creation attempt: {first_attempt_error}")
-                            
-                            # Try with only projects field
-                            if "project_list" in new_profile:
-                                logger.info("Trying again without project_list field")
-                                profile_without_project_list = {k: v for k, v in new_profile.items() if k != "project_list"}
-                                
-                                try:
-                                    profile_response = supabase.table("profiles").insert(profile_without_project_list).execute()
-                                    
-                                    if profile_response.data and len(profile_response.data) > 0:
-                                        logger.info(f"Created new profile for user_id {user_id} (without project_list): {profile_response.data[0]['id']}")
-                                        created_profile = profile_response.data[0]
-                                        created_profile["project_list"] = []  # Add empty project_list for compatibility
-                                        return created_profile
-                                    else:
-                                        logger.error(f"Failed to create profile in Supabase (second attempt): {profile_response}")
-                                        # Fall back to in-memory profile with user_id
-                                except Exception as second_attempt_error:
-                                    logger.error(f"Error in second profile creation attempt: {second_attempt_error}")
-                                    # Fall back to in-memory profile with user_id
-                    except Exception as create_error:
-                        logger.error(f"Error creating profile: {create_error}")
-                        logger.error(f"Error trace: {traceback.format_exc()}")
-                        # Fall back to in-memory profile with user_id
-            except Exception as query_error:
-                logger.error(f"Error querying profiles: {query_error}")
-                logger.error(f"Error trace: {traceback.format_exc()}")
-                # Fall back to in-memory profile
-
-            # If we reach here, we need to return a fallback profile with the user_id
-            logger.warning(f"Using in-memory profile as fallback for user_id: {user_id}")
-            fallback_profile = in_memory_profile.copy()
-            fallback_profile["user_id"] = user_id
-            # Also update project_list for compatibility
-            fallback_profile["project_list"] = fallback_profile.get("project_list", [])
-            return fallback_profile
+        if not user_id:
+            logger.warning("No user_id provided to get_profile_data")
+            return DEFAULT_PROFILE
         
-        # If no user_id or no supabase, just return the in-memory profile
-        logger.warning("Using in-memory profile (no user_id or no Supabase)")
-        return in_memory_profile
+        logger.info(f"Getting profile data for user: {user_id}")
+        
+        # Query Supabase for the profile
+        profile_response = supabase.table("profiles").select("*").eq("user_id", user_id).execute()
+        
+        if profile_response.data and len(profile_response.data) > 0:
+            profile_data = profile_response.data[0]
+            logger.info(f"Found profile data: {profile_data}")
+            
+            # Ensure name and location are not null
+            if not profile_data.get("name"):
+                profile_data["name"] = DEFAULT_PROFILE.get("name", "")
+            if not profile_data.get("location"):
+                profile_data["location"] = DEFAULT_PROFILE.get("location", "")
+            
+            return profile_data
+        
+        # No profile found for this user, create one
+        logger.info(f"No profile found for user_id {user_id}, creating new profile")
+        
+        # Create a new default profile for this user
+        new_profile = DEFAULT_PROFILE.copy()
+        
+        # Ensure name is set - if in_memory_profile has a custom name, use that
+        if in_memory_profile.get("name") and in_memory_profile.get("name") != DEFAULT_PROFILE.get("name"):
+            new_profile["name"] = in_memory_profile.get("name")
+            logger.info(f"Using in-memory profile name: {new_profile['name']}")
+        
+        # Ensure location is set - if in_memory_profile has a custom location, use that
+        if in_memory_profile.get("location") and in_memory_profile.get("location") != DEFAULT_PROFILE.get("location"):
+            new_profile["location"] = in_memory_profile.get("location")
+            logger.info(f"Using in-memory profile location: {new_profile['location']}")
+        
+        new_profile.update({
+            "user_id": user_id,
+            "created_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+            "updated_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+        })
+        
+        try:
+            # First check if user exists in users table, if not create it
+            user_response = supabase.table("users").select("id").eq("id", user_id).execute()
+            if not user_response.data:
+                logger.info(f"User {user_id} not found in users table, creating it")
+                # Create user in users table
+                user_data = {
+                    "id": user_id,
+                    "username": f"user_{user_id[:8]}",
+                    "created_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+                    "updated_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+                }
+                supabase.table("users").upsert(user_data).execute()
+            
+            # Try creating profile
+            profile_response = supabase.table("profiles").insert(new_profile).execute()
+            
+            if profile_response.data and len(profile_response.data) > 0:
+                logger.info(f"Created new profile for user_id {user_id}: {profile_response.data[0]['id']}")
+                created_profile = profile_response.data[0]
+                return created_profile
+            
+            logger.error(f"Failed to create profile in Supabase: {profile_response}")
+            # Fall back to in-memory profile with user_id
+            
+        except Exception as create_error:
+            logger.error(f"Error creating profile: {create_error}")
+            logger.error(f"Error trace: {traceback.format_exc()}")
+            # Fall back to in-memory profile with user_id
+        
+        # If we reach here, we need to return a fallback profile with the user_id
+        logger.warning(f"Using in-memory profile as fallback for user_id: {user_id}")
+        fallback_profile = in_memory_profile.copy()
+        fallback_profile["user_id"] = user_id
+        return fallback_profile
+        
     except Exception as e:
         logger.error(f"Error in get_profile_data: {e}")
         logger.error(f"Error trace: {traceback.format_exc()}")
-        # Return the default/fallback profile
-        return DEFAULT_PROFILE.copy()
+        return DEFAULT_PROFILE
 
 def save_profile_to_file():
     """Save the in-memory profile to a file for persistence"""
@@ -229,7 +196,7 @@ def update_profile_data(data, user_id=None):
         # These are the known safe fields in our profiles table
         safe_fields = ["id", "user_id", "bio", "skills", "experience", 
                         "interests", "name", "location", 
-                        "created_at", "updated_at", "project_list", "projects",
+                        "created_at", "updated_at",
                         "calendly_link", "meeting_rules"]
         
         filtered_data = {k: v for k, v in data.items() if k in safe_fields}
@@ -242,41 +209,14 @@ def update_profile_data(data, user_id=None):
                 filtered_data[field] = DEFAULT_PROFILE.get(field, "Not specified")
                 logger.info(f"Using default value for required field: {field}")
         
-        # Ensure name and location are never NULL
-        if "name" not in filtered_data or filtered_data["name"] is None or filtered_data["name"] == "":
-            # Try to get name from in-memory profile
-            if in_memory_profile.get("name"):
-                filtered_data["name"] = in_memory_profile.get("name")
-                logger.info(f"Using in-memory profile name: {filtered_data['name']}")
-            else:
-                # Use default name if not available
-                filtered_data["name"] = DEFAULT_PROFILE.get("name", "User")
-                logger.info(f"Using default name: {filtered_data['name']}")
+        # Ensure name and location are never empty strings or None
+        if not filtered_data.get("name") or filtered_data["name"].strip() == "":
+            filtered_data["name"] = DEFAULT_PROFILE.get("name", "Anonymous User")
+            logger.info(f"Using default name: {filtered_data['name']}")
                 
-        if "location" not in filtered_data or filtered_data["location"] is None or filtered_data["location"] == "":
-            # Try to get location from in-memory profile
-            if in_memory_profile.get("location"):
-                filtered_data["location"] = in_memory_profile.get("location")
-                logger.info(f"Using in-memory profile location: {filtered_data['location']}")
-            else:
-                # Use default location if not available
-                filtered_data["location"] = DEFAULT_PROFILE.get("location", "Unknown Location")
-                logger.info(f"Using default location: {filtered_data['location']}")
-        
-        # Handle special fields
-        if "project_list" in filtered_data and isinstance(filtered_data["project_list"], list):
-            # Convert to string if Supabase doesn't support JSON directly
-            try:
-                if supabase and filtered_data["project_list"]:
-                    # Try converting the project list to a serializable format
-                    logger.info("Converting project_list to JSON string")
-                    filtered_data["projects"] = json.dumps([p if isinstance(p, dict) else p.__dict__ for p in filtered_data["project_list"]])
-            except Exception as json_error:
-                logger.error(f"Error converting project_list to JSON: {json_error}")
-                filtered_data.pop("project_list", None)
-        
-        # Remove project_list from data for Supabase (we'll use projects string field instead)
-        filtered_data.pop("project_list", None)
+        if not filtered_data.get("location") or filtered_data["location"].strip() == "":
+            filtered_data["location"] = DEFAULT_PROFILE.get("location", "Unknown Location")
+            logger.info(f"Using default location: {filtered_data['location']}")
         
         if supabase:
             logger.info(f"Attempting to update profile in Supabase")
@@ -322,14 +262,6 @@ def update_profile_data(data, user_id=None):
                             logger.info("Successfully updated profile in Supabase")
                             # No need to fall back to in-memory profile
                             result = response.data[0]
-                            # Add back the project_list field for compatibility
-                            if "projects" in result and result["projects"]:
-                                try:
-                                    result["project_list"] = json.loads(result["projects"])
-                                except:
-                                    result["project_list"] = []
-                            else:
-                                result["project_list"] = []
                             return result
                         else:
                             logger.error(f"Failed to update profile in Supabase: {response}")
@@ -338,6 +270,7 @@ def update_profile_data(data, user_id=None):
                         logger.error(f"Error during profile update: {update_error}")
                         logger.error(f"Error trace: {traceback.format_exc()}")
                         # Continue to in-memory fallback
+                        return None # Return None on failure
                 else:
                     # Create new profile for the user
                     logger.info(f"Creating new profile for user: {effective_user_id}")
@@ -351,14 +284,6 @@ def update_profile_data(data, user_id=None):
                             # No need to fall back to in-memory profile
                             save_profile_to_file()  # Still save for backup
                             result = response.data[0]
-                            # Add back the project_list field for compatibility
-                            if "projects" in result and result["projects"]:
-                                try:
-                                    result["project_list"] = json.loads(result["projects"])
-                                except:
-                                    result["project_list"] = []
-                            else:
-                                result["project_list"] = []
                             return result
                         else:
                             logger.error(f"Failed to create profile in Supabase: {response}")
@@ -367,32 +292,15 @@ def update_profile_data(data, user_id=None):
                         logger.error(f"Error during profile creation: {insert_error} for payload {filtered_data}")
                         logger.error(f"Error trace: {traceback.format_exc()}")
                         # Continue to in-memory fallback
+                        return None # Return None on failure
             
             if not effective_user_id:
                 logger.warning("No user_id provided, profile will not be created in database")
+                return None # Cannot proceed without user_id if Supabase is enabled
         
-        # Fallback to in-memory update
-        logger.warning("Using in-memory profile storage as fallback")
-        # Clone the profile to avoid modifying the shared object
-        local_profile = in_memory_profile.copy()
-        for key, value in data.items():
-            if key != 'id' and key != 'user_id':  # Don't overwrite id and user_id
-                local_profile[key] = value
-        
-        # Save updated profile to file for persistence
-        # Note: This will update the shared in-memory profile, which is not ideal 
-        # but needed for backward compatibility
-        for key, value in data.items():
-            if key != 'id' and key != 'user_id':
-                in_memory_profile[key] = value
-                
-        save_profile_to_file()
-        
-        # Add the user_id to the local copy if it was provided
-        if effective_user_id:
-            local_profile["user_id"] = effective_user_id
-            
-        return local_profile
+        # If Supabase is not configured or previous attempts failed and returned None
+        logger.error("Failed to update profile in Supabase and Supabase is required.")
+        return None 
     except Exception as e:
         logger.error(f"Error updating profile: {e}")
         logger.error(f"Error trace: {traceback.format_exc()}")
@@ -499,224 +407,216 @@ def get_or_create_visitor(visitor_id, visitor_name=None):
         logger.error(f"Error trace: {traceback.format_exc()}")
         return None
 
-def log_chat_message(message, sender="user", response=None, visitor_id=None, visitor_name=None, target_user_id=None, chatbot_id=None):
-    """
-    Log a chat message to the database
-    Handle both new schema (with chatbots table) and old schema
-    """
+def get_or_create_conversation(chatbot_id: str, visitor_id: str) -> str:
+    """Finds an existing conversation or creates a new one for a given chatbot and visitor."""
+    if not supabase:
+        logger.error("Supabase client not initialized. Cannot manage conversations.")
+        raise ConnectionError("Database connection not available")
+    
+    if not chatbot_id or not visitor_id:
+        logger.error(f"Chatbot ID ({chatbot_id}) and Visitor ID ({visitor_id}) are required to get/create conversation.")
+        raise ValueError("Chatbot ID and Visitor ID cannot be null")
+
+    try:
+        # Convert IDs to UUIDs for query if they are strings
+        try:
+            chatbot_uuid = uuid.UUID(chatbot_id)
+            visitor_uuid = uuid.UUID(visitor_id)
+        except ValueError as e:
+            logger.error(f"Invalid UUID format for chatbot_id or visitor_id: {e}")
+            raise ValueError(f"Invalid UUID format: {e}")
+
+        logger.info(f"Looking for conversation with chatbot_id={chatbot_uuid} and visitor_id={visitor_uuid}")
+        
+        # 1. Look for existing conversation
+        conv_response = supabase.table("conversations") \
+            .select("id") \
+            .eq("chatbot_id", str(chatbot_uuid)) \
+            .eq("visitor_id", str(visitor_uuid)) \
+            .limit(1) \
+            .execute()
+
+        if conv_response.data:
+            conversation_id = conv_response.data[0]["id"]
+            logger.info(f"Found existing conversation: {conversation_id}")
+            return str(conversation_id)
+        else:
+            logger.info("No existing conversation found. Creating a new one.")
+            
+            # 2. Get chatbot owner's user_id
+            chatbot_response = supabase.table("chatbots") \
+                .select("user_id") \
+                .eq("id", str(chatbot_uuid)) \
+                .limit(1) \
+                .execute()
+
+            if not chatbot_response.data:
+                logger.error(f"Chatbot with ID {chatbot_uuid} not found.")
+                raise ValueError(f"Chatbot not found: {chatbot_uuid}")
+            
+            chatbot_owner_user_id = chatbot_response.data[0]["user_id"]
+            logger.info(f"Found chatbot owner user_id: {chatbot_owner_user_id}")
+
+            # 3. Create new conversation
+            new_conv_data = {
+                "chatbot_id": str(chatbot_uuid),
+                "visitor_id": str(visitor_uuid),
+                "user_id": str(chatbot_owner_user_id) 
+                # created_at, updated_at, last_message_at will use defaults or trigger
+            }
+            
+            insert_response = supabase.table("conversations") \
+                .insert(new_conv_data) \
+                .execute()
+
+            if insert_response.data:
+                new_conversation_id = insert_response.data[0]["id"]
+                logger.info(f"Successfully created new conversation: {new_conversation_id}")
+                return str(new_conversation_id)
+            else:
+                logger.error(f"Failed to insert new conversation: {insert_response.error}")
+                # Attempt to refetch in case of race condition
+                time.sleep(0.5) 
+                refetch_response = supabase.table("conversations") \
+                    .select("id") \
+                    .eq("chatbot_id", str(chatbot_uuid)) \
+                    .eq("visitor_id", str(visitor_uuid)) \
+                    .limit(1) \
+                    .execute()
+                if refetch_response.data:
+                   return str(refetch_response.data[0]["id"])
+                else:
+                   raise Exception(f"Failed to create or retrieve conversation after insert attempt: {insert_response.error}")
+
+    except Exception as e:
+        logger.error(f"Error getting or creating conversation: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise e
+
+def log_chat_message(conversation_id: str, message: str, sender="user", response: Optional[str] = None, metadata: Optional[Dict] = None):
+    """Logs a message and its response to the database, linked to a conversation."""
     try:
         if not supabase:
-            logger.error("Supabase client not initialized")
+            logger.error("Supabase client not initialized. Cannot log chat messages.")
+            # Optional: Fallback to in-memory logging if needed
+            # in_memory_messages.append({"message": message, "response": response, "timestamp": time.time(), "sender": sender, "conversation_id": conversation_id})
             return None
         
-        # Add extensive logging for debugging
-        logger.info(f"Logging chat message with params:")
-        logger.info(f"- message: {message[:50]}..." if len(message) > 50 else f"- message: {message}")
-        logger.info(f"- sender: {sender}")
-        logger.info(f"- visitor_id: {visitor_id}")
-        logger.info(f"- visitor_name: {visitor_name}")
-        logger.info(f"- target_user_id: {target_user_id}")
-        logger.info(f"- chatbot_id: {chatbot_id}")
-        
-        # Get or create the visitor
-        visitor = None
-        if visitor_id:
-            try:
-                visitor = get_or_create_visitor(visitor_id, visitor_name)
-                if visitor:
-                    logger.info(f"Found/created visitor with DB ID: {visitor['id']}")
-                else:
-                    logger.warning(f"Failed to get/create visitor with ID: {visitor_id}")
-            except Exception as visitor_error:
-                logger.error(f"Error getting/creating visitor: {visitor_error}")
-                logger.error(f"Error trace: {traceback.format_exc()}")
-        
-        # Get or create the chatbot if target_user_id is provided but chatbot_id is not
-        if target_user_id and not chatbot_id:
-            try:
-                chatbot = get_or_create_chatbot(user_id=target_user_id)
-                if chatbot:
-                    chatbot_id = chatbot["id"]
-                    logger.info(f"Found/created chatbot with ID: {chatbot_id}")
-                else:
-                    logger.warning(f"Failed to get/create chatbot for user: {target_user_id}")
-            except Exception as chatbot_error:
-                logger.error(f"Error getting/creating chatbot: {chatbot_error}")
-                logger.error(f"Error trace: {traceback.format_exc()}")
-        
-        # Prepare message data
+        if not conversation_id:
+            raise ValueError("conversation_id is required to log a message.")
+
+        try:
+            # Validate conversation_id is a UUID
+            conversation_uuid = uuid.UUID(conversation_id)
+            logger.info(f"Valid conversation UUID: {conversation_uuid}")
+        except ValueError:
+            logger.error(f"Invalid UUID format for conversation_id: {conversation_id}")
+            raise ValueError("Invalid conversation_id format.")
+
+        # --- Get chatbot_id from conversation ---
+        try:
+            # Query conversations table to get chatbot_id based on conversation_id
+            conv_data_response = (supabase.table("conversations")
+                .select("chatbot_id")
+                .eq("id", str(conversation_uuid))
+                .limit(1)
+                .execute())
+
+            if not conv_data_response.data:
+                logger.error(f"Could not find conversation with ID: {conversation_uuid} to get chatbot_id.")
+                raise ValueError(f"Conversation not found: {conversation_uuid}")
+
+            chatbot_id = conv_data_response.data[0].get("chatbot_id")
+            if not chatbot_id:
+                 logger.error(f"Chatbot ID not found in conversation record: {conversation_uuid}")
+                 raise ValueError("Chatbot ID missing from conversation record")
+
+            logger.info(f"Found chatbot_id {chatbot_id} for conversation {conversation_uuid}")
+
+        except Exception as conv_lookup_err:
+             logger.error(f"Error looking up chatbot_id for conversation {conversation_uuid}: {conv_lookup_err}")
+             raise conv_lookup_err
+        # --- End Get chatbot_id ---
+
         message_data = {
+            "conversation_id": str(conversation_uuid),
+            "chatbot_id": str(chatbot_id),
             "message": message,
-            "sender": sender,
             "response": response,
+            "sender": sender,
+            "metadata": metadata or {},
             "created_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-            "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+            "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()) # Keep timestamp for potential compatibility? Check schema.sql
+            # Removed direct chatbot_id, visitor_id - these are in the conversation table
         }
         
-        # Handle visitor_id fields: 
-        # 1. visitor_id should be the UUID primary key from visitors table
-        # 2. visitor_id_text should be the original string ID from the frontend
-        if visitor_id:
-            # For compatibility, check if visitor_id_text column exists
-            schema_check = supabase.table("messages").select("visitor_id_text").limit(1).execute()
-            has_visitor_id_text = schema_check.data and len(schema_check.data) > 0 and 'visitor_id_text' in schema_check.data[0]
-            
-            if has_visitor_id_text:
-                # Store the original text ID in visitor_id_text for direct lookup
-                message_data["visitor_id_text"] = visitor_id
-                logger.info(f"Added visitor_id_text: {visitor_id}")
-            
-            # If we got a visitor record, use its UUID primary key for the visitor_id field
-            if visitor and "id" in visitor:
-                message_data["visitor_id"] = visitor["id"]
-                logger.info(f"Added visitor_id UUID: {visitor['id']}")
-            
-        # Add target user ID if available (for backward compatibility)
-        if target_user_id:
-            message_data["target_user_id"] = target_user_id
+        logger.info(f"Logging message for conversation_id: {conversation_id}")
+        logger.info(f"Message data: {json.dumps(message_data, default=str)}")
         
-        # Add chatbot ID if available (for new schema)
-        if chatbot_id:
-            message_data["chatbot_id"] = chatbot_id
+        insert_response = supabase.table("messages").insert(message_data).execute()
+
+        # Check the response to verify insertion
+        if insert_response and insert_response.data and len(insert_response.data) > 0:
+            logger.info(f"Message saved successfully with ID: {insert_response.data[0].get('id', 'unknown')}")
+            logger.info(f"Saved with conversation_id: {insert_response.data[0].get('conversation_id', 'missing')}")
+            return insert_response.data # Return the inserted data
         else:
-            # If we don't have a chatbot_id, this is a problem for the new schema
-            # Let's try to get a default chatbot
-            try:
-                default_chatbot = supabase.table("chatbots").select("id").limit(1).execute()
-                if default_chatbot.data and len(default_chatbot.data) > 0:
-                    message_data["chatbot_id"] = default_chatbot.data[0]["id"]
-                    logger.info(f"Using default chatbot ID: {message_data['chatbot_id']}")
-                else:
-                    logger.error("No default chatbot found and no chatbot_id provided")
-            except Exception as default_chatbot_error:
-                logger.error(f"Error getting default chatbot: {default_chatbot_error}")
-                logger.error(f"Error trace: {traceback.format_exc()}")
-        
-        # Check if we have all required fields for the messages table
-        required_fields = ["message", "sender"]
-        for field in required_fields:
-            if field not in message_data or not message_data[field]:
-                logger.error(f"Missing required field: {field}")
-                return None
-        
-        # Check if chatbot_id is available (required by schema)
-        if "chatbot_id" not in message_data:
-            logger.error("Missing chatbot_id and couldn't find a default")
-            # This won't work with the new schema, so let's create a dummy record
-            try:
-                dummy_data = {
-                    "message": "System message: No chatbot available",
-                    "sender": "system",
-                    "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-                    "visitor_id_text": visitor_id
-                }
-                return [dummy_data]
-            except:
-                return None
-        
-        # Log the message data for debugging
-        logger.info(f"Final message data for insertion: {message_data}")
-        
-        try:
-            # Insert the message
-            response = supabase.table("messages").insert(message_data).execute()
-            
-            if response.data and len(response.data) > 0:
-                logger.info(f"Successfully logged chat message with ID: {response.data[0]['id']}")
-                return response.data
-            else:
-                logger.error(f"Failed to insert message, empty response data: {response}")
-                return None
-                
-        except Exception as insert_error:
-            logger.error(f"Error inserting chat message: {insert_error}")
-            logger.error(f"Error trace: {traceback.format_exc()}")
-            return None
-    
+            logger.warning(f"Message insertion response didn't include expected data: {insert_response}")
+            return None # Return None on failure or no data
+
     except Exception as e:
         logger.error(f"Error logging chat message: {e}")
-        logger.error(f"Error trace: {traceback.format_exc()}")
-        return None
+        logger.error(traceback.format_exc())
+        return None # Return None on exception
 
-def get_chat_history(limit=50, visitor_id=None, chatbot_id=None, target_user_id=None):
-    """
-    Get chat history from Supabase using the messages_with_visitors view
-    """
+def get_chat_history(conversation_id: str, limit: int = 50):
+    """Gets chat history for a specific conversation from Supabase."""
     try:
-        logger.info(f"Getting chat history with params: limit={limit}, visitor_id={visitor_id}, chatbot_id={chatbot_id}, target_user_id={target_user_id}")
-        result_messages = []
+        if not supabase:
+            logger.error("Supabase client not initialized. Cannot get chat history.")
+            # Optional: Fallback to in-memory filtering if needed
+            # relevant_messages = [m for m in in_memory_messages if m.get('conversation_id') == conversation_id]
+            # return relevant_messages[-limit:]
+            return []
         
-        if supabase:
-            try:
-                # Start building the query using the view
-                query = supabase.table("messages_with_visitors").select("*").order("created_at", desc=True).limit(limit)
-                
-                # Always filter by target_user_id if provided
-                if target_user_id:
-                    query = query.eq("target_user_id", target_user_id)
-                    logger.info(f"Filtering messages by target_user_id: {target_user_id}")
-                
-                # Filter by chatbot_id if provided
-                if chatbot_id:
-                    query = query.eq("chatbot_id", chatbot_id)
-                    logger.info(f"Filtering messages by chatbot_id: {chatbot_id}")
-                
-                # Handle visitor_id filtering
-                if visitor_id:
-                    logger.info(f"Processing visitor_id: {visitor_id}")
-                    
-                    # Try to find the visitor record by visitor_id field (TEXT)
-                    logger.info(f"Looking up visitor by visitor_id (TEXT): {visitor_id}")
-                    visitor_response = supabase.table("visitors").select("id").eq("visitor_id", visitor_id).execute()
-                    
-                    if visitor_response.data and len(visitor_response.data) > 0:
-                        # We found the visitor - use their UUID in the visitor_id column
-                        visitor_uuid = visitor_response.data[0]["id"]
-                        logger.info(f"Found visitor with UUID: {visitor_uuid}")
-                        query = query.eq("visitor_id", visitor_uuid)
-                    else:
-                        # No visitor record found, try direct lookup with visitor_id_text
-                        logger.info(f"No visitor record found, using visitor_id_text: {visitor_id}")
-                        query = query.eq("visitor_id_text", visitor_id)
-                
-                # Execute the final query
-                response = query.execute()
-                if response.data:
-                    logger.info(f"Retrieved {len(response.data)} messages")
-                    # Process the response
-                    for msg in response.data:
-                        message = {
-                            "id": msg["id"],
-                            "message": msg["message"],
-                            "response": msg["response"],
-                            "sender": msg["sender"],
-                            "created_at": msg["created_at"],
-                            "timestamp": msg["timestamp"],
-                            "chatbot_id": msg["chatbot_id"],
-                            "visitor_id": msg["visitor_id"],
-                            "visitor_id_text": msg["visitor_id_text"],
-                            "target_user_id": msg["target_user_id"],
-                            "visitor_name": msg["visitor_name"]
-                        }
-                        result_messages.append(message)
-                else:
-                    logger.warning("No messages found in database")
-                    result_messages = []
+        if not conversation_id:
+             logger.error("No conversation_id provided to get_chat_history")
+             raise ValueError("conversation_id is required to fetch chat history.")
+        
+        try:
+            # Validate conversation_id is a UUID
+            conversation_uuid = uuid.UUID(conversation_id)
+            logger.info(f"Valid conversation UUID: {conversation_uuid}")
+        except ValueError:
+            logger.error(f"Invalid UUID format for conversation_id: {conversation_id}")
+            raise ValueError("Invalid conversation_id format.")
+
+        logger.info(f"Fetching chat history for conversation_id: {conversation_id}, limit: {limit}")
+        
+        try:
+            query = supabase.table("messages") \
+                .select("*") \
+                .eq("conversation_id", str(conversation_uuid)) \
+                .order("created_at", desc=False) \
+                .limit(limit)
             
-            except Exception as db_error:
-                logger.error(f"Error querying chat history from Supabase: {db_error}")
-                logger.error(traceback.format_exc())
-                result_messages = []
-        
-        # Sort messages by timestamp
-        result_messages.sort(key=lambda x: x.get("created_at") or x.get("timestamp") or "", reverse=True)
-        
-        logger.info(f"Returning {len(result_messages)} chat history messages")
-        return result_messages
+            logger.debug(f"Executing query: {query}")
+            response = query.execute()
+            
+            if response and hasattr(response, 'data'):
+                logger.info(f"Retrieved {len(response.data)} messages for conversation {conversation_id}")
+                return response.data
+            else:
+                logger.warning(f"Query response does not contain data attribute: {response}")
+                return []
+        except Exception as query_error:
+            logger.error(f"Error executing query: {query_error}")
+            return []
+            
     except Exception as e:
         logger.error(f"Error getting chat history: {e}")
-        logger.error(traceback.format_exc())
-        return []
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return [] # Return empty list on error
 
 def verify_admin_login(username, password):
     """
@@ -781,109 +681,6 @@ def is_admin_user(user_id=None, email=None):
         logger.error(f"Error checking admin user status: {e}")
         return False
 
-def add_project(project_data, user_id=None):
-    """
-    Add a new project to the profile
-    Returns the updated profile data if successful
-    """
-    try:
-        # Generate unique ID for the project
-        project_data["id"] = str(uuid.uuid4())
-        project_data["created_at"] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-        
-        # Get current profile
-        profile = get_profile_data(user_id=user_id)
-        
-        if not profile:
-            logger.error("Profile not found when adding project")
-            return None
-            
-        # Initialize project_list if it doesn't exist
-        if "project_list" not in profile:
-            profile["project_list"] = []
-        
-        # Add project to list
-        profile["project_list"].append(project_data)
-        
-        # Update the profile with the new project list
-        updated_profile = update_profile_data(profile, user_id=user_id)
-        
-        return updated_profile
-    except Exception as e:
-        logger.error(f"Error adding project: {e}")
-        return None
-        
-def update_project(project_id, project_data, user_id=None):
-    """
-    Update an existing project
-    Returns the updated profile data if successful
-    """
-    try:
-        # Get current profile
-        profile = get_profile_data(user_id=user_id)
-        
-        if not profile or "project_list" not in profile:
-            logger.error("Profile or project list not found when updating project")
-            return None
-            
-        # Find the project to update
-        found = False
-        for i, project in enumerate(profile["project_list"]):
-            if project.get("id") == project_id:
-                # Preserve the original ID and created_at
-                project_data["id"] = project_id
-                if "created_at" in project:
-                    project_data["created_at"] = project["created_at"]
-                
-                # Add updated_at timestamp
-                project_data["updated_at"] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-                
-                # Update the project
-                profile["project_list"][i] = project_data
-                found = True
-                break
-                
-        if not found:
-            logger.error(f"Project with ID {project_id} not found")
-            return None
-            
-        # Update the profile with the updated project list
-        updated_profile = update_profile_data(profile, user_id=user_id)
-        
-        return updated_profile
-    except Exception as e:
-        logger.error(f"Error updating project: {e}")
-        return None
-        
-def delete_project(project_id, user_id=None):
-    """
-    Delete a project
-    Returns True if successful, False otherwise
-    """
-    try:
-        # Get current profile
-        profile = get_profile_data(user_id=user_id)
-        
-        if not profile or "project_list" not in profile:
-            logger.error("Profile or project list not found when deleting project")
-            return False
-            
-        # Find and remove the project
-        original_length = len(profile["project_list"])
-        profile["project_list"] = [p for p in profile["project_list"] if p.get("id") != project_id]
-        
-        if len(profile["project_list"]) == original_length:
-            logger.error(f"Project with ID {project_id} not found")
-            return False
-            
-        # Update the profile with the new project list
-        updated_profile = update_profile_data(profile, user_id=user_id)
-        
-        return updated_profile is not None
-    except Exception as e:
-        logger.error(f"Error deleting project: {e}")
-        return False
-
 def check_schema_applied():
     """Check if the schema has been properly applied to Supabase"""
     if not supabase:
@@ -894,21 +691,20 @@ def check_schema_applied():
         # Check if profiles table has the expected columns
         logger.info("Checking if schema has been properly applied...")
         
-        # Check if profiles table exists and has the expected projects column
+        # Check if profiles table exists and has essential columns (e.g., bio)
         try:
-            # Try to get profile column information through a direct query
-            response = supabase.table("profiles").select("id, projects").limit(1).execute()
+            response = supabase.table("profiles").select("id, bio").limit(1).execute()
             logger.info(f"Profiles table exists, sample response: {response.data}")
-            has_projects = True  # If the query succeeds, the column exists
+            has_essential_cols = True
         except Exception as e:
-            logger.warning(f"Failed to query profiles table or projects column doesn't exist: {e}")
-            has_projects = False
+            logger.warning(f"Failed to query profiles table or essential columns don't exist: {e}")
+            has_essential_cols = False
             
-        if has_projects:
-            logger.info("Schema verification passed: profiles table has projects column")
+        if has_essential_cols:
+            logger.info("Schema verification passed: profiles table seems okay")
             return True
         else:
-            logger.warning("Schema verification failed: profiles table missing projects column")
+            logger.warning("Schema verification failed: profiles table missing essential columns")
             logger.warning("Please apply the schema by running the SQL in apply_schema.sql")
             return False
     except Exception as e:
@@ -918,41 +714,6 @@ def check_schema_applied():
 
 # Call this function on startup to check schema status
 schema_ok = check_schema_applied()
-
-def search_projects(query: str, user_id: str = None) -> List[Dict]:
-    """
-    Search for projects using full-text search
-    If user_id is provided, only search that user's projects
-    """
-    try:
-        if not supabase:
-            logger.warning("No Supabase connection available")
-            return []
-
-        # Build the search query
-        search_query = supabase.from_('projects').select('*')
-        
-        # Add text search condition
-        search_query = search_query.textSearch('searchable_content', query)
-        
-        # Filter by user if provided
-        if user_id:
-            search_query = search_query.eq('user_id', user_id)
-        
-        # Execute query
-        response = search_query.execute()
-        
-        if response.data:
-            logger.info(f"Found {len(response.data)} projects matching query: {query}")
-            return response.data
-        else:
-            logger.info(f"No projects found matching query: {query}")
-            return []
-            
-    except Exception as e:
-        logger.error(f"Error searching projects: {e}")
-        logger.error(f"Error trace: {traceback.format_exc()}")
-        return []
 
 def get_all_profiles():
     """
@@ -966,20 +727,6 @@ def get_all_profiles():
         response = supabase.table("profiles").select("*").execute()
         profiles = response.data
         
-        # Convert each profile's projects JSON to project_list if needed
-        for profile in profiles:
-            if profile.get("projects") and not profile.get("project_list"):
-                try:
-                    import json
-                    projects_json = profile.get("projects")
-                    project_list = json.loads(projects_json)
-                    profile["project_list"] = project_list
-                except Exception as e:
-                    print(f"Error parsing projects JSON: {e}")
-                    profile["project_list"] = []
-            elif not profile.get("project_list"):
-                profile["project_list"] = []
-                
         return profiles
     except Exception as e:
         print(f"Error getting all profiles: {e}")
@@ -1086,18 +833,135 @@ Quote:
         logger.error(f"Error creating test document: {e}")
         return False
 
-def get_all_projects_from_table():
-    """
-    Get all projects directly from the projects table
-    This is needed to ensure projects are properly added to the vector database
-    """
+def get_visitor_id_from_session(session_id: str) -> Optional[str]:
+    """Get visitor ID associated with a session ID"""
     try:
         if not supabase:
-            print("Supabase client not initialized")
-            return []
+            logger.error("Supabase client not initialized. Cannot get visitor ID from session.")
+            return None
         
-        response = supabase.table("projects").select("*").execute()
-        return response.data
+        if not session_id:
+            logger.error("No session_id provided to get_visitor_id_from_session")
+            return None
+        
+        # Query Supabase for the visitor ID
+        response = supabase.table("visitors").select("visitor_id").eq("session_id", session_id).execute()
+        
+        if response.data and len(response.data) > 0:
+            visitor_id = response.data[0]["visitor_id"]
+            logger.info(f"Found visitor ID: {visitor_id} for session: {session_id}")
+            return visitor_id
+        else:
+            logger.info(f"No visitor ID found for session: {session_id}")
+            return None
     except Exception as e:
-        print(f"Error getting all projects from table: {e}")
-        return [] 
+        logger.error(f"Error getting visitor ID from session: {e}")
+        logger.error(traceback.format_exc())
+        return None 
+
+# --- Notes Functions --- 
+
+def get_notes(user_id: uuid.UUID) -> List[Dict]:
+    """Get all notes for a specific user using a privileged SQL function via RPC."""
+    if not supabase:
+        logger.error("Supabase client not initialized. Cannot fetch notes.")
+        return []
+    if not user_id:
+        logger.error("User ID is required to fetch notes.")
+        return []
+
+    try:
+        # Prepare parameters for the RPC call
+        params = {'p_user_id': str(user_id)}
+        logger.info(f"RPC CALL: Attempting to call get_notes_privileged with user_id: {user_id}")
+
+        # --- RPC Call --- 
+        try:
+            response = supabase.rpc('get_notes_privileged', params).execute()
+            logger.info(f"RPC CALL RESPONSE (get_notes): {response}") # Log the full response
+
+            if hasattr(response, 'data') and isinstance(response.data, list):
+                logger.info(f"RPC CALL SUCCESS (get_notes): Found {len(response.data)} notes for user {user_id}")
+                return response.data # Return the list of notes
+            else:
+                error_details = getattr(response, 'error', None)
+                status_code = getattr(response, 'status_code', 'N/A')
+                logger.error(f"RPC CALL FAILED (get_notes): Invalid data format or error. Status: {status_code}, Error: {error_details}")
+                return [] # Return empty list on failure/invalid format
+
+        except Exception as rpc_error:
+            logger.error(f"RPC CALL EXCEPTION (get_notes): An error occurred during RPC call.")
+            error_details = {
+                 "message": getattr(rpc_error, 'message', str(rpc_error)),
+                 "code": getattr(rpc_error, 'code', 'N/A'),
+                 "details": getattr(rpc_error, 'details', None)
+            }
+            logger.error(f"Supabase RPC Error Details: {error_details}")
+            logger.error(f"Full Traceback: {traceback.format_exc()}")
+            return [] # Return empty list on exception
+
+    except Exception as e:
+        logger.error(f"PRE-RPC EXCEPTION (get_notes): Error preparing for RPC call for user {user_id}: {e}")
+        logger.error(f"Full Traceback: {traceback.format_exc()}")
+        return []
+
+def create_note(user_id: uuid.UUID, content: str) -> Optional[Dict]:
+    """Create a new note using a privileged SQL function via RPC."""
+    if not supabase:
+        logger.error("ACTION FAILED: Supabase client not initialized. Cannot create note.")
+        return None
+    if not user_id:
+        logger.error("ACTION FAILED: User ID is required to create a note.")
+        return None
+    if not content:
+        logger.error("ACTION FAILED: Note content cannot be empty.")
+        return None
+
+    try:
+        # Prepare parameters for the RPC call
+        params = {
+            'p_user_id': str(user_id),
+            'p_content': content
+        }
+        logger.info(f"RPC CALL: Attempting to call create_note_privileged with params: {params}")
+        
+        # --- RPC Call --- 
+        try:
+            # Execute the PostgreSQL function
+            response = supabase.rpc('create_note_privileged', params).execute()
+            logger.info(f"RPC CALL RESPONSE: {response}") # Log the full response
+
+            # Check response structure
+            if hasattr(response, 'data') and response.data and len(response.data) > 0:
+                created_note_data = response.data[0]
+                # Basic check for expected fields based on function return type
+                if created_note_data.get('id') and created_note_data.get('user_id'):
+                    logger.info(f"RPC CALL SUCCESS: Created note with id: {created_note_data.get('id')}")
+                    return created_note_data
+                else:
+                    logger.error(f"RPC CALL FAILED: Response data missing expected fields. Data: {created_note_data}")
+                    return None
+            else:
+                error_details = getattr(response, 'error', None)
+                status_code = getattr(response, 'status_code', 'N/A')
+                logger.error(f"RPC CALL FAILED: No data in response. Status: {status_code}, Error: {error_details}")
+                return None
+                
+        except Exception as rpc_error:
+            logger.error(f"RPC CALL EXCEPTION: An error occurred during RPC call.")
+            error_details = {
+                 "message": getattr(rpc_error, 'message', str(rpc_error)),
+                 "code": getattr(rpc_error, 'code', 'N/A'),
+                 "details": getattr(rpc_error, 'details', None)
+            }
+            logger.error(f"Supabase RPC Error Details: {error_details}")
+            logger.error(f"Full Traceback: {traceback.format_exc()}")
+            raise rpc_error # Re-raise for the router to handle
+            
+    except Exception as e:
+        # Catch errors during parameter preparation or other logic
+        logger.error(f"PRE-RPC EXCEPTION: Error preparing for RPC call for user {user_id}: {e}")
+        logger.error(f"Full Traceback: {traceback.format_exc()}")
+        return None
+
+# --- End Notes Functions --- 

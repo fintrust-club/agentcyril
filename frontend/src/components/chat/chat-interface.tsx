@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { chatApi } from '@/utils/api';
+import { chatApi, profileApi } from '@/utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pencil1Icon } from '@radix-ui/react-icons';
 import ReactMarkdown from 'react-markdown';
@@ -44,20 +44,9 @@ export function ChatInterface({
   const [error, setError] = useState<string | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [profileName, setProfileName] = useState<string | null>(null);
 
-  // Fetch chat history when component mounts
-  useEffect(() => {
-    if (userName && (chatbotId || userId)) {
-      fetchChatHistory();
-    }
-  }, [chatbotId, userName, userId]);
-
-  // Scroll to bottom whenever messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const fetchChatHistory = async () => {
+  const fetchChatHistory = useCallback(async () => {
     try {
       if (userName && (chatbotId || userId)) {
         let history = [];
@@ -116,7 +105,37 @@ export function ChatInterface({
       console.error('Error fetching chat history:', error);
       setError('Failed to load chat history');
     }
-  };
+  }, [chatbotId, userName, userId]);
+
+  // Fetch chat history when component mounts or dependencies change
+  useEffect(() => {
+    if (userName && (chatbotId || userId)) {
+      fetchChatHistory();
+    }
+  }, [fetchChatHistory, chatbotId, userName, userId]);
+
+  // Fetch profile data to get the name
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (userId) {
+        try {
+          const profile = await profileApi.getProfileData(userId);
+          if (profile && profile.name) {
+            setProfileName(profile.name);
+          }
+        } catch (err) {
+          console.error('Error fetching profile data:', err);
+        }
+      }
+    };
+    
+    fetchProfileData();
+  }, [userId]);
+
+  // Scroll to bottom whenever messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -234,7 +253,7 @@ export function ChatInterface({
         <div className="flex flex-col h-full justify-center items-center p-6 bg-background">
           <Card className="w-full max-w-md shadow-lg">
             <CardHeader>
-              <CardTitle className="text-2xl text-center">Welcome to {botName}</CardTitle>
+              <CardTitle className="text-2xl text-center">Welcome to {profileName || botName}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-center text-muted-foreground">
@@ -329,8 +348,9 @@ export function ChatInterface({
                           </>
                         ) : (
                           <>
-                            <AvatarImage src="/bot-avatar.png" />
-                            <AvatarFallback>AI</AvatarFallback>
+                            <AvatarFallback className="bg-primary text-primary-foreground">
+                              {profileName?.[0]?.toUpperCase() || botName?.[0]?.toUpperCase() || 'AI'}
+                            </AvatarFallback>
                           </>
                         )}
                       </Avatar>
@@ -359,8 +379,9 @@ export function ChatInterface({
               <div className="flex justify-start px-4">
                 <div className="flex items-start">
                   <Avatar className="h-8 w-8 mr-2">
-                    <AvatarImage src="/bot-avatar.png" />
-                    <AvatarFallback>AI</AvatarFallback>
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {profileName?.[0]?.toUpperCase() || botName?.[0]?.toUpperCase() || 'AI'}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="bg-muted rounded-lg p-3">
                     <div className="flex space-x-2">

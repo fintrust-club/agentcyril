@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -9,6 +9,8 @@ import { supabase } from '@/utils/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { DocumentUploadModal } from "@/components/ui/document-upload-modal";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ReactMarkdown from 'react-markdown';
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DocumentManagementProps {
   userId: string;
@@ -30,19 +32,13 @@ interface Document {
 
 export function DocumentManagement({ userId }: DocumentManagementProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [documentPreview, setDocumentPreview] = useState<Document | null>(null);
   const { toast } = useToast();
   
-  useEffect(() => {
-    // Ensure the document bucket exists when the component loads
-    ensureDocumentBucketExists();
-    fetchDocuments();
-  }, [userId]);
-  
-  // Ensure the documents storage bucket exists
-  const ensureDocumentBucketExists = async () => {
+  const ensureDocumentBucketExists = useCallback(async () => {
     try {
       // Get the current session
       const { data: { session } } = await supabase.auth.getSession();
@@ -71,11 +67,12 @@ export function DocumentManagement({ userId }: DocumentManagementProps) {
     } catch (err) {
       console.error('Error checking/creating documents bucket:', err);
     }
-  };
+  }, []);
   
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     try {
       setError(null);
+      setIsLoading(true);
       
       // Get the current session
       const {
@@ -104,8 +101,15 @@ export function DocumentManagement({ userId }: DocumentManagementProps) {
     } catch (err: any) {
       console.error('Error fetching documents:', err);
       setError(err?.message || 'Failed to load documents');
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    ensureDocumentBucketExists();
+    fetchDocuments();
+  }, [userId, fetchDocuments, ensureDocumentBucketExists]);
   
   const handleDeleteDocument = async (documentId: string) => {
     try {
@@ -176,7 +180,25 @@ export function DocumentManagement({ userId }: DocumentManagementProps) {
         </Alert>
       )}
       
-      {documents.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Card key={index} className="overflow-hidden">
+              <div className="flex items-center p-4 space-x-4">
+                <Skeleton className="h-10 w-10" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-9 w-9" />
+                  <Skeleton className="h-9 w-9" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : documents.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="py-8 text-center">
             <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -245,49 +267,31 @@ export function DocumentManagement({ userId }: DocumentManagementProps) {
         userId={userId}
       />
       
-      {/* Document Preview Modal */}
+      {/* Document Preview Modal - Scrollable Markdown Area */}
       <Dialog open={!!documentPreview} onOpenChange={(open) => !open && setDocumentPreview(null)}>
-        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{documentPreview?.title}</DialogTitle>
-            <DialogDescription>
-              Document Details
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="grid grid-cols-[120px_1fr] gap-2">
-              <p className="font-medium text-muted-foreground">Filename:</p>
-              <p>{documentPreview?.file_name}</p>
+        <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col p-6">
+          {documentPreview && (
+            <>
+              {/* Header (fixed) */}
+              <DialogHeader className="pb-4 border-b flex-shrink-0">
+                <DialogTitle className="text-xl flex items-center gap-2">
+                  <FileText className="h-5 w-5" /> Preview: {documentPreview.title}
+                </DialogTitle>
+                <DialogDescription className="pt-1">
+                  File: {documentPreview.file_name} ({formatFileSize(documentPreview.file_size)}) - Added: {formatDate(documentPreview.created_at)}
+                </DialogDescription>
+              </DialogHeader>
               
-              <p className="font-medium text-muted-foreground">Size:</p>
-              <p>{documentPreview?.file_size && formatFileSize(documentPreview.file_size)}</p>
-              
-              <p className="font-medium text-muted-foreground">Uploaded:</p>
-              <p>{documentPreview?.created_at && formatDate(documentPreview.created_at)}</p>
-              
-              <p className="font-medium text-muted-foreground">Type:</p>
-              <p>{documentPreview?.mime_type}</p>
-            </div>
-            
-            {documentPreview?.description && (
-              <div className="space-y-2">
-                <h4 className="font-medium">Description</h4>
-                <p className="p-3 border rounded-md bg-muted/50 text-sm">{documentPreview.description}</p>
+              {/* Scrollable Content Area (grows and provides context for ScrollArea) */}
+              <div className="pt-4 flex-1 overflow-y-auto pr-4"> 
+                <div className="prose dark:prose-invert max-w-none"> 
+                  <ReactMarkdown>
+                    {documentPreview.extracted_text || "*No text extracted or available for preview.*"} 
+                  </ReactMarkdown>
+                </div>
               </div>
-            )}
-            
-            <div className="space-y-2">
-              <h4 className="font-medium">Extracted Text</h4>
-              <div className="border rounded-md p-3 bg-muted/50 max-h-[300px] overflow-y-auto">
-                <pre className="text-xs whitespace-pre-wrap">{documentPreview?.extracted_text}</pre>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDocumentPreview(null)}>Close</Button>
-          </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

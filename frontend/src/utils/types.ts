@@ -50,4 +50,13 @@ export interface Chatbot {
   public_url_slug?: string;
   created_at?: string;
   updated_at?: string;
-} 
+}
+
+// Note type
+export type Note = {
+  id: string;
+  content: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}; 

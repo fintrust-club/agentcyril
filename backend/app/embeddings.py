@@ -5,7 +5,13 @@ from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
 import uuid
 import time
-from typing import List
+from typing import List, Dict
+import logging # Import logging
+import traceback # Import traceback
+from app.database import get_notes # Import if needed elsewhere, or pass notes directly
+
+# Configure logger for this module
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -133,12 +139,6 @@ def add_profile_to_vector_db(profile_data, user_id=None):
             metadatas.append({"category": "profile", "subcategory": "experience", "user_id": effective_user_id})
             ids.append(f"experience_{effective_user_id}")
         
-        # Add legacy projects text if it exists
-        if profile_data.get("projects"):
-            documents.append(profile_data["projects"])
-            metadatas.append({"category": "profile", "subcategory": "projects", "user_id": effective_user_id})
-            ids.append(f"projects_{effective_user_id}")
-        
         # Add interests
         if profile_data.get("interests"):
             documents.append(profile_data["interests"])
@@ -154,176 +154,14 @@ def add_profile_to_vector_db(profile_data, user_id=None):
             )
             print(f"Successfully added {len(documents)} profile documents to vector database for user {effective_user_id}")
             
-        # Now add projects from project_list if available
-        add_projects_to_vector_db(profile_data.get("project_list", []), user_id=effective_user_id)
-        
         return True
     except Exception as e:
         print(f"Error adding profile to vector database: {e}")
         return False
 
-def add_projects_to_vector_db(projects_list, user_id=None):
-    """
-    Add project items to the vector database
-    """
-    if not projects_list:
-        print("No projects to add to vector database")
-        return True
-        
-    try:
-        # Use the same collection for projects
-        collection_name = "portfolio_data"
-        print(f"Using collection name for projects: {collection_name}")
-        
-        # Create or get the appropriate collection
-        collection = chroma_client.get_or_create_collection(
-            name=collection_name,
-            embedding_function=openai_ef
-        )
-        
-        # Clear existing project documents from this collection
-        try:
-            collection.delete(where={
-                "$and": [
-                    {"category": {"$eq": "project"}},
-                    {"user_id": {"$eq": user_id}}
-                ]
-            })
-            print(f"Cleared existing project documents for user {user_id}")
-        except Exception as clear_error:
-            print(f"Error clearing project documents (may be empty): {clear_error}")
-        
-        # Format and add new documents for each project
-        documents = []
-        metadatas = []
-        ids = []
-        
-        for project in projects_list:
-            project_id = project.get("id")
-            if not project_id:
-                continue
-                
-            # Add project title
-            if project.get("title"):
-                documents.append(project["title"])
-                metadatas.append({
-                    "category": "project", 
-                    "subcategory": "title",
-                    "project_id": project_id,
-                    "project_category": project.get("category", ""),
-                    "user_id": user_id
-                })
-                ids.append(f"project_title_{project_id}_{user_id}")
-            
-            # Add project description
-            if project.get("description"):
-                documents.append(project["description"])
-                metadatas.append({
-                    "category": "project", 
-                    "subcategory": "description",
-                    "project_id": project_id,
-                    "project_category": project.get("category", ""),
-                    "user_id": user_id
-                })
-                ids.append(f"project_description_{project_id}_{user_id}")
-                
-            # Add project details
-            if project.get("details"):
-                documents.append(project["details"])
-                metadatas.append({
-                    "category": "project", 
-                    "subcategory": "details",
-                    "project_id": project_id,
-                    "project_category": project.get("category", ""),
-                    "user_id": user_id
-                })
-                ids.append(f"project_details_{project_id}_{user_id}")
-                
-            # Add project content - supporting both Lexical and legacy content
-            content_text = ""
-            
-            # Handle Lexical content format (JSON with HTML representation)
-            if project.get("content"):
-                try:
-                    # Try to use content_html if available
-                    if project.get("content_html"):
-                        # Strip HTML tags for indexing
-                        content_text = project["content_html"]
-                        # Simple HTML tag removal for indexing purposes
-                        import re
-                        content_text = re.sub(r'<[^>]*>', ' ', content_text)
-                    else:
-                        # Try to parse Lexical JSON
-                        import json
-                        content_data = json.loads(project["content"])
-                        if content_data.get("html"):
-                            content_text = content_data["html"]
-                            # Simple HTML tag removal for indexing purposes
-                            import re
-                            content_text = re.sub(r'<[^>]*>', ' ', content_text)
-                        else:
-                            # Fallback to raw content
-                            content_text = project["content"]
-                except Exception as e:
-                    # If not JSON or parsing fails, use raw content
-                    print(f"Warning: Could not parse project content as JSON: {e}")
-                    content_text = project["content"]
-            
-            # If we have content, add it to the vector DB
-            if content_text:
-                # Split content into smaller chunks if it's too large
-                if len(content_text) > 1000:
-                    # Split into ~1000 character chunks with some overlap
-                    chunk_size = 1000
-                    overlap = 100
-                    chunks = []
-                    for i in range(0, len(content_text), chunk_size - overlap):
-                        chunk = content_text[i:i + chunk_size]
-                        if chunk:
-                            chunks.append(chunk)
-                    
-                    # Add each chunk as a separate document
-                    for i, chunk in enumerate(chunks):
-                        documents.append(chunk)
-                        metadatas.append({
-                            "category": "project", 
-                            "subcategory": "content",
-                            "chunk_index": i,
-                            "total_chunks": len(chunks),
-                            "project_id": project_id,
-                            "project_category": project.get("category", ""),
-                            "user_id": user_id
-                        })
-                        ids.append(f"project_content_{project_id}_{i}_{user_id}")
-                else:
-                    # Add the whole content as one document
-                    documents.append(content_text)
-                    metadatas.append({
-                        "category": "project", 
-                        "subcategory": "content",
-                        "project_id": project_id,
-                        "project_category": project.get("category", ""),
-                        "user_id": user_id
-                    })
-                    ids.append(f"project_content_{project_id}_{user_id}")
-        
-        # Add documents to collection
-        if documents:
-            collection.add(
-                documents=documents,
-                metadatas=metadatas,
-                ids=ids
-            )
-            print(f"Successfully added {len(documents)} project documents to vector database for user {user_id}")
-        
-        return True
-    except Exception as e:
-        print(f"Error adding projects to vector database: {e}")
-        return False
-
 def add_conversation_to_vector_db(message, response, visitor_id, message_id=None, user_id=None):
     """
-    Add conversation exchange to the vector database for future context retrieval
+    Add conversation snippets to the vector database for RAG.
     Include user_id to ensure proper segregation of conversation data by chatbot owner
     """
     try:
@@ -483,6 +321,68 @@ def add_document_to_vector_db(document_data, user_id):
         print(f"Error adding document to vector database: {e}")
         return False
 
+def embed_and_store_notes(user_id: uuid.UUID, notes: List[Dict]):
+    """Embeds notes and stores them in the user's vector DB collection."""
+    if not user_id:
+        logger.error("EMBEDDING ERROR: No user_id provided for embedding notes.")
+        return
+    if not notes:
+        logger.info(f"EMBEDDING INFO: No notes provided for user {user_id} to embed.")
+        return
+
+    try:
+        collection_name = "portfolio_data"
+        collection = chroma_client.get_or_create_collection(
+            name=collection_name,
+            embedding_function=openai_ef
+        )
+        
+        logger.info(f"EMBEDDING INFO: Processing {len(notes)} notes for user {user_id}...")
+        
+        documents = []
+        metadatas = []
+        ids = []
+        
+        for note in notes:
+            note_id = note.get('id')
+            content = note.get('content')
+            
+            if not note_id or not content:
+                logger.warning(f"EMBEDDING WARNING: Skipping note due to missing ID or content: {note}")
+                continue
+            
+            # Prepare data for ChromaDB
+            # Use a specific prefix to distinguish notes from other text
+            document_text = f"User Note: {content}"
+            documents.append(document_text)
+            metadatas.append({
+                "category": "note", # Specific category for notes
+                "user_id": str(user_id),
+                "note_id": str(note_id)
+            })
+            # Create a unique ID for the ChromaDB entry
+            ids.append(f"note_{user_id}_{note_id}")
+            
+        if not documents: 
+            logger.info(f"EMBEDDING INFO: No valid notes found to add for user {user_id}.")
+            return
+
+        # TODO: Implement deletion/update logic if notes can be modified/deleted.
+        # For now, we just add. If a note content changes, re-running this 
+        # with the same ID will effectively update it in ChromaDB.
+        # If notes are deleted, we'd need a separate step to remove them from Chroma.
+        
+        collection.add(
+            documents=documents,
+            metadatas=metadatas,
+            ids=ids
+        )
+        logger.info(f"EMBEDDING SUCCESS: Successfully added/updated {len(documents)} notes in vector DB for user {user_id}")
+
+    except Exception as e:
+        logger.error(f"EMBEDDING ERROR: Failed to embed notes for user {user_id}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+
 def query_vector_db(query, n_results=8, user_id=None, visitor_id=None, include_conversation=True):
     """
     Query the vector database with the user's question
@@ -517,7 +417,7 @@ def query_vector_db(query, n_results=8, user_id=None, visitor_id=None, include_c
         combined_dist = []
         
         # Track what types of content we found
-        found_types = {"document": False, "profile": False, "project": False, "conversation": False}
+        found_types = {"document": False, "profile": False, "project": False, "conversation": False, "note": False}
         
         # First, try to get document content specifically with higher n_results
         if user_id:
@@ -689,6 +589,50 @@ def query_vector_db(query, n_results=8, user_id=None, visitor_id=None, include_c
             except Exception as conv_error:
                 print(f"Error fetching conversation history: {str(conv_error)}")
         
+        # Add block for searching notes
+        if user_id:
+            try:
+                note_filter = {
+                    "$and": [
+                        {"category": {"$eq": "note"}}, # Filter by the 'note' category
+                        {"user_id": {"$eq": user_id}} # Filter by the user ID
+                    ]
+                }
+                
+                # Check if any notes exist for the user
+                note_count_results = collection.get(where=note_filter, limit=1)
+                
+                if len(note_count_results.get("ids", [])) > 0:
+                    print(f"Found notes for user {user_id}, performing query")
+                    note_n_results = 5 # Retrieve up to 5 relevant notes
+                    
+                    note_results = collection.query(
+                        query_texts=[query],
+                        n_results=note_n_results,
+                        where=note_filter
+                    )
+                    
+                    if note_results and len(note_results.get("documents", [[]])[0]) > 0:
+                        note_count = len(note_results["documents"][0])
+                        print(f"Found {note_count} relevant notes from query")
+                        found_types["note"] = True
+                        
+                        # Add notes to combined results
+                        for i, doc in enumerate(note_results["documents"][0]):
+                            metadata = note_results["metadatas"][0][i]
+                            dist = note_results["distances"][0][i] if note_results.get("distances") else 1.0
+                            print(f"  Note #{i+1}: {doc[:50]}... (distance: {dist:.4f})")
+                            
+                            combined_docs.append(doc)
+                            combined_meta.append(metadata)
+                            combined_dist.append(dist)
+                    else:
+                        print("No relevant note results found for the query")
+                else:
+                    print(f"No notes found in vector DB for user {user_id}")
+            except Exception as note_error:
+                print(f"Error searching note content: {str(note_error)}")
+        
         # If we have no results at all, try a general query
         if not combined_docs:
             print("No specific results found, trying general query")
@@ -753,16 +697,36 @@ def query_vector_db(query, n_results=8, user_id=None, visitor_id=None, include_c
                 doc_preview = doc[:50] + "..." if len(doc) > 50 else doc
                 print(f"Result #{i+1}: {category}/{subcategory}: {doc_preview} (distance: {dist:.4f})")
             
-        return query_results
-    except Exception as e:
-        print(f"Error querying vector database: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        # Return empty results on error to avoid breaking the chat flow
+        # Combine and sort results (Optional: refine sorting if needed)
+        # Simple combination for now, might need better ranking later
+        print(f"Total combined results before filtering: {len(combined_docs)}")
+        
+        # Return the combined results (limited to original n_results)
+        # The function structure might need adjustment if it returns only one type
+        # Assuming it should return a mix based on relevance (distance)
+        
+        # Sort combined results by distance (ascending)
+        sorted_indices = sorted(range(len(combined_dist)), key=lambda k: combined_dist[k])
+        
+        final_docs = [combined_docs[i] for i in sorted_indices[:n_results]]
+        final_meta = [combined_meta[i] for i in sorted_indices[:n_results]]
+        final_dist = [combined_dist[i] for i in sorted_indices[:n_results]]
+        
+        print(f"Returning top {len(final_docs)} results after combining and sorting.")
+
         return {
-            "documents": [],
-            "metadatas": [],
-            "distances": []
+            "documents": [final_docs], # Keep the nested list structure if expected by caller
+            "metadatas": [final_meta],
+            "distances": [final_dist]
+        }
+
+    except Exception as e:
+        print(f"Error querying vector database: {e}")
+        # Return empty results structure on error
+        return {
+            "documents": [[]],
+            "metadatas": [[]],
+            "distances": [[]]
         }
 
 def format_conversation_history(chat_history: List[dict]) -> str:
@@ -786,63 +750,79 @@ async def generate_ai_response(message: str, search_results: dict, profile_data:
             "profile": [],
             "project": [],
             "document": [],
-            "conversation": []
+            "conversation": [],
+            "note": []
         }
         
         # Track if we have document content
         has_document_content = False
         
-        # Sort results by category and prioritize document content
-        if search_results and search_results.get("documents"):
-            print(f"Processing {len(search_results['documents'])} search results for prompt")
+        # Correctly process the nested search results structure
+        if search_results and search_results.get("documents") and search_results.get("metadatas"):
+            # Check if the inner lists exist and are not empty
+            docs_list = search_results["documents"][0]
+            meta_list = search_results["metadatas"][0]
             
-            # Count different content types
-            content_types = {"document": 0, "project": 0, "profile": 0, "conversation": 0}
-            
-            for i, doc in enumerate(search_results["documents"]):
-                metadata = search_results["metadatas"][i] if search_results.get("metadatas") else {}
-                category = metadata.get("category", "unknown")
-                subcategory = metadata.get("subcategory", "unknown")
+            if docs_list and meta_list and len(docs_list) == len(meta_list):
+                print(f"Processing {len(docs_list)} search results for prompt")
+                content_types = {"document": 0, "project": 0, "profile": 0, "conversation": 0, "note": 0} # Include note
                 
-                # Count content type
-                if category in content_types:
-                    content_types[category] += 1
-                
-                # Format the context entry based on category
-                if category == "document":
-                    has_document_content = True
-                    if subcategory == "title":
-                        context_entry = f"Document Title: {doc}"
-                    elif subcategory == "description":
-                        context_entry = f"Document Description: {doc}"
-                    elif subcategory == "content":
-                        # Remove the "Document Title:" prefix if present
-                        if isinstance(doc, str) and doc.startswith("Document Title:"):
-                            doc = doc[len("Document Title:"):]
-                        # Clean up document text (remove page markers, etc.)
-                        if isinstance(doc, str):
-                            doc = doc.replace("\n--- Page", "\n").replace("---\n", "")
-                        context_entry = f"Content: {doc}"
+                # Iterate over the inner lists
+                for i, doc in enumerate(docs_list):
+                    metadata = meta_list[i] # Get metadata by index from the inner list
+                    category = metadata.get("category", "unknown")
+                    subcategory = metadata.get("subcategory", "unknown")
+                    
+                    # Count content type
+                    if category in content_types:
+                        content_types[category] += 1
+                    
+                    # Format the context entry based on category
+                    if category == "document":
+                        has_document_content = True
+                        if subcategory == "title":
+                            context_entry = f"Document Title: {doc}"
+                        elif subcategory == "description":
+                            context_entry = f"Document Description: {doc}"
+                        elif subcategory == "content":
+                            # Remove the "Document Title:" prefix if present
+                            if isinstance(doc, str) and doc.startswith("Document Title:"):
+                                doc = doc[len("Document Title:"):]
+                            # Clean up document text (remove page markers, etc.)
+                            if isinstance(doc, str):
+                                doc = doc.replace("\n--- Page", "\n").replace("---\n", "")
+                            context_entry = f"Content: {doc}"
+                        else:
+                            context_entry = f"{subcategory}: {doc}"
+                    elif category == "note": # Add handling for notes
+                        context_entry = f"User Note: {doc}" # Assume doc is prefixed already, or adjust as needed
+                        # You might want to remove the prefix here if you add it in the prompt structure later
+                        if isinstance(doc, str) and doc.startswith("User Note: "):
+                             context_entry = doc[len("User Note: "):] 
                     else:
                         context_entry = f"{subcategory}: {doc}"
-                else:
-                    context_entry = f"{subcategory}: {doc}"
+                    
+                    # Add to the appropriate section
+                    if category in context_sections:
+                        context_sections[category].append(context_entry)
+                    else:
+                        # Default to profile if category is unknown
+                        context_sections["profile"].append(context_entry)
                 
-                # Add to the appropriate section
-                if category in context_sections:
-                    context_sections[category].append(context_entry)
-                else:
-                    context_sections["profile"].append(context_entry)
-            
-            # Log content type counts
-            print(f"Content type counts: " + ", ".join([f"{k}: {v}" for k, v in content_types.items() if v > 0]))
+                # Log content type counts
+                print(f"Content type counts: " + ", ".join([f"{k}: {v}" for k, v in content_types.items() if v > 0]))
+            else:
+                print("Search results structure invalid or empty inner lists.")
+        else:
+            print("No valid search results found.")
         
         # Limit number of entries per section to avoid token limits
         max_entries = {
             "document": 5,  # Prioritize documents
             "project": 3,
             "profile": 3,
-            "conversation": 2
+            "conversation": 2,
+            "note": 5
         }
         
         for section, entries in context_sections.items():
@@ -877,6 +857,12 @@ async def generate_ai_response(message: str, search_results: dict, profile_data:
             for entry in context_sections["profile"]:
                 context_text += f"- {entry}\n"
         
+        # Add Notes context section to the prompt
+        if context_sections["note"]:
+            context_text += "\nRelevant Notes:\n"
+            for entry in context_sections["note"]:
+                context_text += f"- {entry}\n"
+        
         # Get the name from profile data
         name = profile_data.get('name', 'AI Assistant')
         
@@ -889,7 +875,7 @@ async def generate_ai_response(message: str, search_results: dict, profile_data:
 """
         else:
             doc_instructions = """
-7. If asked about documents or specific knowledge not in your profile, you should answer based only on the information provided in your profile.
+7. If asked about documents or specific knowledge not in your profile, politely explain that you can only speak about the experiences and knowledge shared in your profile.
 """
         
         # Build the system prompt
@@ -910,8 +896,8 @@ Meeting Scheduling:
 Important Instructions:
 1. Always respond as if you are {name}, using first-person pronouns ("I", "my", "me").
 2. Draw from the provided profile information and context to maintain authenticity.
-3. If asked about personal experiences, skills, or projects, refer to the information provided above.
-4. If asked about something not covered in the profile data, politely explain that you can only speak about the experiences and knowledge shared in your profile.
+3. If asked about personal experiences, skills, or core profile details, refer primarily to the 'Profile Information' section.
+4. For questions about topics not explicitly covered in the main 'Profile Information' section (e.g., specific details, technical knowledge, opinions recalled in notes or past conversations): Search **all** provided context sections ('Knowledge Base Information', 'Relevant Notes', 'Relevant Previous Conversations', 'Additional Profile Information'). **If you find relevant information in *any* of these sections, use it directly to answer the question.** Synthesize the information naturally as if recalling your own knowledge or past statements. Only if no relevant details are found in *any* context section should you state that you don't have the specific information requested.
 5. Maintain a professional but conversational tone that matches {name}'s background and expertise.
 6. For meeting requests:
    - If a Calendly link is configured and the request matches the meeting rules, provide the link
@@ -952,8 +938,11 @@ Recent conversation history:
             return f"I apologize, but I'm having trouble processing your request as {name}'s AI clone. Please try again later."
             
     except Exception as e:
-        print(f"Error in generate_ai_response: {str(e)}")
-        return f"I apologize, but I'm having trouble accessing {name}'s knowledge base. Please try again later." 
+        print(f"Error in generate_ai_response: {e}")
+        import traceback
+        traceback.print_exc()
+        # Return a generic error message or re-raise
+        return "I'm sorry, I encountered an internal error while generating a response."
 
 def add_truck_driver_document_to_vector_db():
     """
@@ -1049,3 +1038,9 @@ Quote:
     except Exception as e:
         print(f"Error adding truck driver document to vector database: {e}")
         return False 
+
+def get_related_documents(query, user_id=None, n_results=5):
+    """Gets related documents based on the query."""
+    # Function implementation would go here
+    # For now, just pass to avoid syntax errors
+    pass

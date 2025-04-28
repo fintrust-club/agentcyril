@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { supabase } from './supabase';
-import type { ProfileData, Project, Chatbot } from './types';
+import type { ProfileData, Project, Chatbot, Note } from './types';
 import { toast } from '@/hooks/use-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
@@ -99,6 +99,7 @@ export type ChatHistoryItem = {
   created_at?: string;
   chatbot_id?: string;
   target_user_id?: string;
+  conversation_id?: string;
 };
 
 export const chatApi = {
@@ -109,43 +110,44 @@ export const chatApi = {
   sendMessage: async (message: string, chatbotId?: string) => {
     try {
       const visitorId = getOrCreateVisitorId();
-      const visitorName = getVisitorName();
+      const visitorName = getVisitorName(); // Keep for visitor creation/update on backend
       
-      // Only use the provided chatbotId, don't fall back to localStorage
-      // This ensures each chat page uses the correct chatbot
       const activeChatbotId = chatbotId;
       
+      if (!activeChatbotId) {
+        console.error('sendMessage requires a chatbotId.');
+        return { error: 'Chatbot ID is missing.' };
+      }
+
       console.log('Sending chat message with:');
       console.log(`- Visitor ID: ${visitorId}`);
       console.log(`- Visitor Name: ${visitorName}`);
       console.log(`- Chatbot ID: ${activeChatbotId}`);
       
-      // Create the payload
+      // Create the payload - Ensure it matches backend ChatRequest model
+      // Backend now primarily uses chatbot_id and visitor_id to find/create conversation
       const payload = { 
         message, 
         visitor_id: visitorId,
-        visitor_name: visitorName
+        visitor_name: visitorName, // Still potentially useful for get_or_create_visitor
+        chatbot_id: activeChatbotId,
+        // 'messages' array might not be needed if backend only uses 'message'
+        // Adjust based on backend's ChatRequest model definition
+        messages: [{ role: 'user', content: message }] // Keep if backend uses it
       };
       
-      // Add chatbot_id if available
-      if (activeChatbotId) {
-        Object.assign(payload, { chatbot_id: activeChatbotId });
-      }
-      
-      // Get authentication token from Supabase
+      // Get authentication token (might be needed if backend requires auth for /chat)
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
       
-      // Use fetch API directly for better error handling
       const url = `${API_URL}/chat`;
       console.log(`Sending POST to ${url}`);
       console.log('Payload:', payload);
       
-      const headers = {
+      const headers: HeadersInit = {
         'Content-Type': 'application/json'
       };
       
-      // Add authorization header if token exists
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
@@ -159,7 +161,13 @@ export const chatApi = {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`API error (${response.status}): ${errorText}`);
-        return { error: `API responded with status ${response.status}: ${errorText}` };
+        // Attempt to parse JSON error detail if available
+        try {
+            const errorJson = JSON.parse(errorText);
+            return { error: `API Error (${response.status}): ${errorJson.detail || errorText}` };
+        } catch (e) {
+             return { error: `API Error (${response.status}): ${errorText}` };
+        }
       }
       
       const data = await response.json();
@@ -172,39 +180,51 @@ export const chatApi = {
   
   /**
    * Send a message to a public chatbot using the user_id (no authentication required)
+   * This uses the user_id to find the associated chatbot
    */
   sendPublicMessage: async (message: string, userId: string) => {
     try {
       const visitorId = getOrCreateVisitorId();
       const visitorName = getVisitorName();
       
+      if (!userId) {
+         console.error('sendPublicMessage requires a userId.');
+         return { error: 'User ID is missing.' };
+      }
+
       console.log('Sending public chat message with:');
       console.log(`- User ID: ${userId}`);
       console.log(`- Visitor ID: ${visitorId}`);
       console.log(`- Visitor Name: ${visitorName}`);
       console.log(`- Message: ${message}`);
       
-      // Create the payload
+      // Create payload that matches the ChatRequest model in the backend
       const payload = { 
-        message, 
+        message: message,
         visitor_id: visitorId,
-        visitor_name: visitorName
+        visitor_name: visitorName,
+        chatbot_id: userId // Use userId as the chatbot_id since backend will find the chatbot based on userId anyway
       };
       
-      // Use fetch API directly for better error handling
-      const url = `${API_URL}/chat/${userId}/public`;
-      console.log(`Sending POST to ${url}`);
+      // Use the public chat endpoint with the user ID
+      const url = `${API_URL}/chat/${userId}/public`; 
+      console.log(`Sending POST to ${url} for public chat`);
       
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }, // No Auth header for public
         body: JSON.stringify(payload)
       });
       
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`API error (${response.status}): ${errorText}`);
-        return { error: `API responded with status ${response.status}: ${errorText}` };
+         try {
+            const errorJson = JSON.parse(errorText);
+            return { error: `API Error (${response.status}): ${errorJson.detail || errorText}` };
+        } catch (e) {
+             return { error: `API Error (${response.status}): ${errorText}` };
+        }
       }
       
       const data = await response.json();
@@ -217,44 +237,58 @@ export const chatApi = {
 
   /**
    * Get chat history for current visitor with a specific chatbot
+   * Updated: Requires both chatbotId and visitorId
    */
-  getChatHistory: async (chatbotId?: string) => {
+  getChatHistory: async (chatbotId: string) => {
     try {
       const visitorId = getOrCreateVisitorId();
       
-      // Use provided chatbotId or get from storage
-      const activeChatbotId = chatbotId || getCurrentChatbotId();
-      
-      // Build the URL with appropriate query parameters
-      let url = `/chat/history?visitor_id=${visitorId}`;
-      if (activeChatbotId) {
-        url += `&chatbot_id=${activeChatbotId}`;
+      const activeChatbotId = chatbotId;
+
+      if (!activeChatbotId) {
+        console.error('getChatHistory requires a chatbotId.');
+        return []; // Return empty array on error
+      }
+      if (!visitorId) {
+        console.error('getChatHistory requires a visitorId.');
+        return []; // Return empty array on error
       }
       
+      console.log(`Getting chat history for chatbot: ${activeChatbotId}, visitor: ${visitorId}`);
+
+      // Build the URL with required query parameters for the updated backend endpoint
+      const url = `/chat/history?chatbot_id=${activeChatbotId}&visitor_id=${visitorId}`;
+      
+      // Use the api instance which likely includes auth headers if needed
       const response = await api.get(url);
       console.log('Chat history API response:', response.data);
       
-      // Check if response has the expected format with history array
-      if (response.data && Array.isArray(response.data.history)) {
+      // Check for various response formats
+      if (Array.isArray(response.data)) {
+        console.log(`Received ${response.data.length} messages from history endpoint`);
+        console.log('Sample message:', response.data.length > 0 ? response.data[0] : 'No messages');
+        return response.data;
+      } else if (response.data && response.data.history && Array.isArray(response.data.history)) {
+        console.log(`Received ${response.data.history.length} messages from history endpoint (nested format)`);
         return response.data.history;
-      } else if (response.data && typeof response.data === 'object') {
-        console.warn('Unexpected response format for chat history, trying to handle it:', response.data);
-        // Try to extract history if it exists
-        if (Array.isArray(response.data.history)) {
-          return response.data.history;
-        } 
-        // If the whole response is an array, use that
-        else if (Array.isArray(response.data)) {
-          return response.data;
-        }
       }
       
-      // Fallback if we couldn't extract a proper array
-      console.error('Failed to extract chat history from response:', response.data);
+      // Log unexpected format but return empty array
+      console.error('Unexpected response format for chat history:', response.data);
       return [];
+
     } catch (error) {
-      console.error('Error getting chat history:', error);
-      return [];
+      // Log Axios error details if available
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error getting chat history:', error.response?.status, error.response?.data);
+        if (error.response?.status === 404) {
+           console.warn('Chat history not found (404), likely no conversation yet.');
+           return []; // Return empty array for 404 is reasonable
+        }
+      } else {
+        console.error('Error getting chat history:', error);
+      }
+      return []; // Return empty array on any error
     }
   },
 
@@ -298,7 +332,18 @@ export const chatApi = {
     try {
       const visitorId = getOrCreateVisitorId();
       
-      // Build the URL with appropriate query parameters
+      if (!visitorId) {
+        console.error('getPublicChatHistory requires a visitorId.');
+        return []; // Return empty array on error
+      }
+      if (!userId) {
+        console.error('getPublicChatHistory requires a userId.');
+        return []; // Return empty array on error
+      }
+
+      console.log(`Getting public chat history for user: ${userId}, visitor: ${visitorId}`);
+      
+      // Build the URL with correct path and query parameters
       const url = `/chat/${userId}/public/history?visitor_id=${visitorId}`;
       
       const response = await api.get(url);
@@ -501,6 +546,8 @@ export async function fetchProfileData(userId?: string): Promise<ProfileData> {
       skills: "No skills listed yet.",
       experience: "No experience listed yet.",
       interests: "No interests listed yet.",
+      name: "Anonymous User",
+      location: "Unknown Location",
       project_list: []
     };
   }
@@ -583,6 +630,47 @@ export const projectApi = {
   }
 };
 
+// API functions for Notes
+export const notesApi = {
+  /**
+   * Get all notes for the authenticated user
+   */
+  getNotes: async (): Promise<Note[]> => {
+    try {
+      const response = await api.get<Note[]>('/notes');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+      toast({
+        title: "Error Fetching Notes",
+        description: "Could not retrieve your notes. Please try again.",
+        variant: "destructive",
+      });
+      return []; // Return empty array on error
+    }
+  },
+
+  /**
+   * Create a new note
+   */
+  createNote: async (content: string): Promise<Note | null> => {
+    try {
+      const response = await api.post<Note>('/notes', { content });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating note:', error);
+      toast({
+        title: "Error Saving Note",
+        description: "Could not save your note. Please try again.",
+        variant: "destructive",
+      });
+      return null; // Return null on error
+    }
+  },
+
+  // Optional: updateNote and deleteNote can be added here later
+};
+
 // Export the API instance
 export default api;
 
@@ -597,9 +685,17 @@ export const getProfile = async () => {
   }
 };
 
-export const updateProfile = async (profileData: any) => {
+export const updateProfile = async (profileData: ProfileData) => {
   try {
-    const response = await api.put('/profile', profileData);
+    // Ensure name and location are included in the update
+    const updatedData = {
+      ...profileData,
+      name: profileData.name?.trim() || "Anonymous User",
+      location: profileData.location?.trim() || "Unknown Location"
+    };
+    
+    console.log('Updating profile with data:', updatedData);
+    const response = await api.put('/profile', updatedData);
     return response.data;
   } catch (error) {
     console.error('Error updating profile:', error);

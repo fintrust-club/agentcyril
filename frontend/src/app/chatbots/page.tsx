@@ -165,7 +165,7 @@ export default function ChatbotsPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <CardTitle className="text-lg">{name}'s Chatbot</CardTitle>
+                      <CardTitle className="text-lg">{name}&apos;s Chatbot</CardTitle>
                       <CardDescription className="text-xs truncate max-w-[200px]">
                         {location && <span className="font-medium">{location}</span>}
                         {location && " • "}

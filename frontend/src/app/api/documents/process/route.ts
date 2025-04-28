@@ -1,12 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-export const config = {
-  api: {
-    bodyParser: false, // Don't parse the files, we'll use formData directly
-  },
-};
-
 // Maximum file size (10MB)
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 

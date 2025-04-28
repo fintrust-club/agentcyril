@@ -16,8 +16,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { redirect } from 'next/navigation';
-import { ProjectManagement } from '@/components/admin/project-management';
 import { DocumentManagement } from '@/components/admin/document-management';
+import { NotesInterface } from '@/components/notes/notes-interface';
+import { UserCircle, User, MessagesSquare, FileText, Bot, StickyNote } from 'lucide-react';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 export default function AdminPage() {
   const [formData, setFormData] = useState<ProfileData>({
@@ -33,7 +42,7 @@ export default function AdminPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState("chat");
   const [isEditMode, setIsEditMode] = useState(false);
   
   // Use the standardized useAuth hook
@@ -196,315 +205,402 @@ export default function AdminPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-background border-b py-4">
-        <div className="container mx-auto px-4 flex justify-between items-center">
+      <header className="sticky top-0 z-10 bg-background border-b py-3">
+        <div className="container mx-auto px-4 flex justify-between items-center max-w-7xl">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-primary">Personal Dashboard</h1>
-            {user && (
-              <p className="text-sm text-muted-foreground hidden md:block">
-                Logged in as: <span className="font-medium">{user.email}</span>
-              </p>
-            )}
+            <h1 className="text-[32px] font-bold text-primary">Urclone.ai</h1>
           </div>
           <nav className="flex items-center space-x-4">
-            <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
-              {isLoading ? 'Refreshing...' : 'Refresh Data'}
-            </Button>
             <ThemeToggle />
-            <Button variant="outline" asChild>
-              <Link href={user ? `/chat/${user.id}` : '/'}>Back to Chatbot</Link>
-            </Button>
-            <Button variant="destructive" onClick={signOut}>
-              Logout
-            </Button>
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <UserCircle className="h-6 w-6" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="focus:bg-transparent cursor-default">
+                    {user.email}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut} className="cursor-pointer text-red-600 focus:bg-red-100 focus:text-red-700">
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </nav>
         </div>
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-6 flex flex-col">
-        <Tabs 
-          defaultValue="profile" 
-          value={activeTab} 
+        <Tabs
+          defaultValue="chat"
+          value={activeTab}
           onValueChange={setActiveTab}
-          className="w-full max-w-5xl mx-auto"
+          orientation="vertical"
+          className="w-full max-w-7xl mx-auto flex gap-6 flex-1"
         >
-          <div className="flex justify-center mb-8">
-            <TabsList>
-              <TabsTrigger value="profile">
+          <TabsList className="flex flex-col h-auto justify-start w-64 border-r bg-muted/30 p-4 space-y-1">
+            <TabsTrigger
+              value="chat"
+              className="w-full justify-start px-3 py-2 text-left"
+            >
+              <span className="flex items-center gap-2">
+                <MessagesSquare className="h-4 w-4" />
+                Conversations
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="notes"
+              className="w-full justify-start px-3 py-2 text-left"
+            >
+              <StickyNote className="mr-2 h-5 w-5" />
+              Notes
+            </TabsTrigger>
+            <TabsTrigger 
+              value="profile" 
+              className="w-full justify-start px-3 py-2 text-left"
+            >
+              <span className="flex items-center gap-2">
+                <User className="h-4 w-4" />
                 Profile Information
-              </TabsTrigger>
-              <TabsTrigger value="chat">
-                Chat History
-              </TabsTrigger>
-              <TabsTrigger value="projects">
-                Projects
-              </TabsTrigger>
-              <TabsTrigger value="documents">
+              </span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="clone" 
+              className="w-full justify-start px-3 py-2 text-left"
+            >
+              <span className="flex items-center gap-2">
+                <Bot className="h-4 w-4" />
+                Your AI Clone
+              </span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="documents" 
+              className="w-full justify-start px-3 py-2 text-left"
+            >
+              <span className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
                 Documents
-              </TabsTrigger>
-            </TabsList>
-          </div>
+              </span>
+            </TabsTrigger>
+          </TabsList>
           
-          <TabsContent value="profile">
-            <Card className="shadow-md">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-semibold">What the AI knows about you</CardTitle>
-                  {!isEditMode && !isLoading && (
-                    <Button
-                      onClick={() => setIsEditMode(true)}
-                      variant="outline"
-                      className="px-6"
-                    >
-                      Edit Profile
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              
-              <CardContent className="p-6">
-                {saveSuccess && (
-                  <div className="mb-6 p-4 rounded-md bg-green-50 border border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-900 dark:text-green-400">
-                    <p className="font-medium">Success!</p>
-                    <p className="text-sm">Content updated successfully and saved to database.</p>
-                  </div>
-                )}
-                
-                {error && (
-                  <div className="mb-6 p-4 rounded-md bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-900 dark:text-red-400">
-                    <p className="font-medium">Error</p>
-                    <p className="text-sm">{error}</p>
-                    <div className="mt-2">
-                      <Button variant="outline" size="sm" onClick={handleRefresh}>
-                        Try Again
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                
-                {isLoading ? (
-                  <div className="py-8 text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
-                    <p>Loading profile data...</p>
-                  </div>
-                ) : isEditMode ? (
-                  <form onSubmit={handleSubmit} className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-2">
-                        <Label htmlFor="name" className="text-base font-medium">Name</Label>
-                        <Input
-                          id="name"
-                          name="name"
-                          value={formData.name || ''}
-                          onChange={handleChange}
-                          placeholder="Your name"
-                          className="text-base"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="location" className="text-base font-medium">Location</Label>
-                        <Input
-                          id="location"
-                          name="location"
-                          value={formData.location || ''}
-                          onChange={handleChange}
-                          placeholder="Your location"
-                          className="text-base"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <label className="text-base font-medium">Bio</label>
-                        <Badge variant="outline" className="ml-2 text-xs">Personal</Badge>
-                      </div>
-                      <Textarea
-                        name="bio"
-                        value={formData.bio}
-                        onChange={handleChange}
-                        rows={3}
-                        className="resize-none text-base"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <label className="text-base font-medium">Skills</label>
-                        <Badge variant="outline" className="ml-2 text-xs">Technical</Badge>
-                      </div>
-                      <Textarea
-                        name="skills"
-                        value={formData.skills}
-                        onChange={handleChange}
-                        rows={3}
-                        className="resize-none text-base"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <label className="text-base font-medium">Experience</label>
-                        <Badge variant="outline" className="ml-2 text-xs">Professional</Badge>
-                      </div>
-                      <Textarea
-                        name="experience"
-                        value={formData.experience}
-                        onChange={handleChange}
-                        rows={3}
-                        className="resize-none text-base"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <label className="text-base font-medium">Interests & Hobbies</label>
-                        <Badge variant="outline" className="ml-2 text-xs">Personal</Badge>
-                      </div>
-                      <Textarea
-                        name="interests"
-                        value={formData.interests}
-                        onChange={handleChange}
-                        rows={2}
-                        className="resize-none text-base"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <label className="text-base font-medium">Calendly Link</label>
-                        <Badge variant="outline" className="ml-2 text-xs">Meeting</Badge>
-                      </div>
-                      <Input
-                        name="calendly_link"
-                        value={formData.calendly_link || ''}
-                        onChange={handleChange}
-                        placeholder="Your Calendly scheduling link"
-                        className="text-base"
-                      />
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <label className="text-base font-medium">Meeting Rules</label>
-                        <Badge variant="outline" className="ml-2 text-xs">Policy</Badge>
-                      </div>
-                      <Textarea
-                        name="meeting_rules"
-                        value={formData.meeting_rules || ''}
-                        onChange={handleChange}
-                        rows={3}
-                        placeholder="Define rules for when meetings should be allowed (e.g., 'Only allow meetings for project discussions, job opportunities, or consulting inquiries')"
-                        className="resize-none text-base"
-                      />
-                    </div>
-                    
-                    <div className="flex justify-end gap-2 pt-6">
+          <div className="flex-1">
+            <TabsContent value="profile">
+              <Card className="shadow-md">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-2xl font-semibold">What the AI knows about you</CardTitle>
+                    {!isEditMode && !isLoading && (
                       <Button
-                        type="button"
+                        onClick={() => setIsEditMode(true)}
                         variant="outline"
-                        onClick={() => setIsEditMode(false)}
-                        disabled={isSaving}
                         className="px-6"
                       >
-                        Cancel
+                        Edit Profile
                       </Button>
-                      <Button
-                        type="submit"
-                        disabled={isSaving}
-                        className="px-8"
-                      >
-                        {isSaving ? 'Saving...' : 'Save Changes'}
-                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="p-6">
+                  {saveSuccess && (
+                    <div className="mb-6 p-4 rounded-md bg-green-50 border border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-900 dark:text-green-400">
+                      <p className="font-medium">Success!</p>
+                      <p className="text-sm">Content updated successfully and saved to database.</p>
                     </div>
-                  </form>
-                ) : (
-                  <div className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-2">
-                        <h3 className="text-base font-semibold">Name</h3>
-                        <p className="text-lg">{formData.name || 'Not specified'}</p>
+                  )}
+                  
+                  {error && (
+                    <div className="mb-6 p-4 rounded-md bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-900 dark:text-red-400">
+                      <p className="font-medium">Error</p>
+                      <p className="text-sm">{error}</p>
+                      <div className="mt-2">
+                        <Button variant="outline" size="sm" onClick={handleRefresh}>
+                          Try Again
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {isLoading ? (
+                    <div className="py-8 text-center">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+                      <p>Loading profile data...</p>
+                    </div>
+                  ) : isEditMode ? (
+                    <form onSubmit={handleSubmit} className="space-y-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2">
+                          <Label htmlFor="name" className="text-base font-medium">Name</Label>
+                          <Input
+                            id="name"
+                            name="name"
+                            value={formData.name || ''}
+                            onChange={handleChange}
+                            placeholder="Your name"
+                            className="text-base"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="location" className="text-base font-medium">Location</Label>
+                          <Input
+                            id="location"
+                            name="location"
+                            value={formData.location || ''}
+                            onChange={handleChange}
+                            placeholder="Your location"
+                            className="text-base"
+                          />
+                        </div>
                       </div>
                       
-                      <div className="space-y-2">
-                        <h3 className="text-base font-semibold">Location</h3>
-                        <p className="text-lg">{formData.location || 'Not specified'}</p>
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <label className="text-base font-medium">Bio</label>
+                          <Badge variant="outline" className="ml-2 text-xs">Personal</Badge>
+                        </div>
+                        <Textarea
+                          name="bio"
+                          value={formData.bio}
+                          onChange={handleChange}
+                          rows={3}
+                          className="resize-none text-base"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <label className="text-base font-medium">Skills</label>
+                          <Badge variant="outline" className="ml-2 text-xs">Technical</Badge>
+                        </div>
+                        <Textarea
+                          name="skills"
+                          value={formData.skills}
+                          onChange={handleChange}
+                          rows={3}
+                          className="resize-none text-base"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <label className="text-base font-medium">Experience</label>
+                          <Badge variant="outline" className="ml-2 text-xs">Professional</Badge>
+                        </div>
+                        <Textarea
+                          name="experience"
+                          value={formData.experience}
+                          onChange={handleChange}
+                          rows={3}
+                          className="resize-none text-base"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <label className="text-base font-medium">Interests & Hobbies</label>
+                          <Badge variant="outline" className="ml-2 text-xs">Personal</Badge>
+                        </div>
+                        <Textarea
+                          name="interests"
+                          value={formData.interests}
+                          onChange={handleChange}
+                          rows={2}
+                          className="resize-none text-base"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <label className="text-base font-medium">Calendly Link</label>
+                          <Badge variant="outline" className="ml-2 text-xs">Meeting</Badge>
+                        </div>
+                        <Input
+                          name="calendly_link"
+                          value={formData.calendly_link || ''}
+                          onChange={handleChange}
+                          placeholder="Your Calendly scheduling link"
+                          className="text-base"
+                        />
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <label className="text-base font-medium">Meeting Rules</label>
+                          <Badge variant="outline" className="ml-2 text-xs">Policy</Badge>
+                        </div>
+                        <Textarea
+                          name="meeting_rules"
+                          value={formData.meeting_rules || ''}
+                          onChange={handleChange}
+                          rows={3}
+                          placeholder="Define rules for when meetings should be allowed (e.g., 'Only allow meetings for project discussions, job opportunities, or consulting inquiries')"
+                          className="resize-none text-base"
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end gap-2 pt-6">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsEditMode(false)}
+                          disabled={isSaving}
+                          className="px-6"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={isSaving}
+                          className="px-8"
+                        >
+                          {isSaving ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="space-y-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2">
+                          <h3 className="text-base font-semibold">Name</h3>
+                          <p className="text-lg">{formData.name || 'Not specified'}</p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <h3 className="text-base font-semibold">Location</h3>
+                          <p className="text-lg">{formData.location || 'Not specified'}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center border-b pb-2">
+                          <h3 className="text-base font-semibold">Bio</h3>
+                          <Badge variant="outline" className="ml-2 text-xs">Personal</Badge>
+                        </div>
+                        <p className="text-base leading-relaxed whitespace-pre-wrap">{formData.bio}</p>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center border-b pb-2">
+                          <h3 className="text-base font-semibold">Skills</h3>
+                          <Badge variant="outline" className="ml-2 text-xs">Technical</Badge>
+                        </div>
+                        <p className="text-base leading-relaxed whitespace-pre-wrap">{formData.skills}</p>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center border-b pb-2">
+                          <h3 className="text-base font-semibold">Experience</h3>
+                          <Badge variant="outline" className="ml-2 text-xs">Professional</Badge>
+                        </div>
+                        <p className="text-base leading-relaxed whitespace-pre-wrap">{formData.experience}</p>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center border-b pb-2">
+                          <h3 className="text-base font-semibold">Interests & Hobbies</h3>
+                          <Badge variant="outline" className="ml-2 text-xs">Personal</Badge>
+                        </div>
+                        <p className="text-base leading-relaxed whitespace-pre-wrap">{formData.interests}</p>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center border-b pb-2">
+                          <h3 className="text-base font-semibold">Calendly Link</h3>
+                          <Badge variant="outline" className="ml-2 text-xs">Meeting</Badge>
+                        </div>
+                        <p className="text-base leading-relaxed break-all">
+                          {formData.calendly_link || 'No meeting link configured'}
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center border-b pb-2">
+                          <h3 className="text-base font-semibold">Meeting Rules</h3>
+                          <Badge variant="outline" className="ml-2 text-xs">Policy</Badge>
+                        </div>
+                        <p className="text-base leading-relaxed whitespace-pre-wrap">
+                          {formData.meeting_rules || 'No meeting rules configured'}
+                        </p>
                       </div>
                     </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center border-b pb-2">
-                        <h3 className="text-base font-semibold">Bio</h3>
-                        <Badge variant="outline" className="ml-2 text-xs">Personal</Badge>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="clone">
+              <Card className="shadow-md">
+                <CardHeader>
+                  <CardTitle>Your AI Clone</CardTitle>
+                  <CardDescription>Manage your public-facing AI clone settings.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {user && (
+                    <div className="bg-muted/30 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-medium">Your Public Chat Link</h3>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (typeof window !== 'undefined') {
+                              navigator.clipboard.writeText(`${window.location.origin}/chat/${user.id}`);
+                              alert('Link copied to clipboard!');
+                            }
+                          }}
+                          className="px-4"
+                        >
+                          Copy Link
+                        </Button>
                       </div>
-                      <p className="text-base leading-relaxed whitespace-pre-wrap">{formData.bio}</p>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center border-b pb-2">
-                        <h3 className="text-base font-semibold">Skills</h3>
-                        <Badge variant="outline" className="ml-2 text-xs">Technical</Badge>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          readOnly
+                          value={typeof window !== 'undefined' ? `${window.location.origin}/chat/${user.id}` : ''}
+                          className="flex-1"
+                        />
                       </div>
-                      <p className="text-base leading-relaxed whitespace-pre-wrap">{formData.skills}</p>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center border-b pb-2">
-                        <h3 className="text-base font-semibold">Experience</h3>
-                        <Badge variant="outline" className="ml-2 text-xs">Professional</Badge>
-                      </div>
-                      <p className="text-base leading-relaxed whitespace-pre-wrap">{formData.experience}</p>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center border-b pb-2">
-                        <h3 className="text-base font-semibold">Interests & Hobbies</h3>
-                        <Badge variant="outline" className="ml-2 text-xs">Personal</Badge>
-                      </div>
-                      <p className="text-base leading-relaxed whitespace-pre-wrap">{formData.interests}</p>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center border-b pb-2">
-                        <h3 className="text-base font-semibold">Calendly Link</h3>
-                        <Badge variant="outline" className="ml-2 text-xs">Meeting</Badge>
-                      </div>
-                      <p className="text-base leading-relaxed break-all">
-                        {formData.calendly_link || 'No meeting link configured'}
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Share this link to allow others to chat with your AI clone.
                       </p>
                     </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center border-b pb-2">
-                        <h3 className="text-base font-semibold">Meeting Rules</h3>
-                        <Badge variant="outline" className="ml-2 text-xs">Policy</Badge>
-                      </div>
-                      <p className="text-base leading-relaxed whitespace-pre-wrap">
-                        {formData.meeting_rules || 'No meeting rules configured'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="chat">
-            <AdminChatHistory userId={user.id} />
-          </TabsContent>
-
-          <TabsContent value="projects">
-            <ProjectManagement userId={user.id} />
-          </TabsContent>
-          
-          <TabsContent value="documents">
-            <DocumentManagement userId={user.id} />
-          </TabsContent>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="chat" className="flex-1 h-full overflow-auto">
+              <AdminChatHistory userId={user.id} />
+            </TabsContent>
+            
+            <TabsContent value="notes" className="flex-1 h-full overflow-auto">
+              <NotesInterface />
+            </TabsContent>
+            
+            <TabsContent value="documents">
+              <Card className="shadow-md">
+                <CardHeader>
+                  {/* Optionally add a title here if DocumentManagement doesn't have one */}
+                  {/* <CardTitle>Manage Documents</CardTitle> */}
+                </CardHeader>
+                <CardContent>
+                  <DocumentManagement userId={user.id} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </div>
         </Tabs>
       </main>
 

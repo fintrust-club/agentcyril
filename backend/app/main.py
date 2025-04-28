@@ -7,7 +7,7 @@ import os
 import json
 import uuid
 from app import models
-from app.database import get_profile_data, update_profile_data, log_chat_message, get_chat_history, get_or_create_chatbot
+from app.database import get_profile_data, update_profile_data, log_chat_message, get_chat_history, get_or_create_chatbot, get_or_create_conversation, get_or_create_visitor
 from app.embeddings import add_profile_to_vector_db, query_vector_db, generate_ai_response, add_conversation_to_vector_db
 from app.routes import chatbot, profiles, admin
 import time
@@ -22,6 +22,7 @@ import jwt
 from fastapi.staticfiles import StaticFiles
 from app.routes import chatbot as chatbot_routes
 from app.routes import documents
+from app.routes import notes
 
 # EMERGENCY FIX - Import the emergency endpoint
 try:
@@ -74,7 +75,11 @@ except Exception as e:
     logger.warning("Continuing application startup despite OpenAI client initialization issue")
 
 # Create the FastAPI app
-app = FastAPI()
+app = FastAPI(
+    title="AgentCyril Backend",
+    description="API for AgentCyril project",
+    version="0.2.0"
+)
 
 # Authentication middleware
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -131,6 +136,7 @@ app.include_router(chatbot.router, prefix="/chat", tags=["chatbot"])
 app.include_router(profiles.router, prefix="/profile", tags=["profiles"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
 app.include_router(documents.router, prefix="/documents", tags=["documents"])
+app.include_router(notes.router)
 try:
     app.include_router(auth.router, prefix="/auth", tags=["auth"])
 except NameError:
@@ -291,108 +297,123 @@ def is_valid_meeting_request(message: str, meeting_rules: str) -> bool:
     # Check if any of the allowed purposes are mentioned in the message
     return any(purpose in message for purpose in allowed_purposes)
 
-# Update the chat function to handle meeting requests
+# Update the chat function to use conversations
 @app.post("/chat")
 async def chat(chat_request: models.ChatRequest):
     try:
         # Get the latest user message
-        user_message = chat_request.messages[-1].content.lower() if chat_request.messages else ""
+        user_message = chat_request.message # Assuming ChatRequest now has a direct 'message' field based on previous log
+        if not user_message:
+            user_message = chat_request.messages[-1].content if chat_request.messages else ""
         
-        # Check if this might be a meeting request
-        if any(keyword in user_message for keyword in ["meet", "meeting", "schedule", "appointment", "chat", "discuss", "call"]):
-            # Get the profile data to check meeting rules and Calendly link
-            profile_data = None
-            if chat_request.user_id:
-                profile_data = get_profile_data(user_id=chat_request.user_id)
-            
+        user_message_lower = user_message.lower()
+        
+        # Extract identifying information
+        visitor_id = chat_request.visitor_id
+        chatbot_id = chat_request.chatbot_id
+        target_user_id = chat_request.target_user_id # Used to find default chatbot if chatbot_id is missing
+        visitor_name = chat_request.visitor_name # For visitor creation/update
+        
+        if not chatbot_id and target_user_id:
+            logger.info(f"No chatbot_id provided, looking up default for target_user_id: {target_user_id}")
+            chatbot_data = get_or_create_chatbot(user_id=target_user_id)
+            if chatbot_data:
+                chatbot_id = chatbot_data.get("id")
+                logger.info(f"Using default chatbot_id: {chatbot_id}")
+            else:
+                logger.error(f"Could not find or create a default chatbot for user {target_user_id}")
+                raise HTTPException(status_code=404, detail="Chatbot configuration not found.")
+        
+        if not chatbot_id:
+            logger.error("Chatbot ID is missing and could not be determined.")
+            raise HTTPException(status_code=400, detail="Chatbot ID is required.")
+        
+        if not visitor_id:
+            # Generate a visitor ID if one is not provided (or handle error)
+            visitor_id = str(uuid.uuid4())
+            logger.warning(f"No visitor_id provided, generated a new one: {visitor_id}")
+            # Optionally, you might want to raise an error if visitor_id is strictly required
+            # raise HTTPException(status_code=400, detail="Visitor ID is required.")
+
+        # Ensure visitor exists in the visitors table (using the separate function)
+        try:
+            visitor_record = get_or_create_visitor(visitor_id, visitor_name)
+            # Use the UUID from the visitor record for consistency, if available
+            db_visitor_id = visitor_record.get("id") if visitor_record else visitor_id
+            if not db_visitor_id:
+                logger.error(f"Failed to get or create visitor, using original ID: {visitor_id}")
+                db_visitor_id = visitor_id # Fallback, though this might cause issues if it's not a UUID
+            else:
+                logger.info(f"Ensured visitor exists with UUID: {db_visitor_id}")
+        except Exception as visitor_err:
+            logger.error(f"Error ensuring visitor exists: {visitor_err}")
+            # Decide how to proceed: raise error or continue with potentially non-UUID visitor_id?
+            # For now, let's try continuing, get_or_create_conversation might raise an error if format is wrong
+            db_visitor_id = visitor_id 
+
+        # Get or create the conversation ID
+        conversation_id = get_or_create_conversation(chatbot_id=str(chatbot_id), visitor_id=str(db_visitor_id))
+        logger.info(f"Using conversation_id: {conversation_id}")
+
+        # --- Meeting Request Logic (remains largely the same, but uses chatbot owner ID) ---
+        chatbot_data = get_or_create_chatbot(chatbot_id=chatbot_id) # Fetch chatbot data again to get owner ID safely
+        owner_user_id = chatbot_data.get("user_id")
+        
+        if any(keyword in user_message_lower for keyword in ["meet", "meeting", "schedule", "appointment", "chat", "discuss", "call"]):
+            profile_data = get_profile_data(user_id=owner_user_id)
             if profile_data and profile_data.get("calendly_link"):
-                # Check if the meeting request is valid based on rules
                 if is_valid_meeting_request(user_message, profile_data.get("meeting_rules", "")):
                     calendly_link = profile_data["calendly_link"]
                     meeting_response = (
                         f"I'd be happy to help you schedule a meeting! You can use my Calendly link to find a suitable time: "
                         f"{calendly_link}\n\nPlease select a time that works best for you."
                     )
-                    return {"response": meeting_response}
+                    # Log this interaction as well
+                    log_chat_message(conversation_id=conversation_id, message=user_message, response=meeting_response, sender="user")
+                    return models.ChatResponse(response=meeting_response)
                 else:
-                    return {"response": "I understand you'd like to schedule a meeting. However, based on our meeting policy, "
+                    meeting_response = ("I understand you'd like to schedule a meeting. However, based on our meeting policy, "
                                       "I can only schedule meetings for specific purposes. Could you please clarify the purpose "
-                                      "of the meeting?"}
-        
-        # If not a meeting request or no Calendly link set, proceed with normal chat handling
-        logging.info(f"Processing chat message")
-        
-        # Extract visitor information
-        visitor_id = chat_request.visitor_id
-        visitor_name = chat_request.visitor_name
-        target_user_id = chat_request.target_user_id
-        chatbot_id = chat_request.chatbot_id
-        
-        logging.info(f"Chat request from visitor: {visitor_id}, name: {visitor_name}, user_id: {target_user_id}, chatbot_id: {chatbot_id}")
-        
-        # Get the message directly from the request
-        message = chat_request.message
-        
-        if not message or message.strip() == "":
+                                      "of the meeting?")
+                    log_chat_message(conversation_id=conversation_id, message=user_message, response=meeting_response, sender="user")
+                    return models.ChatResponse(response=meeting_response)
+        # --- End Meeting Request Logic ---
+
+        logging.info(f"Processing normal chat message for conversation {conversation_id}")
+
+        if not user_message or user_message.strip() == "":
             logging.warning("No valid user message found in request")
-            return {"response": "I didn't receive a valid message. Please try again."}
+            return models.ChatResponse(response="I didn't receive a valid message. Please try again.")
         
-        logging.info(f"User message: {message[:50]}...")
-        
-        # Get chatbot and profile data
-        chatbot = None
-        owner_user_id = target_user_id
-        
-        if chatbot_id:
-            # If a specific chatbot ID is provided, use it
-            chatbot = get_or_create_chatbot(chatbot_id=chatbot_id)
-            if chatbot:
-                owner_user_id = chatbot.get("user_id")
-                logging.info(f"Using chatbot with ID {chatbot_id}, owned by user {owner_user_id}")
-        elif target_user_id:
-            # If a target user ID is provided but no chatbot ID, get/create the user's default chatbot
-            chatbot = get_or_create_chatbot(user_id=target_user_id)
-            logging.info(f"Using default chatbot for user {target_user_id}")
-        
-        # Get profile data for the appropriate user
+        # Get profile data for the chatbot owner
         profile_data = get_profile_data(user_id=owner_user_id)
-        logging.info(f"Retrieved profile data: {profile_data.get('id', 'No ID')}") 
+        logging.info(f"Retrieved profile data for owner {owner_user_id}: {profile_data.get('id', 'No ID')}") 
         
-        # Query vector database for relevant information including conversation history
-        logging.info(f"Querying vector DB for relevant context and conversation history for user {owner_user_id}")
+        # Query vector database (remains similar, but context might change)
+        logging.info(f"Querying vector DB for relevant context for conversation {conversation_id}")
         search_results = query_vector_db(
-            query=message, 
+            query=user_message, 
             n_results=3,
-            user_id=owner_user_id,  # Use the chatbot owner's user_id
-            visitor_id=visitor_id,
-            include_conversation=True
+            user_id=owner_user_id, # Filter context by chatbot owner
+            # visitor_id=db_visitor_id, # Optional: Could filter context by visitor too
+            # include_conversation=True # This might need adjustment based on how history is stored in vector DB
         )
         
-        # Get sequential conversation history for UI/display context
-        logging.info(f"Getting sequential conversation history for visitor: {visitor_id}")
-        history_limit = 10  # Get last 10 messages (5 exchanges)
+        # Get sequential conversation history using the new function
+        logging.info(f"Getting sequential conversation history for conversation: {conversation_id}")
+        history_limit = 10 
         chat_history = get_chat_history(
-            limit=history_limit,
-            visitor_id=visitor_id,
-            target_user_id=owner_user_id,
-            chatbot_id=chatbot.get("id") if chatbot else None
+            conversation_id=conversation_id,
+            limit=history_limit
         )
         
-        # Sort history to have oldest messages first
-        if chat_history:
-            chat_history = sorted(
-                chat_history,
-                key=lambda x: x.get("timestamp", ""),
-                reverse=False  # Oldest messages first
-            )
-            logging.info(f"Found {len(chat_history)} previous messages in conversation history")
-        else:
-            logging.info("No previous conversation history found")
-            chat_history = []
+        # Sort history (already sorted by DB query, but maybe double-check)
+        # chat_history = sorted(chat_history, key=lambda x: x.get("created_at"), reverse=False)
+        logging.info(f"Found {len(chat_history)} previous messages in conversation history")
         
-        # Generate AI response using the embeddings.py implementation
+        # Generate AI response
         ai_response = generate_ai_response(
-            message=message,  # Using the message as the query
+            message=user_message,
             search_results=search_results,
             profile_data=profile_data,
             chat_history=chat_history
@@ -400,81 +421,86 @@ async def chat(chat_request: models.ChatRequest):
         
         logging.info(f"Generated AI response: {ai_response[:50]}...")
         
-        # Log chat interaction
-        logging.info("Saving chat message to database...")
-        chat_log_result = log_chat_message(
-            message=message,
-            sender="user", 
-            response=ai_response,
-            visitor_id=chat_request.visitor_id,
-            visitor_name=chat_request.visitor_name,
-            target_user_id=owner_user_id,
-            chatbot_id=chatbot.get("id") if chatbot else None
-        )
+        # Log chat interaction using the new function
+        logging.info(f"Saving chat message to conversation {conversation_id}...")
+        try:
+            log_chat_message(
+                conversation_id=conversation_id,
+                message=user_message,
+                sender="user", 
+                response=ai_response
+            )
+            logging.info("Chat message saved successfully.")
+        except Exception as log_err:
+            # Log error but continue to return response to user
+            logger.error(f"Failed to log chat message: {log_err}") 
+            logger.error(traceback.format_exc())
         
-        # Also store the conversation in the vector database for semantic search
-        message_id = chat_log_result[0]["id"] if chat_log_result and len(chat_log_result) > 0 else None
-        logging.info(f"Adding conversation to vector database for future reference with user_id: {owner_user_id}")
-        add_conversation_to_vector_db(
-            message=message,
-            response=ai_response,
-            visitor_id=visitor_id,
-            message_id=message_id,
-            user_id=owner_user_id  # Pass the chatbot owner's user_id
-        )
+        # TODO: Update vector DB storage if needed
+        # The add_conversation_to_vector_db function might need updating
+        # to work with conversation_id or to fetch necessary context differently.
+        # logging.info(f"Adding conversation turn to vector database for conversation {conversation_id}")
+        # add_conversation_to_vector_db(...) 
         
-        logging.info(f"Chat message saved: {chat_log_result is not None}")
+        return models.ChatResponse(response=ai_response)
         
-        return {"response": ai_response}
     except Exception as e:
-        logging.error(f"Error processing chat: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error processing chat: {e}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
-# Get chat history endpoint - kept for backward compatibility
+# Get chat history endpoint - Updated to use conversation_id
+# This endpoint needs a way to get the conversation_id. 
+# Option 1: Frontend provides it directly (e.g., /conversations/{id}/history)
+# Option 2: Frontend provides chatbot_id + visitor_id, backend looks up conversation_id.
+# Implementing Option 2 for now, assuming frontend has chatbot_id and visitor_id.
 @app.get("/chat/history")
-async def history(visitor_id: Optional[str] = None, target_user_id: Optional[str] = None, limit: int = 50):
-    """Get chat history"""
+async def history(chatbot_id: str, visitor_id: str, limit: int = 50):
+    """Get chat history for a specific chatbot and visitor."""
     try:
-        logging.info(f"Getting chat history for visitor: {visitor_id}, target: {target_user_id}, limit: {limit}")
+        logger.info(f"Getting chat history for chatbot: {chatbot_id}, visitor: {visitor_id}, limit: {limit}")
         
-        # Get chat history
-        history = get_chat_history(
-            limit=limit,
-            visitor_id=visitor_id,
-            target_user_id=target_user_id
+        # Ensure visitor exists and get their UUID
+        try:
+            visitor_record = get_or_create_visitor(visitor_id)
+            db_visitor_id = visitor_record.get("id") if visitor_record else visitor_id
+            if not db_visitor_id:
+                raise ValueError("Could not find visitor record")
+            logger.info(f"Using visitor UUID: {db_visitor_id}")
+        except Exception as visitor_err:
+            logger.error(f"Failed to get visitor UUID for history: {visitor_err}")
+            raise HTTPException(status_code=404, detail="Visitor not found")
+
+        # Find the conversation ID
+        try:
+            # Use get_or_create, but we expect it to exist if history is requested
+            conversation_id = get_or_create_conversation(chatbot_id=chatbot_id, visitor_id=str(db_visitor_id))
+            logger.info(f"Found conversation_id: {conversation_id}")
+        except ValueError as ve:
+            logger.error(f"Value error finding conversation: {ve}")
+            raise HTTPException(status_code=404, detail=f"Conversation not found: {ve}")
+        except Exception as e:
+            logger.error(f"Error finding conversation for history: {e}")
+            raise HTTPException(status_code=500, detail="Error retrieving conversation")
+
+        # Get chat history using the conversation ID
+        history_messages = get_chat_history(
+            conversation_id=conversation_id,
+            limit=limit
         )
         
-        logging.info(f"Retrieved {len(history)} chat history entries")
-        if len(history) > 0:
-            logging.info(f"First message: {history[0].get('message', 'N/A')[:30]}...")
-        else:
-            logging.info("No chat history found")
+        logging.info(f"Retrieved {len(history_messages)} chat history entries for conversation {conversation_id}")
         
-        # Convert to ChatHistoryResponse format for better compatibility
-        formatted_history = []
-        for item in history:
-            formatted_history.append(models.ChatHistoryItem(
-                id=item["id"],
-                message=item["message"],
-                sender=item["sender"],
-                response=item.get("response"),
-                visitor_id=item["visitor_id"],
-                visitor_name=item.get("visitor_name"),
-                target_user_id=item.get("target_user_id"),
-                timestamp=item["timestamp"]
-            ))
-        
-        response = models.ChatHistoryResponse(
-            history=formatted_history,
-            count=len(formatted_history)
-        )
-        
-        logging.info(f"Returning response with {len(formatted_history)} items, using ChatHistoryResponse format")
-        return response
-        
+        # Return history in the expected format (check if models.ChatHistoryResponse exists or adjust)
+        # Assuming a simple list return for now
+        return history_messages
+
+    except HTTPException as he:
+        raise he # Re-raise HTTP exceptions
     except Exception as e:
-        logging.error(f"Error getting chat history: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error getting chat history: {e}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Internal Server Error retrieving history: {str(e)}")
 
 # Add a direct route for public chatbot access by user ID
 @app.get("/chat/{user_id}/public")
@@ -503,76 +529,188 @@ async def get_public_chatbot_by_user_id(user_id: str):
         )
 
 # Add a POST endpoint for public chatbot access by user ID
-@app.post("/chat/{user_id}/public", response_model=models.ChatResponse)
-async def chat_with_public_chatbot_by_user_id(user_id: str, request: models.ChatRequest):
+@app.post("/chat/{user_id}/public", response_model=ChatResponse)
+async def public_chat(user_id: str, chat_request: ChatRequest):
     """
-    Public endpoint to chat with a chatbot by user ID
-    This is accessible without authentication
+    Public endpoint to interact with a chatbot by user ID
+    This endpoint first finds the chatbot associated with the user, then processes the request
     """
     try:
-        # Forward the request to the chatbot router handler
-        from app.routes.chatbot import chat_with_public_chatbot
-        return await chat_with_public_chatbot(user_id, request)
+        # Extract the message from the last message in the messages array
+        message = ""
+        if chat_request.messages and len(chat_request.messages) > 0:
+            message = chat_request.messages[-1].content
+        
+        visitor_id = chat_request.visitor_id
+        visitor_name = chat_request.visitor_name
+        
+        logger.info(f"Public chat request for user ID: {user_id}, visitor ID: {visitor_id}")
+        logger.info(f"Message content: {message[:50]}..." if len(message) > 50 else f"Message content: {message}")
+        
+        # Get the chatbot for this user - this will get or create a chatbot
+        chatbot = get_or_create_chatbot(user_id=user_id)
+        
+        if not chatbot:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"No chatbot found for user {user_id}"
+            )
+            
+        # Ensure the chatbot is public
+        if not chatbot.get("is_public", True):
+            raise HTTPException(
+                status_code=403,
+                detail="This chatbot is not publicly accessible"
+            )
+            
+        # Get the actual chatbot ID to use
+        chatbot_id = chatbot.get("id")
+        logger.info(f"Using chatbot with ID: {chatbot_id} for public chat")
+        
+        # Get or create the visitor record
+        visitor_record = get_or_create_visitor(visitor_id_text=visitor_id, name=visitor_name)
+        if not visitor_record:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to create or retrieve visitor record"
+            )
+            
+        db_visitor_id = visitor_record.get("id")
+        if not db_visitor_id:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to get visitor ID from record"
+            )
+            
+        # Get or create the conversation
+        conversation_id = get_or_create_conversation(
+            chatbot_id=str(chatbot_id),
+            visitor_id=str(db_visitor_id)
+        )
+        
+        logger.info(f"Using conversation ID: {conversation_id} for chat")
+        
+        # Get profile data for the chatbot owner
+        profile_data = get_profile_data(user_id=user_id)
+        
+        # Query vector database for relevant context
+        search_results = query_vector_db(
+            query=message, 
+            n_results=3,
+            user_id=user_id
+        )
+        
+        # Get sequential conversation history
+        chat_history = get_chat_history(
+            conversation_id=conversation_id,
+            limit=10
+        )
+        
+        # Generate AI response
+        ai_response = generate_ai_response(
+            message=message,
+            search_results=search_results,
+            profile_data=profile_data,
+            chat_history=chat_history
+        )
+        
+        # Log the message and response to the database with the conversation ID
+        log_chat_message(
+            conversation_id=conversation_id,
+            message=message,
+            sender="user",
+            response=ai_response
+        )
+        
+        return ChatResponse(
+            response=ai_response,
+            chatbot_id=str(chatbot_id)
+        )
+        
+    except HTTPException as he:
+        raise he
     except Exception as e:
-        logging.error(f"Error in public chat endpoint: {e}")
+        logger.error(f"Error in public chat endpoint: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to process chat request: {str(e)}"
+            detail=f"Error processing chat request: {str(e)}"
         )
 
 # Add a GET endpoint for public chatbot history access by user ID
 @app.get("/chat/{user_id}/public/history")
 async def get_public_chatbot_history(user_id: str, visitor_id: Optional[str] = None, limit: int = 50):
     """
-    Public endpoint to get chat history for a public chatbot by user ID
-    This is accessible without authentication
+    Get chat history for a public chatbot by user ID
+    This endpoint uses the user ID to find the associated chatbot, then retrieves the conversation
     """
     try:
-        # Get or create a chatbot for the user
-        chatbot = get_or_create_chatbot(user_id=user_id)
+        # Log the request details
+        logger.info(f"Getting public chat history for user_id: {user_id}, visitor_id: {visitor_id}")
         
+        # First, get the chatbot for this user (don't create if it doesn't exist)
+        chatbot = get_or_create_chatbot(user_id=user_id)
         if not chatbot:
             raise HTTPException(
                 status_code=404,
                 detail=f"No chatbot found for user {user_id}"
             )
         
-        # Get chat history for this chatbot and visitor
-        logging.info(f"Getting public chat history for user_id: {user_id}, visitor_id: {visitor_id}, chatbot_id: {chatbot.get('id')}")
-        history = get_chat_history(
-            limit=limit,
-            visitor_id=visitor_id,
-            chatbot_id=chatbot.get("id")
+        # Ensure chatbot is public
+        if not chatbot.get("is_public", True):
+            raise HTTPException(
+                status_code=403,
+                detail="This chatbot is not publicly accessible"
+            )
+            
+        # Now we have the actual chatbot ID to use
+        chatbot_id = chatbot.get("id")
+        logger.info(f"Found chatbot with ID: {chatbot_id} for user: {user_id}")
+        
+        # Verify visitor ID exists, create if needed
+        if not visitor_id:
+            logger.warning("No visitor_id provided, cannot retrieve chat history")
+            return []
+            
+        try:
+            # Find or create the visitor in our database
+            db_visitor_id = get_or_create_visitor(visitor_id_text=visitor_id)
+            logger.info(f"Found or created visitor with DB ID: {db_visitor_id}")
+        except Exception as ve:
+            logger.error(f"Error finding/creating visitor: {ve}")
+            raise HTTPException(status_code=500, detail=f"Visitor error: {str(ve)}")
+
+        # Find the conversation ID using chatbot_id and the visitor's DB UUID
+        try:
+            conversation_id = get_or_create_conversation(chatbot_id=str(chatbot_id), visitor_id=str(db_visitor_id))
+            logger.info(f"Found conversation_id: {conversation_id} for public history")
+        except ValueError as ve:
+            logger.error(f"Value error finding public conversation: {ve}")
+            raise HTTPException(status_code=404, detail=f"Conversation not found: {ve}")
+        except Exception as e:
+            logger.error(f"Error finding public conversation for history: {e}")
+            raise HTTPException(status_code=500, detail="Error retrieving conversation")
+
+        # Get chat history using the conversation ID
+        history_messages = get_chat_history(
+            conversation_id=conversation_id,
+            limit=limit
         )
         
-        logging.info(f"Retrieved {len(history)} chat history entries")
+        logging.info(f"Retrieved {len(history_messages)} public chat history entries for conversation {conversation_id}")
         
-        # Convert to ChatHistoryResponse format
-        formatted_history = []
-        for item in history:
-            formatted_history.append(models.ChatHistoryItem(
-                id=item.get("id", ""),
-                message=item.get("message", ""),
-                sender=item.get("sender", "user"),
-                response=item.get("response"),
-                visitor_id=item.get("visitor_id", ""),
-                visitor_name=item.get("visitor_name"),
-                timestamp=item.get("created_at") or item.get("timestamp", "")
-            ))
+        # Return history as a simple list (matching the main /chat/history endpoint)
+        return history_messages
         
-        response = models.ChatHistoryResponse(
-            history=formatted_history,
-            count=len(formatted_history)
-        )
-        
-        logging.info(f"Returning public chat history with {len(formatted_history)} items")
-        return response
-        
+    except HTTPException as he:
+        raise he # Re-raise HTTP exceptions
     except Exception as e:
         logging.error(f"Error getting public chat history: {e}")
+        logger.error(traceback.format_exc())
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get chat history: {str(e)}"
+            detail=f"Failed to get public chat history: {str(e)}"
         )
 
 # Add the emergency chat endpoint

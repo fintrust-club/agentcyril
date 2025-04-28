@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+import uuid
 
 
 class ChatRequest(BaseModel):
@@ -10,7 +11,7 @@ class ChatRequest(BaseModel):
     message: str = Field(..., description="The message sent by the user")
     visitor_id: str = Field(..., description="Unique identifier for the visitor")
     visitor_name: Optional[str] = Field(None, description="Optional name for the visitor")
-    chatbot_id: Optional[str] = Field(None, description="Identifier for the specific chatbot to chat with")
+    chatbot_id: str = Field(..., description="Identifier for the specific chatbot to chat with")
 
 
 class ChatResponse(BaseModel):
@@ -43,19 +44,9 @@ class ChatHistoryResponse(BaseModel):
     count: Optional[int] = Field(None, description="Total number of messages")
 
 
-class Project(BaseModel):
-    """
-    Model for a project
-    """
-    id: Optional[str] = None
-    title: str = Field(..., description="Project title")
-    description: str = Field(..., description="Project description")
-    technologies: Optional[str] = Field(None, description="Technologies used")
-    image_url: Optional[str] = Field(None, description="Project image URL")
-    project_url: Optional[str] = Field(None, description="Project URL")
-    is_featured: Optional[bool] = Field(False, description="Whether project is featured")
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+class Settings(BaseModel):
+    # Settings fields...
+    pass
 
 
 class ProfileData(BaseModel):
@@ -70,9 +61,9 @@ class ProfileData(BaseModel):
     skills: str
     experience: str
     interests: str
-    project_list: Optional[List[Project]] = Field(default_factory=list, description="List of projects")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    calendly_link: Optional[str] = Field(None, description="Calendly link")
 
 
 class ChatbotModel(BaseModel):
@@ -151,4 +142,24 @@ class ErrorResponse(BaseModel):
     Standard error response
     """
     error: str
-    detail: Optional[str] = None 
+    detail: Optional[str] = None
+
+
+# Note Models
+class NoteBase(BaseModel):
+    content: str
+
+
+class NoteCreate(NoteBase):
+    pass
+
+
+class NoteRead(NoteBase):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True # For SQLAlchemy or similar ORMs
+        from_attributes = True # Pydantic v2 equivalent of orm_mode 

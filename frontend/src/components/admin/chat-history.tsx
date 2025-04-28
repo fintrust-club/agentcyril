@@ -10,6 +10,10 @@ import { chatApi, type ChatHistoryItem } from '@/utils/api';
 import { formatDistanceToNow, format } from 'date-fns';
 import { supabase } from '@/utils/supabase';
 import { Input } from "@/components/ui/input";
+import { RefreshCw } from 'lucide-react';
+import { Skeleton } from "@/components/ui/skeleton";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // Group chats by visitor/user
 type UserThread = {
@@ -31,6 +35,7 @@ export function AdminChatHistory({ userId }: AdminChatHistoryProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  const messagesEndRef = React.useRef<HTMLDivElement>(null); // Add ref for scroll target
 
   useEffect(() => {
     const getUser = async () => {
@@ -48,59 +53,57 @@ export function AdminChatHistory({ userId }: AdminChatHistoryProps) {
   // Process chat history into visitor threads
   useEffect(() => {
     if (chatHistory && chatHistory.length > 0) {
-      console.log(`Processing ${chatHistory.length} messages into visitor threads...`);
-      const threads: { [key: string]: UserThread } = {};
+      console.log('Processing chat history for visitor threads');
       
-      // Group messages by visitor
-      chatHistory.forEach(item => {
-        // Ensure item has required fields
-        if (!item) {
-          console.warn("Found null item in chat history");
-          return;
+      // First, create a map of messages by visitor
+      const visitorMap = new Map<string, ChatHistoryItem[]>();
+      
+      // Group messages by visitor_id or visitor_id_text
+      chatHistory.forEach((message) => {
+        // Skip invalid messages
+        if (!message) return;
+        
+        // Determine which visitor ID to use (prefer visitor_id when available)
+        const visitorKey = message.visitor_id || message.visitor_id_text || 'unknown';
+        
+        if (!visitorMap.has(visitorKey)) {
+          visitorMap.set(visitorKey, []);
         }
         
-        // Use visitor_id_text if available, otherwise use visitor_id
-        const visitorId = item.visitor_id_text || item.visitor_id || 'unknown';
-        
-        if (!threads[visitorId]) {
-          console.log(`Creating new thread for visitor: ${visitorId}, name: ${item.visitor_name || 'unnamed'}`);
-          threads[visitorId] = {
-            visitorId,
-            visitorName: item.visitor_name,
-            messages: [],
-            lastActive: new Date(item.created_at || item.timestamp || Date.now()),
-            messageCount: 0,
-          };
-        }
-        
-        // Add message to thread
-        threads[visitorId].messages.push(item);
-        threads[visitorId].messageCount += 1;
-        
-        // Update last active timestamp if more recent
-        const messageDate = new Date(item.created_at || item.timestamp || Date.now());
-        if (messageDate > threads[visitorId].lastActive) {
-          threads[visitorId].lastActive = messageDate;
-        }
+        visitorMap.get(visitorKey)?.push(message);
       });
       
-      // Sort messages by timestamp within each thread
-      Object.values(threads).forEach(thread => {
-        thread.messages.sort((a, b) => {
-          const dateA = new Date(a.created_at || a.timestamp || 0).getTime();
-          const dateB = new Date(b.created_at || b.timestamp || 0).getTime();
-          return dateA - dateB;
-        });
+      // Convert the map to an array of visitor threads
+      const threadsArray: UserThread[] = Array.from(visitorMap.entries()).map(([visitorId, messages]) => {
+        // Get the visitor name from any message (assuming they're all the same visitor)
+        const firstMessageWithName = messages.find(m => m.visitor_name);
+        const visitorName = firstMessageWithName?.visitor_name || visitorId;
+        
+        // Get the timestamp of the most recent message
+        const timestamps = messages.map(m => new Date(m.timestamp || m.created_at || 0));
+        const lastActive = new Date(Math.max(...timestamps.map(d => d.getTime())));
+        
+        // Create a UserThread for this visitor
+        return {
+          visitorId,
+          visitorName,
+          messages,
+          lastActive,
+          messageCount: messages.length
+        };
       });
       
-      // Convert to array and sort by last active (most recent first)
-      const threadsArray = Object.values(threads).sort((a, b) => 
-        b.lastActive.getTime() - a.lastActive.getTime()
-      );
+      // Sort thread array by last active timestamp (most recent first)
+      threadsArray.sort((a, b) => b.lastActive.getTime() - a.lastActive.getTime());
       
       console.log(`Created ${threadsArray.length} visitor threads`);
       if (threadsArray.length > 0) {
         console.log(`First thread: Visitor ${threadsArray[0].visitorId} with ${threadsArray[0].messageCount} messages`);
+        
+        // Check if we have conversation IDs in the messages
+        const hasConversationIds = threadsArray[0].messages.some(m => m.conversation_id);
+        console.log(`Messages have conversation_id: ${hasConversationIds}`);
+        
         console.log('Sample messages from first thread:', threadsArray[0].messages.slice(0, 2));
       }
       
@@ -116,6 +119,14 @@ export function AdminChatHistory({ userId }: AdminChatHistoryProps) {
       setVisitorThreads([]);
     }
   }, [chatHistory, selectedVisitor]);
+
+  // Scroll to bottom when selectedVisitor changes
+  React.useEffect(() => {
+    if (messagesEndRef.current) {
+      // Use 'auto' for instant scroll, 'smooth' for animated scroll
+      messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+    }
+  }, [selectedVisitor]);
 
   // Function to fetch chat history
   const fetchChatHistory = async () => {
@@ -217,51 +228,12 @@ export function AdminChatHistory({ userId }: AdminChatHistoryProps) {
   return (
     <div className="max-w-6xl mx-auto">
       <Card className="shadow-lg h-[800px] flex flex-col">
-        <CardHeader className="border-b shrink-0">
-          <div className="flex flex-col space-y-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-semibold">Chat History</CardTitle>
-              <Button 
-                variant="outline" 
-                onClick={handleRefresh} 
-                disabled={isLoading}
-                className="px-6"
-              >
-                {isLoading ? 'Loading...' : 'Refresh'}
-              </Button>
-            </div>
-            
-            {user && (
-              <div className="bg-muted/30 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium">Your Public Chat Link</h3>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/chat/${user.id}`);
-                      alert('Link copied to clipboard!');
-                    }}
-                    className="px-4"
-                  >
-                    Copy Link
-                  </Button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input 
-                    readOnly
-                    value={`${window.location.origin}/chat/${user.id}`}
-                    className="font-mono text-sm bg-background"
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Share this link with anyone who wants to chat with your AI assistant.
-                </p>
-              </div>
-            )}
-          </div>
-        </CardHeader>
+        {/* Remove the entire CardHeader element */}
+        {/* <CardHeader className="border-b shrink-0">
+          {/* Header can be empty or contain other global controls if needed */}
+        {/* </CardHeader> */}
         
+        {/* Adjust CardContent to handle potential top padding/margin if needed */}
         <CardContent className="p-0 flex-1 overflow-hidden">
           {error && (
             <div className="m-6 p-4 rounded-md bg-red-50 border border-red-200 text-red-700">
@@ -271,10 +243,26 @@ export function AdminChatHistory({ userId }: AdminChatHistoryProps) {
           )}
           
           {isLoading ? (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
-                <p className="text-muted-foreground">Loading chat history...</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 h-full divide-x">
+              {/* Skeleton for Visitor List */}
+              <div className="flex flex-col h-full overflow-hidden p-4 space-y-3">
+                <Skeleton className="h-8 w-full mb-2" /> {/* Search bar skeleton */}
+                {Array.from({ length: 5 }).map((_, index) => ( // 5 visitor skeletons
+                  <Skeleton key={index} className="h-16 w-full" />
+                ))}
+              </div>
+              {/* Skeleton for Chat Area with Loading Text */}
+              <div className="md:col-span-2 flex flex-col h-full overflow-hidden p-4">
+                <div className="flex-1 space-y-4">
+                    <Skeleton className="h-10 w-1/3 self-end ml-auto" /> {/* Message skeleton (user) - align right */}
+                    <Skeleton className="h-16 w-1/2 self-start" /> {/* Message skeleton (AI) - align left */}
+                    <Skeleton className="h-10 w-2/5 self-end ml-auto" /> {/* Message skeleton (user) - align right */}
+                    <Skeleton className="h-12 w-3/5 self-start" /> {/* Message skeleton (AI) - align left */}
+                    <Skeleton className="h-8 w-1/4 self-end ml-auto" /> {/* Message skeleton (user) - align right */}
+                </div>
+                <div className="pt-4 text-center text-muted-foreground">
+                  Fetching and loading your conversations...
+                </div>
               </div>
             </div>
           ) : visitorThreads.length === 0 ? (
@@ -288,11 +276,22 @@ export function AdminChatHistory({ userId }: AdminChatHistoryProps) {
             <div className="grid grid-cols-1 md:grid-cols-3 h-full divide-x">
               {/* Visitor List */}
               <div className="flex flex-col h-full overflow-hidden">
-                <div className="p-4 border-b bg-muted/10 shrink-0">
-                  <h3 className="text-lg font-semibold">Visitors</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {visitorThreads.length} {visitorThreads.length === 1 ? 'visitor' : 'visitors'} total
-                  </p>
+                <div className="p-4 border-b bg-muted/10 shrink-0 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">Visitors</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {visitorThreads.length} {visitorThreads.length === 1 ? 'visitor' : 'visitors'} total
+                    </p>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handleRefresh} 
+                    disabled={isLoading}
+                    className="text-muted-foreground"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                  </Button>
                 </div>
                 <div className="flex-1 overflow-hidden">
                   <ScrollArea className="h-full">
@@ -346,7 +345,15 @@ export function AdminChatHistory({ userId }: AdminChatHistoryProps) {
                     <div className="flex-1 overflow-hidden">
                       <ScrollArea className="h-full">
                         <div className="p-6 space-y-6">
-                          {getSelectedVisitorThread()?.messages.map((message) => (
+                          {/* Sort messages before mapping */}
+                          {getSelectedVisitorThread()?.messages
+                            .slice() // Create a shallow copy to avoid mutating state
+                            .sort((a, b) => { // Sort ascending (oldest first)
+                              const dateA = new Date(a.created_at || a.timestamp || 0).getTime();
+                              const dateB = new Date(b.created_at || b.timestamp || 0).getTime();
+                              return dateA - dateB; 
+                            })
+                            .map((message) => (
                             <React.Fragment key={message.id}>
                               {/* User Message */}
                               {message.message && (
@@ -354,7 +361,11 @@ export function AdminChatHistory({ userId }: AdminChatHistoryProps) {
                                   <div className="max-w-[70%]">
                                     <div className="bg-primary text-primary-foreground rounded-lg p-4">
                                       <div className="text-sm font-medium mb-1 opacity-80">Visitor</div>
-                                      <div className="text-base break-words whitespace-pre-wrap">{message.message}</div>
+                                      <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-0 prose-ul:my-0 prose-ol:my-0">
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                          {message.message}
+                                        </ReactMarkdown>
+                                      </div>
                                     </div>
                                     <div className="text-xs text-muted-foreground mt-2 text-right">
                                       {formatDate(message.created_at || message.timestamp || '')}
@@ -369,7 +380,11 @@ export function AdminChatHistory({ userId }: AdminChatHistoryProps) {
                                   <div className="max-w-[70%]">
                                     <div className="bg-muted rounded-lg p-4">
                                       <div className="text-sm font-medium mb-1 opacity-80">AI Response</div>
-                                      <div className="text-base break-words whitespace-pre-wrap">{message.response}</div>
+                                      <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-0 prose-ul:my-0 prose-ol:my-0">
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                          {message.response}
+                                        </ReactMarkdown>
+                                      </div>
                                     </div>
                                     <div className="text-xs text-muted-foreground mt-2">
                                       {formatDate(message.created_at || message.timestamp || '')}
@@ -379,6 +394,8 @@ export function AdminChatHistory({ userId }: AdminChatHistoryProps) {
                               )}
                             </React.Fragment>
                           ))}
+                          {/* Add div with ref at the end of messages */}
+                          <div ref={messagesEndRef} />
                         </div>
                       </ScrollArea>
                     </div>
